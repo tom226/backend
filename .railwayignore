@@ -1,0 +1,12 @@
+node_modules/
+.git/
+NurseryGreenApp/
+mobile/
+Images/
+.github/
+backend/
+tools/
+*.exe
+*.tar.gz
+*.bat
+*.ps1

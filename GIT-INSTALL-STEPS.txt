@@ -1,0 +1,50 @@
+QUICK GIT INSTALLATION FOR WINDOWS
+====================================
+
+STEP 1: DOWNLOAD GIT
+====================
+1. Open your browser
+2. Go to: https://git-scm.com/download/win
+3. Click the download link (automatically starts downloading)
+4. A file named "Git-2.xx.x-64-bit.exe" will download (~50MB)
+5. Wait for download to complete
+
+STEP 2: RUN THE INSTALLER
+=========================
+1. Go to your Downloads folder
+2. Find "Git-2.xx.x-64-bit.exe"
+3. Double-click it
+4. If Windows asks "Allow this app?", click YES
+
+STEP 3: INSTALLATION WIZARD - JUST CLICK NEXT
+==============================================
+Screen 1: Click NEXT
+Screen 2: Click NEXT
+Screen 3: Click NEXT
+Screen 4: Click NEXT
+Screen 5: Choose "Notepad" then NEXT
+Screen 6: SELECT THIS ONE: "Git from the command line..." ⭐ IMPORTANT
+Screen 7: Click NEXT
+Screen 8: Click NEXT
+Screen 9: Click NEXT
+Screen 10: Click NEXT
+Screen 11: Click INSTALL
+
+Wait 1-2 minutes for installation...
+Then click FINISH
+
+STEP 4: RESTART POWERSHELL
+==========================
+- Close the current terminal
+- Open a NEW PowerShell window
+- Type: git --version
+- You should see: git version 2.x.x
+
+STEP 5: ONCE INSTALLED, RUN THESE COMMANDS:
+===========================================
+cd "e:\VS Code Projects\Website Nursery green\backend"
+git --version
+git config --global user.name "Your Name"
+git config --global user.email "your-email@gmail.com"
+
+Done! Git is ready to use.

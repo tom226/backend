@@ -1,0 +1,38 @@
+const products = [
+  // === Organic Fertilizers ===
+  { name: "Premium Vermicompost", description: "100% organic earthworm castings. Rich in NPK, humic acid & beneficial microbes. Ideal for all indoor/outdoor plants.", price: 299, category: "Fertilizers", stock: 150, sku: "FERT-001", image: "/Images/products/vermicompost.jpg", rating: 4.7, tags: ["organic", "fertilizer", "all-purpose"] },
+  { name: "Neem Cake Powder", description: "Cold-pressed neem seed cake. Natural pest deterrent + slow-release nitrogen fertilizer. 1kg pack.", price: 199, category: "Fertilizers", stock: 200, sku: "FERT-002", image: "/Images/products/neem-cake.jpg", rating: 4.5, tags: ["organic", "fertilizer", "pest-control"] },
+  { name: "Bone Meal Fertilizer", description: "Steamed bone meal for phosphorus-hungry plants. Promotes root growth & flowering. 500g.", price: 179, category: "Fertilizers", stock: 120, sku: "FERT-003", image: "/Images/products/bone-meal.jpg", rating: 4.3, tags: ["organic", "fertilizer", "flowering"] },
+  { name: "Mustard Cake Powder", description: "Traditional Indian organic fertilizer. High nitrogen content for leafy growth. 1kg.", price: 149, category: "Fertilizers", stock: 180, sku: "FERT-004", image: "/Images/products/mustard-cake.jpg", rating: 4.4, tags: ["organic", "fertilizer", "nitrogen"] },
+  { name: "Seaweed Extract Liquid", description: "Concentrated seaweed bio-stimulant. Boosts root development & stress tolerance. 500ml.", price: 349, category: "Fertilizers", stock: 80, sku: "FERT-005", image: "/Images/products/seaweed.jpg", rating: 4.6, tags: ["organic", "liquid", "bio-stimulant"] },
+
+  // === Plant Sprays ===
+  { name: "Neem Oil Spray (500ml)", description: "Cold-pressed neem oil ready-to-use spray. Controls aphids, mealybugs, whiteflies & fungal infections.", price: 249, category: "Plant Sprays", stock: 300, sku: "SPRAY-001", image: "/Images/products/neem-spray.jpg", rating: 4.8, tags: ["organic", "spray", "pest-control"] },
+  { name: "Organic Fungicide Spray", description: "Copper-based organic fungicide. Treats powdery mildew, leaf spot, rust & blight. 250ml.", price: 199, category: "Plant Sprays", stock: 150, sku: "SPRAY-002", image: "/Images/products/fungicide.jpg", rating: 4.4, tags: ["organic", "spray", "fungicide"] },
+  { name: "Garlic + Chilli Pest Spray", description: "Homestyle Indian recipe pest repellent. Safe for edible plants. 300ml concentrate.", price: 179, category: "Plant Sprays", stock: 100, sku: "SPRAY-003", image: "/Images/products/garlic-spray.jpg", rating: 4.2, tags: ["organic", "spray", "natural"] },
+  { name: "Haldi (Turmeric) Root Paste", description: "Traditional antifungal paste for stem rot & root infections. 200g tub.", price: 129, category: "Plant Sprays", stock: 90, sku: "SPRAY-004", image: "/Images/products/haldi-paste.jpg", rating: 4.1, tags: ["organic", "paste", "antifungal"] },
+
+  // === Seeds ===
+  { name: "Tulsi (Holy Basil) Seeds", description: "Rama Tulsi variety. Aromatic medicinal herb. Easy to grow indoors. Pack of 100+ seeds.", price: 49, category: "Seeds", stock: 500, sku: "SEED-001", image: "/Images/products/tulsi-seeds.jpg", rating: 4.6, tags: ["seeds", "herb", "medicinal"] },
+  { name: "Bhindi (Okra) Seeds", description: "Pusa Sawani variety. High-yield summer vegetable. Sow Feb-Jun. Pack of 50 seeds.", price: 39, category: "Seeds", stock: 400, sku: "SEED-002", image: "/Images/products/bhindi-seeds.jpg", rating: 4.3, tags: ["seeds", "vegetable", "summer"] },
+  { name: "Marigold (Genda) Seeds", description: "African Marigold - bright orange. Natural pest repellent companion plant. 200+ seeds.", price: 29, category: "Seeds", stock: 600, sku: "SEED-003", image: "/Images/products/marigold-seeds.jpg", rating: 4.7, tags: ["seeds", "flower", "companion"] },
+  { name: "Coriander (Dhaniya) Seeds", description: "Slow-bolt variety for Indian climate. Microgreen or full plant. 100g pack.", price: 35, category: "Seeds", stock: 450, sku: "SEED-004", image: "/Images/products/coriander-seeds.jpg", rating: 4.5, tags: ["seeds", "herb", "kitchen-garden"] },
+  { name: "Tomato Cherry Seeds", description: "Sweet cherry tomato. Balcony/terrace friendly. Year-round sowing. 50 seeds.", price: 59, category: "Seeds", stock: 350, sku: "SEED-005", image: "/Images/products/cherry-tomato-seeds.jpg", rating: 4.4, tags: ["seeds", "vegetable", "balcony"] },
+
+  // === Pots & Planters ===
+  { name: "Terracotta Pot (8 inch)", description: "Hand-thrown Indian clay pot. Porous for healthy roots. Drainage hole included.", price: 149, category: "Pots & Planters", stock: 200, sku: "POT-001", image: "/Images/products/terracotta-8.jpg", rating: 4.5, tags: ["pot", "terracotta", "classic"] },
+  { name: "Ceramic Glazed Planter (6 inch)", description: "Handpainted Jaipur blue pottery style. With saucer. Indoor statement piece.", price: 399, category: "Pots & Planters", stock: 60, sku: "POT-002", image: "/Images/products/ceramic-blue.jpg", rating: 4.8, tags: ["pot", "ceramic", "decorative"] },
+  { name: "Hanging Macrame Planter", description: "Cotton rope macrame hanger. Fits 4-6 inch pots. Boho indoor garden essential.", price: 249, category: "Pots & Planters", stock: 100, sku: "POT-003", image: "/Images/products/macrame.jpg", rating: 4.6, tags: ["pot", "hanging", "indoor"] },
+  { name: "Self-Watering Planter (10 inch)", description: "Built-in water reservoir. Perfect for busy plant parents. ABS plastic, UV resistant.", price: 499, category: "Pots & Planters", stock: 75, sku: "POT-004", image: "/Images/products/self-watering.jpg", rating: 4.3, tags: ["pot", "self-watering", "modern"] },
+
+  // === Organic Food ===
+  { name: "Organic Toor Dal", description: "Farm-fresh unpolished toor dal. No pesticides, no chemicals. Rich in protein. 1kg.", price: 189, category: "Organic Food", stock: 250, sku: "FOOD-001", image: "/Images/products/toor-dal.jpg", rating: 4.7, tags: ["food", "organic", "dal"] },
+  { name: "Wild Forest Honey", description: "Raw unprocessed honey from Sundarbans. No sugar added. Glass jar 500g.", price: 449, category: "Organic Food", stock: 80, sku: "FOOD-002", image: "/Images/products/honey.jpg", rating: 4.9, tags: ["food", "organic", "honey"] },
+  { name: "Herbal Tulsi Green Tea", description: "Tulsi + green tea blend. Immunity booster. Hand-picked Assam leaves. 100 tea bags.", price: 299, category: "Organic Food", stock: 120, sku: "FOOD-003", image: "/Images/products/tulsi-tea.jpg", rating: 4.6, tags: ["food", "tea", "herbal"] },
+  { name: "Organic Haldi Powder", description: "Lakadong turmeric from Meghalaya. 7%+ curcumin. Lab-tested purity. 250g.", price: 199, category: "Organic Food", stock: 160, sku: "FOOD-004", image: "/Images/products/haldi-powder.jpg", rating: 4.8, tags: ["food", "spice", "turmeric"] },
+  { name: "Cold-Pressed Mustard Oil", description: "Kachi ghani mustard oil. Traditional extraction. 1 litre glass bottle.", price: 279, category: "Organic Food", stock: 100, sku: "FOOD-005", image: "/Images/products/mustard-oil.jpg", rating: 4.5, tags: ["food", "oil", "organic"] },
+  { name: "Organic Moong Dal", description: "Whole green moong. Sprouting grade. High protein, easy to digest. 1kg.", price: 169, category: "Organic Food", stock: 200, sku: "FOOD-006", image: "/Images/products/moong-dal.jpg", rating: 4.4, tags: ["food", "organic", "dal"] },
+  { name: "Kashmiri Red Chilli Powder", description: "Degi mirch - vibrant color, mild heat. Perfect for Indian curries. 200g.", price: 159, category: "Organic Food", stock: 140, sku: "FOOD-007", image: "/Images/products/chilli-powder.jpg", rating: 4.6, tags: ["food", "spice", "chilli"] },
+];
+
+module.exports = products;

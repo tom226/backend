@@ -1,0 +1,78 @@
+===== CUSTOMER RECORDS =====
+Customer_ID,First_Name,Last_Name,Email,Phone,State,City,Registration_Date,Total_Orders,Total_Spent,Last_Order_Date,Customer_Status,Notes
+C001,Arun,Kumar,arun.kumar@gmail.com,9876543210,Uttar Pradesh,Lucknow,2026-02-01,3,₹4500,2026-02-15,Active,Regular customer
+C002,Priya,Singh,priya.singh@yahoo.com,9123456789,Delhi,Delhi,2026-02-05,1,₹1200,2026-02-10,Active,First time buyer
+C003,Rajesh,Patel,rajesh.patel@gmail.com,8765432109,Gujarat,Ahmedabad,2026-02-08,2,₹2800,2026-02-12,Active,Interested in bulk orders
+
+===== WEBSITE VISITORS =====
+Visitor_ID,Session_Date,Session_Time,Device_Type,Browser,Pages_Visited,Time_Spent_Minutes,Products_Viewed,Add_To_Cart_Count,Checkout_Initiated,Order_Completed,Referral_Source,Visitor_Status
+V001,2026-02-18,10:30 AM,Mobile,Chrome,5,8,3,1,0,0,Google Search,Bounce
+V002,2026-02-18,11:00 AM,Desktop,Firefox,12,15,8,2,1,1,Facebook Ad,Converted
+V003,2026-02-18,11:45 AM,Tablet,Safari,7,10,5,0,0,0,Direct,Browse Only
+
+===== CUSTOMER ORDERS =====
+Order_ID,Customer_ID,Order_Date,Order_Amount,Shipping_Charge,Total_Amount,Payment_Method,Order_Status,Delivery_Status,Delivery_Date,Items_Count,Product_Names,Feedback_Rating,Feedback_Comment
+ORD001,C001,2026-02-15,₹2500,₹0,₹2500,Razorpay,Completed,Delivered,2026-02-17,2,"Vermi Compost, Neem Oil",5,Excellent quality products
+ORD002,C002,2026-02-10,₹1200,₹100,₹1300,Razorpay,Completed,Delivered,2026-02-12,1,"Flower Mixture",4,Good packaging
+ORD003,C001,2026-02-12,₹3500,₹0,₹3500,Razorpay,Processing,Pending,2026-02-20,3,"Plant Booster Spray, Neem Cake Powder, Root Booster",0,Waiting delivery
+
+===== PRODUCT INVENTORY =====
+Product_ID,Product_Name,Category,Price,Stock_Quantity,Units_Sold,Total_Revenue,Rating,Availability,Supplier_Info,Last_Restocked_Date,Reorder_Level
+P001,Vermi Compost,Fertilizer,₹150,45,120,₹18000,4.85,In Stock,Local Farm Partnership,2026-02-10,20
+P002,Neem Cake Powder,Pest Control,₹150,32,95,₹14250,4.89,In Stock,Organic Supplier,2026-02-08,15
+P003,Flower Mixture,Fertilizer,₹130,28,110,₹14300,4.92,In Stock,Bio Supplier,2026-02-12,10
+P004,All in One Mixture,Multipurpose,₹130,40,85,₹11050,4.76,In Stock,Local Farm,2026-02-11,15
+P005,Plant Booster Spray,Spray,₹230,18,65,₹14950,4.88,Low Stock,Agro Company,2026-02-05,25
+
+===== PAYMENT TRANSACTIONS =====
+Transaction_ID,Order_ID,Customer_ID,Transaction_Date,Amount,Currency,Payment_Gateway,Payment_Status,Payment_Method,Razorpay_ID,Failure_Reason,Retry_Count,Receipt_URL
+TXN001,ORD001,C001,2026-02-15,₹2500,INR,Razorpay,Success,Card,razorpay_12345,N/A,0,receipt_url_1
+TXN002,ORD002,C002,2026-02-10,₹1300,INR,Razorpay,Success,UPI,razorpay_12346,N/A,0,receipt_url_2
+TXN003,ORD003,C001,2026-02-12,₹3500,INR,Razorpay,Success,Net Banking,razorpay_12347,N/A,0,receipt_url_3
+TXN004,ORD004,C003,2026-02-16,₹1500,INR,Razorpay,Failed,Card,razorpay_12348,Insufficient Funds,1,N/A
+
+===== CHATBOT INTERACTIONS =====
+Chat_ID,Customer_ID,Chat_Date,Chat_Time,Chat_Duration_Minutes,Messages_Count,Intent_Type,Products_Inquired,Order_Placed,Chat_Topic,Sentiment,Resolution_Status,Escalated_To_Agent
+CH001,C001,2026-02-18,09:00 AM,3,6,Product Query,"Vermi Compost, Neem Oil",0,Product Information,Positive,Resolved,No
+CH002,C002,2026-02-18,10:15 AM,8,12,Order Status,N/A,0,Order Tracking,Neutral,Resolved,No
+CH003,C004,2026-02-18,11:30 AM,5,10,Ordering,Product Browsing,1,Direct Order,Positive,Resolved,No
+CH004,C005,2026-02-18,02:00 PM,2,4,Support,Return Query,0,Return/Refund,Negative,Pending,Yes
+
+===== CUSTOMER FEEDBACK & REVIEWS =====
+Review_ID,Customer_ID,Order_ID,Review_Date,Product_Name,Rating_1_5,Review_Title,Review_Text,Verified_Purchase,Helpful_Count,Unhelpful_Count,Response_From_Admin,Admin_Response_Date
+REV001,C001,ORD001,2026-02-17,Vermi Compost,5,Excellent Fertilizer,Great quality for my plants,Yes,12,0,"Thank you! We appreciate your feedback",2026-02-17
+REV002,C002,ORD002,2026-02-12,Flower Mixture,4,Good but Expensive,Quality is good but could be cheaper,Yes,5,1,"We'll consider pricing. Thank you!",2026-02-13
+REV003,C001,ORD001,2026-02-17,Neem Oil,5,Works Great,Plant pests are gone,Yes,8,0,"Glad it helped your plants!",2026-02-17
+
+===== NEWSLETTER SUBSCRIBERS =====
+Subscriber_ID,Email,Subscription_Date,Source,Subscription_Status,Last_Email_Sent,Email_Open_Count,Email_Click_Count,Unsubscribe_Date,Interests
+SUB001,arun.kumar@gmail.com,2026-02-01,Website,Active,2026-02-18,7,3,N/A,Organic Fertilizers
+SUB002,priya.singh@yahoo.com,2026-02-05,Chat Inquiry,Active,2026-02-18,2,0,N/A,Pest Control
+SUB003,visitor1@gmail.com,2026-02-16,Newsletter Form,Inactive,2026-02-18,1,0,2026-02-17,All Products
+SUB004,bulk.buyer@business.com,2026-02-10,Direct Signup,Active,2026-02-18,5,2,N/A,Bulk Orders
+
+===== MARKETING CAMPAIGNS =====
+Campaign_ID,Campaign_Name,Campaign_Type,Start_Date,End_Date,Budget,Clicks,Impressions,Conversions,Conversion_Rate,Cost_Per_Click,ROI_Percentage,Status
+CAMP001,Valentine's Day Sale,Email,2026-02-10,2026-02-15,₹0,0,500,25,5.00%,₹0,N/A,Completed
+CAMP002,Facebook Organic Feed,Social Media,2026-02-01,2026-02-28,₹2000,150,5000,12,8.00%,₹13.33,150%,Active
+CAMP003,Google Search Ads,PPC,2026-02-15,2026-02-28,₹5000,320,8000,45,14.06%,₹15.63,280%,Active
+CAMP004,Referral Program,Organic,2026-02-01,2026-12-31,₹0,0,0,18,N/A,₹0,N/A,Active
+
+===== SUPPORT TICKETS =====
+Ticket_ID,Customer_ID,Ticket_Date,Issue_Category,Issue_Description,Priority,Status,Assigned_To,Resolution_Date,Resolution_Notes,Satisfaction_Rating,Resolution_Time_Hours
+TKT001,C001,2026-02-16,Delivery,Delayed Delivery,Medium,Resolved,Support Team,2026-02-17,Expedited shipping provided,5,24
+TKT002,C002,2026-02-17,Product Quality,Damaged Items,High,Resolved,Warehouse,2026-02-17,Full refund + replacement,4,4
+TKT003,C003,2026-02-18,Billing,Duplicate Charge,Medium,Open,Finance,N/A,Under Investigation,N/A,24
+TKT004,C004,2026-02-18,Technical,Website Error,Low,Resolved,Tech Support,2026-02-18,Cache cleared,4,1
+
+===== WEBSITE ANALYTICS =====
+Date,Total_Visitors,Unique_Visitors,Page_Views,Sessions,Bounce_Rate_Percent,Avg_Session_Duration_Minutes,Conversion_Rate_Percent,Traffic_Source_Organic,Traffic_Source_Paid,Traffic_Source_Direct,Traffic_Source_Referral,Total_Revenue,Orders_Count
+2026-02-18,145,120,425,135,42%,4.5,8.9%,35,65,20,25,₹8500,5
+2026-02-17,128,105,380,110,45%,4.2,7.2%,30,70,15,13,₹6200,3
+2026-02-16,156,130,510,145,38%,5.1,9.5%,40,60,25,31,₹9800,6
+2026-02-15,92,78,280,85,48%,3.8,6.1%,25,55,12,8,₹4500,2
+
+===== MONTHLY PERFORMANCE SUMMARY =====
+Month,Total_Customers,New_Customers,Total_Orders,Total_Revenue,Avg_Order_Value,Customer_Retention_Percent,Top_Product,Best_Performing_Day,Issues_Reported,Customer_Satisfaction_Percent
+2026-02,8,6,12,₹32000,₹2666,75%,Vermi Compost,2026-02-18,3,92%
+2026-01,4,4,5,₹12000,₹2400,50%,Neem Oil,2026-01-28,1,95%

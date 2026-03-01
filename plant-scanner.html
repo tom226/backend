@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Free Plant Disease Scanner by The Nursery Green. Upload a photo of your sick plant and get instant diagnosis with homemade Indian remedies using neem, haldi, and more.">
+    <meta name="keywords" content="plant disease scanner, plant disease identifier, plant problem diagnosis, homemade plant remedy India, neem spray for plants, organic pest control India">
+    <title>Plant Disease Scanner — Free Diagnosis & Desi Remedies | The Nursery Green</title>
+    <link rel="canonical" href="https://thenurserygreen.com/plant-scanner.html">
+    <link rel="icon" href="Images/logo.png" type="image/png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css?v=20260225b">
+    <link rel="stylesheet" href="scanner.css?v=20260225b">
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Plant Disease Scanner",
+        "description": "Upload a photo of your plant and get instant disease diagnosis with homemade Indian remedies",
+        "url": "https://thenurserygreen.com/plant-scanner.html",
+        "applicationCategory": "UtilityApplication",
+        "operatingSystem": "Web Browser",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "INR" },
+        "provider": {
+            "@type": "Organization",
+            "name": "The Nursery Green",
+            "url": "https://thenurserygreen.com"
+        }
+    }
+    </script>
+</head>
+<body>
+    <!-- Top Notification Bar -->
+    <div class="notification-bar">
+        <p>🌿 Free Plant Disease Scanner — Upload a photo, get diagnosis + desi home remedies!</p>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo-section">
+                <a href="index.html" style="display:flex;align-items:center;gap:10px;text-decoration:none;">
+                    <img src="Images/logo.png" alt="The Nursery Green Logo" class="logo-img">
+                    <div>
+                        <div class="logo">The Nursery Green</div>
+                        <p class="tagline">Premium Plant Care & Fertilizers</p>
+                    </div>
+                </a>
+            </div>
+            <div class="nav-icons">
+                <a href="index.html" class="scanner-nav-link">← Back to Shop</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Scanner Hero -->
+    <section class="scanner-hero">
+        <div class="scanner-hero-content">
+            <p class="eyebrow">🔬 AI-Powered Plant Doctor</p>
+            <h1>Scan Your Plant,<br><span class="green-text">Get Desi Remedies</span></h1>
+            <p class="scanner-subtitle">Upload a photo of your sick plant. Our AI identifies the disease and suggests <strong>homemade Indian remedies</strong> using neem, haldi, garlic, and more — plus matching products from our store.</p>
+            <div class="scanner-stats">
+                <div class="stat-pill"><span class="stat-num">50+</span><span class="stat-label">Diseases</span></div>
+                <div class="stat-pill"><span class="stat-num">100+</span><span class="stat-label">Desi Remedies</span></div>
+                <div class="stat-pill"><span class="stat-num">100%</span><span class="stat-label">Free</span></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Scanner Main -->
+    <section class="scanner-main">
+        <div class="scanner-container">
+            <!-- Access Bar -->
+            <div class="access-bar" id="accessBar" style="display:none;">
+                <div>
+                    <p class="access-welcome">Welcome, <span id="userNameLabel">Plant Parent</span></p>
+                    <p class="access-contact">Account: <span id="userContactLabel">-</span></p>
+                </div>
+                <button class="btn-scan switch" id="switchAccountBtn">Switch account</button>
+            </div>
+
+            <!-- Access Gate -->
+            <div class="gate-overlay" id="gateOverlay">
+                <div class="gate-card">
+                    <p class="gate-kicker">🔒 Login required</p>
+                    <h3>Use your Nursery Green account</h3>
+                    <p class="gate-desc">Sign in once to scan plants, buy products, and view your dashboard with the same credentials.</p>
+                    <ul class="gate-guidelines">
+                        <li>Use your account from dashboard/orders for seamless access.</li>
+                        <li>Keep using real plant photos; spam/abuse leads to blocking.</li>
+                        <li>We may send plant care tips/offers to your account email/phone.</li>
+                    </ul>
+                    <div class="gate-actions">
+                        <a class="btn-scan analyze" id="loginRedirect" href="login.html?redirect=plant-scanner.html">Login / Create account</a>
+                        <a class="btn-scan camera" href="dashboard.html">Go to dashboard</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upload Area -->
+            <div class="upload-zone" id="uploadZone">
+                <div class="upload-icon">📸</div>
+                <h3>Upload Plant Photo</h3>
+                <p>Drag & drop or click to upload a clear photo of the affected leaf/stem</p>
+                <div class="upload-tips">
+                    <span class="tip">💡 Close-up of affected area</span>
+                    <span class="tip">☀️ Good lighting</span>
+                    <span class="tip">🍃 Show both sides if possible</span>
+                </div>
+                <input type="file" id="plantImage" accept="image/*" capture="environment" hidden>
+                <div class="upload-buttons">
+                    <button class="btn-scan upload" onclick="document.getElementById('plantImage').click()">📁 Choose Photo</button>
+                    <button class="btn-scan camera" onclick="openCamera()">📷 Take Photo</button>
+                </div>
+            </div>
+
+            <!-- Preview -->
+            <div class="preview-zone" id="previewZone" style="display:none;">
+                <div class="preview-img-wrap">
+                    <img id="previewImg" src="" alt="Plant preview">
+                    <button class="change-photo" onclick="resetScanner()">✕ Change Photo</button>
+                </div>
+                <button class="btn-scan analyze" id="analyzeBtn" onclick="analyzePlant()">🔬 Analyze Plant</button>
+            </div>
+
+            <!-- Loading -->
+            <div class="scan-loading" id="scanLoading" style="display:none;">
+                <div class="loader-ring"></div>
+                <h3>Analyzing your plant...</h3>
+                <p>Our AI is examining the leaf patterns, color changes, and symptoms</p>
+                <div class="loading-steps">
+                    <span class="lstep active" id="ls1">🔍 Scanning image</span>
+                    <span class="lstep" id="ls2">🧬 Detecting patterns</span>
+                    <span class="lstep" id="ls3">🌿 Matching diseases</span>
+                    <span class="lstep" id="ls4">🏠 Finding remedies</span>
+                    <span class="lstep" id="ls5">⚡ Reading plant energy</span>
+                </div>
+            </div>
+
+            <!-- Results -->
+            <div class="scan-results" id="scanResults" style="display:none;">
+                <div class="result-header">
+                    <div class="result-status" id="resultStatus">
+                        <!-- Filled by JS -->
+                    </div>
+                </div>
+
+                <!-- Disease Card -->
+                <div class="disease-card" id="diseaseCard">
+                    <div class="disease-top">
+                        <div class="severity-badge" id="severityBadge">Moderate</div>
+                        <h2 id="diseaseName">Loading...</h2>
+                        <p id="diseaseDesc" class="disease-desc">...</p>
+                    </div>
+
+                    <!-- Symptoms -->
+                    <div class="info-block">
+                        <h4>🔍 Symptoms Detected</h4>
+                        <ul id="symptomsList" class="symptom-list"></ul>
+                    </div>
+
+                    <!-- Cause -->
+                    <div class="info-block">
+                        <h4>🦠 Likely Cause</h4>
+                        <p id="diseaseCause"></p>
+                    </div>
+                </div>
+
+                <!-- Remedies Card -->
+                <div class="remedies-card">
+                    <h3>🏠 Homemade Desi Remedies</h3>
+                    <p class="remedies-intro">Try these proven Indian home remedies using easily available ingredients:</p>
+                    <div id="remediesList" class="remedies-grid"></div>
+                </div>
+
+                <!-- Prevention Tips -->
+                <div class="prevention-card">
+                    <h3>🛡️ Prevention Tips</h3>
+                    <ul id="preventionList" class="prevention-list"></ul>
+                </div>
+
+                <!-- Soil & Feeding Plan -->
+                <div class="soil-card" id="soilCard">
+                    <div class="soil-card-top">
+                        <h3>🌱 Soil & Feeding Plan</h3>
+                        <span id="envBadge" class="env-badge">Analyzing photo...</span>
+                    </div>
+                    <p id="soilIntro" class="soil-intro">We will tailor soil mix and nutrition once the scan completes.</p>
+                    <ul id="soilList" class="soil-list"></ul>
+                </div>
+
+                <!-- Plant Energy Card -->
+                <div class="energy-card" id="energyCard" style="display:none;">
+                    <div class="energy-card-top">
+                        <h3>⚡ Plant Energy Analysis</h3>
+                        <span id="energyBadge" class="energy-badge positive">✨ Positive Energy</span>
+                    </div>
+                    <div id="energyPlantName" class="energy-plant-name" style="display:none;"></div>
+                    <div class="energy-env-row">
+                        <span id="energyEnvTag" class="energy-env-tag indoor">🏠 Indoor · 75% confidence</span>
+                        <span id="energySourceBadge" class="energy-source-badge verified" style="font-size:0.72rem;margin-left:8px;"></span>
+                    </div>
+
+                    <!-- Vitality Meter -->
+                    <div class="vitality-meter-wrap">
+                        <div class="vitality-meter-header">
+                            <span class="vitality-meter-title">Plant Vitality Score</span>
+                            <span id="vitalityLabel" class="vitality-meter-value">—/100</span>
+                        </div>
+                        <div class="vitality-meter-track">
+                            <div class="vitality-meter-fill" id="vitalityFill" style="width:0%"></div>
+                        </div>
+                        <div class="vitality-meter-legend">
+                            <span>😟 Low</span><span>😐 Fair</span><span>😊 Good</span><span>🌟 Excellent</span>
+                        </div>
+                    </div>
+
+                    <!-- Energy Description (brief) -->
+                    <div class="energy-info-block">
+                        <h4>🔮 Energy Reading</h4>
+                        <p id="energyDesc">Analyzing plant energy...</p>
+                        <div id="energyDetailedWrap" style="display:none;">
+                            <button id="energyDetailedBtn" class="read-more-btn">📖 Read More about Energy</button>
+                            <div id="energyDetailedContent" class="read-more-content" style="display:none;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Vastu/Feng Shui (brief + expandable) -->
+                    <div class="energy-info-block vastu-block">
+                        <h4>🏛️ Vastu & Feng Shui Insight</h4>
+                        <p id="vastuAdvice">Loading Vastu guidance...</p>
+                        <div id="vastuDetailedWrap" style="display:none;">
+                            <button id="vastuDetailedBtn" class="read-more-btn">📖 Read More about Vastu</button>
+                            <div id="vastuDetailedContent" class="read-more-content" style="display:none;"></div>
+                        </div>
+                        <div id="vastuDosAndDonts" style="display:none;">
+                            <h5 class="dos-donts-title">✅ Do's & ❌ Don'ts</h5>
+                            <ul id="vastuDosList" class="vastu-dos-list"></ul>
+                        </div>
+                    </div>
+
+                    <!-- Quick Stats -->
+                    <div id="energyStats" class="energy-stats-row"></div>
+
+                    <!-- Health Benefits (brief + expandable) -->
+                    <div id="energyHealthWrap" class="energy-info-block health-block" style="display:none;">
+                        <h4>💚 Health Benefits</h4>
+                        <p id="healthSummaryText"></p>
+                        <div id="toxinsRemovedList" class="toxins-list" style="display:none;"></div>
+                        <button id="healthDetailedBtn" class="read-more-btn" style="display:none;">📖 Read More about Health Benefits</button>
+                        <div id="healthDetailedContent" class="read-more-content" style="display:none;"></div>
+                        <div style="display:none;">
+                            <h5>🌿 Medicinal Uses</h5>
+                            <ul id="medicinalUsesList" class="energy-tips-list"></ul>
+                        </div>
+                    </div>
+
+                    <!-- Placement Tips -->
+                    <div class="energy-info-block">
+                        <h4>📍 Placement & Energy Tips</h4>
+                        <ul id="energyTips" class="energy-tips-list"></ul>
+                    </div>
+
+                    <!-- Spiritual, Care & Healthy Indicators (collapsed by default) -->
+                    <button id="energyExtraBtn" class="read-more-btn" style="display:none;">📖 Show Spiritual, Care & Health Indicators</button>
+                    <div id="energyExtraWrap" style="display:none;">
+                        <div id="energyExtraContent" class="extra-details-content"></div>
+                    </div>
+
+                    <!-- References -->
+                    <div id="energyReferences" class="energy-references" style="display:none;"></div>
+                </div>
+
+                <!-- Product Recommendations -->
+                <div class="products-card" id="productsCard">
+                    <h3>🛒 Recommended Products</h3>
+                    <p class="products-intro">These products from our store can help treat and prevent recurrence:</p>
+                    <div id="recommendedProducts" class="rec-products-grid"></div>
+                    <a href="index.html#organic" class="btn-scan shop-link">View All Products →</a>
+                </div>
+
+                <!-- Share & Rescan -->
+                <div class="result-actions">
+                    <button class="btn-scan rescan" onclick="resetScanner()">🔄 Scan Another Plant</button>
+                    <button class="btn-scan share" onclick="shareResult()">📤 Share on WhatsApp</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Common Diseases Section -->
+    <section class="common-diseases">
+        <h2>Common Plant Diseases in India</h2>
+        <p class="cd-subtitle">Quick reference guide — tap any card to learn desi remedies</p>
+        <div class="disease-grid">
+            <div class="cd-card" onclick="showQuickRemedy('powdery-mildew')">
+                <span class="cd-icon">🍄</span>
+                <h4>Powdery Mildew</h4>
+                <p>White powdery coating on leaves</p>
+                <span class="cd-tag fungal">Fungal</span>
+            </div>
+            <div class="cd-card" onclick="showQuickRemedy('leaf-spot')">
+                <span class="cd-icon">🟤</span>
+                <h4>Leaf Spot</h4>
+                <p>Brown/black spots on leaves</p>
+                <span class="cd-tag fungal">Fungal</span>
+            </div>
+            <div class="cd-card" onclick="showQuickRemedy('aphids')">
+                <span class="cd-icon">🐛</span>
+                <h4>Aphids</h4>
+                <p>Tiny green/black insects on stems</p>
+                <span class="cd-tag pest">Pest</span>
+            </div>
+            <div class="cd-card" onclick="showQuickRemedy('root-rot')">
+                <span class="cd-icon">🪵</span>
+                <h4>Root Rot</h4>
+                <p>Mushy dark roots, wilting leaves</p>
+                <span class="cd-tag fungal">Fungal</span>
+            </div>
+            <div class="cd-card" onclick="showQuickRemedy('mealybugs')">
+                <span class="cd-icon">🐞</span>
+                <h4>Mealybugs</h4>
+                <p>White cottony clusters on stems</p>
+                <span class="cd-tag pest">Pest</span>
+            </div>
+            <div class="cd-card" onclick="showQuickRemedy('yellow-leaves')">
+                <span class="cd-icon">🍂</span>
+                <h4>Yellowing Leaves</h4>
+                <p>Nutrient deficiency or overwatering</p>
+                <span class="cd-tag deficiency">Deficiency</span>
+            </div>
+            <div class="cd-card" onclick="showQuickRemedy('whitefly')">
+                <span class="cd-icon">🦟</span>
+                <h4>Whitefly</h4>
+                <p>Tiny white flies under leaves</p>
+                <span class="cd-tag pest">Pest</span>
+            </div>
+            <div class="cd-card" onclick="showQuickRemedy('rust')">
+                <span class="cd-icon">🟠</span>
+                <h4>Rust Disease</h4>
+                <p>Orange/rust pustules on leaves</p>
+                <span class="cd-tag fungal">Fungal</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quick Remedy Modal -->
+    <div class="qr-modal-overlay" id="quickRemedyModal">
+        <div class="qr-modal">
+            <button class="qr-close" onclick="closeQuickRemedy()">✕</button>
+            <div id="quickRemedyContent"></div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>The Nursery Green</h4>
+                <p style="font-size:13px;color:#5c6f68;">India's trusted organic plant care brand. Free disease scanning with homemade remedies.</p>
+            </div>
+            <div class="footer-section">
+                <h4>Quick Links</h4>
+                <ul>
+                    <li><a href="index.html">Shop Products</a></li>
+                    <li><a href="contact.html">Contact Us</a></li>
+                    <li><a href="dashboard.html">My Orders</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Get in Touch</h4>
+                <p>📞 +91-8887608236</p>
+                <p>📧 thenurserygreen@gmail.com</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2026 The Nursery Green. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="shared-auth.js?v=20260225c"></script>
+    <script src="scanner.js?v=20260227b"></script>
+</body>
+</html>

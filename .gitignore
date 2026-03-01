@@ -1,0 +1,28 @@
+node_modules/
+.env
+.DS_Store
+*.log
+npm-debug.log
+.idea/
+.vscode/
+dist/
+build/
+*.exe
+*.tar.gz
+OPTIMIZE-IMAGES.bat
+Optimize-Images.ps1
+backend/
+
+# NurseryGreenApp generated artifacts
+NurseryGreenApp/.expo/
+NurseryGreenApp/dist-*/
+NurseryGreenApp/debug-bundle*.js
+NurseryGreenApp/android/app/debug.keystore
+NurseryGreenApp/android/app/build/
+NurseryGreenApp/android/.gradle/
+NurseryGreenApp/android/app/.cxx/
+
+# Local secret vaults (never commit)
+.credentials.local.md
+.credentials.local.json
+.secrets/

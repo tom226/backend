@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Join the Plant Parents Community by The Nursery Green. Share your plant journey, get expert advice, show off your garden, and connect with fellow plant lovers across India.">
+    <meta name="keywords" content="plant community India, plant parents, gardening community, plant care tips, indoor plants India, plant lovers forum, garden sharing">
+    <title>Plant Parents Community — Share, Learn & Grow Together | The Nursery Green</title>
+    <link rel="canonical" href="https://thenurserygreen.com/community.html">
+    <link rel="icon" href="Images/logo.png" type="image/png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css?v=20260225d">
+    <link rel="stylesheet" href="community.css?v=20260227a">
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        "name": "Plant Parents Community",
+        "description": "A community for plant lovers to share experiences, photos, and tips",
+        "url": "https://thenurserygreen.com/community.html",
+        "provider": {
+            "@type": "Organization",
+            "name": "The Nursery Green",
+            "url": "https://thenurserygreen.com"
+        }
+    }
+    </script>
+</head>
+<body>
+    <!-- Top Notification Bar -->
+    <div class="notification-bar">
+        <p>🌱 Plant Parents Community — Share your plant journey & learn from fellow growers!</p>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo-section">
+                <a href="index.html" style="display:flex;align-items:center;gap:10px;text-decoration:none;">
+                    <img src="Images/logo.png" alt="The Nursery Green Logo" class="logo-img">
+                    <div>
+                        <div class="logo">The Nursery Green</div>
+                        <p class="tagline">Premium Plant Care & Fertilizers</p>
+                    </div>
+                </a>
+            </div>
+            <div class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="index.html#care">Products</a>
+                <a href="plant-scanner.html">Plant Scanner</a>
+                <a href="community.html" class="active-nav">Community</a>
+                <a href="contact.html">Contact</a>
+            </div>
+            <div class="nav-actions">
+                <a href="index.html#care" class="btn-primary-sm">Shop Now</a>
+            </div>
+            <button class="mobile-toggle" id="mobileToggle" aria-label="Menu">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu -->
+    <div class="mobile-menu" id="mobileMenu">
+        <a href="index.html">🏠 Home</a>
+        <a href="index.html#care">🌿 Products</a>
+        <a href="plant-scanner.html">🔬 Plant Scanner</a>
+        <a href="community.html" class="active-mobile">👥 Community</a>
+        <a href="contact.html">📞 Contact</a>
+        <a href="index.html#care" class="btn-primary-sm" style="text-align:center;">Shop Now</a>
+    </div>
+
+    <!-- Community Hero -->
+    <section class="community-hero">
+        <div class="hero-content">
+            <span class="hero-badge">🌱 Plant Parents Community</span>
+            <h1>Grow Together, <span class="text-gradient">Learn Together</span></h1>
+            <p class="hero-desc">Join thousands of plant lovers across India. Share your garden wins, ask questions, swap tips, and celebrate every new leaf.</p>
+            <div class="hero-stats">
+                <div class="stat-pill"><span class="stat-num" id="memberCount">1,247</span> members</div>
+                <div class="stat-pill"><span class="stat-num" id="postCount">3,580</span> posts</div>
+                <div class="stat-pill"><span class="stat-num">128</span> cities</div>
+            </div>
+            <div class="auth-banner" id="authBanner">
+                <div>
+                    <strong>Sign in to your Nursery Green account</strong>
+                    <p style="margin:0.2rem 0 0;font-size:0.92rem;opacity:0.85;">One login for shopping, scanner, and community.</p>
+                </div>
+                <a class="btn-community" href="login.html?redirect=community.html">Login</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Profile Setup Modal -->
+    <div class="modal-overlay" id="profileModal">
+        <div class="modal-card">
+            <button class="modal-close" id="closeProfileModal" aria-label="Close profile setup">✕</button>
+            <h2>👋 Welcome, Plant Parent!</h2>
+            <p>Set up your profile to start sharing with the community.</p>
+            <form id="profileForm">
+                <div class="form-group">
+                    <label>Your Name</label>
+                    <input type="text" id="profileName" placeholder="e.g. Priya Sharma" required maxlength="30">
+                </div>
+                <div class="form-group">
+                    <label>City</label>
+                    <input type="text" id="profileCity" placeholder="e.g. Lucknow, Mumbai" maxlength="25">
+                </div>
+                <div class="form-group">
+                    <label>Pick Your Avatar</label>
+                    <div class="avatar-grid" id="avatarGrid">
+                        <button type="button" class="avatar-btn selected" data-avatar="🌱">🌱</button>
+                        <button type="button" class="avatar-btn" data-avatar="🌿">🌿</button>
+                        <button type="button" class="avatar-btn" data-avatar="🌻">🌻</button>
+                        <button type="button" class="avatar-btn" data-avatar="🌵">🌵</button>
+                        <button type="button" class="avatar-btn" data-avatar="🌺">🌺</button>
+                        <button type="button" class="avatar-btn" data-avatar="🍃">🍃</button>
+                        <button type="button" class="avatar-btn" data-avatar="🌸">🌸</button>
+                        <button type="button" class="avatar-btn" data-avatar="🪴">🪴</button>
+                    </div>
+                </div>
+                <button type="submit" class="btn-community">Join the Community 🌿</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Community Layout -->
+    <main class="community-main">
+        <!-- Left Sidebar -->
+        <aside class="sidebar sidebar-left">
+            <!-- User Card -->
+            <div class="sidebar-card user-card" id="userCard" style="display:none;">
+                <div class="user-avatar-big" id="userAvatarBig">🌱</div>
+                <h3 id="userName">Plant Lover</h3>
+                <p class="user-city" id="userCity">India</p>
+                <div class="user-stats-row">
+                    <div><strong id="myPostCount">0</strong><span>Posts</span></div>
+                    <div><strong id="myLikeCount">0</strong><span>Likes</span></div>
+                </div>
+                <button class="btn-edit-profile" id="editProfileBtn">Edit Profile</button>
+            </div>
+
+            <!-- Categories -->
+            <div class="sidebar-card">
+                <h3>📂 Categories</h3>
+                <div class="category-pills" id="categoryFilters">
+                    <button class="cat-pill active" data-cat="all">All Posts</button>
+                    <button class="cat-pill" data-cat="show-tell">🏆 Show & Tell</button>
+                    <button class="cat-pill" data-cat="help">🆘 Help Needed</button>
+                    <button class="cat-pill" data-cat="tips">💡 Tips & Tricks</button>
+                    <button class="cat-pill" data-cat="diy">🔧 DIY & Hacks</button>
+                    <button class="cat-pill" data-cat="balcony">🏠 Balcony Garden</button>
+                    <button class="cat-pill" data-cat="terrace">🌇 Terrace Garden</button>
+                    <button class="cat-pill" data-cat="indoor">🪴 Indoor Plants</button>
+                    <button class="cat-pill" data-cat="organic">🌿 Organic Care</button>
+                </div>
+            </div>
+
+            <!-- Community Guidelines -->
+            <div class="sidebar-card guidelines-card">
+                <h3>📜 Community Guidelines</h3>
+                <ul>
+                    <li>🤝 Be kind & supportive</li>
+                    <li>📸 Share your own photos</li>
+                    <li>💬 Give constructive advice</li>
+                    <li>🚫 No spam or self-promotion</li>
+                    <li>🌱 Keep it plant-related</li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- Main Feed -->
+        <section class="feed-column">
+            <!-- Create Post -->
+            <div class="create-post-card" id="createPostCard">
+                <div class="create-post-header">
+                    <span class="create-avatar" id="createAvatar">🌱</span>
+                    <button class="create-trigger" id="createTrigger">Share your plant story...</button>
+                </div>
+                <div class="auth-guard" id="authGuard" style="display:none;">
+                    <div>
+                        <p class="auth-guard-title">Sign in to post</p>
+                        <p class="auth-guard-sub">Use the same Nursery Green login as shopping and scanner.</p>
+                    </div>
+                    <a class="btn-community" href="login.html?redirect=community.html">Login</a>
+                </div>
+                <div class="create-post-expanded" id="createPostExpanded" style="display:none;">
+                    <textarea id="postContent" placeholder="What's happening in your garden today? 🌿&#10;&#10;Share a tip, ask a question, or show off your plants!" maxlength="1000"></textarea>
+                    <div class="char-counter"><span id="charCount">0</span>/1000</div>
+                    
+                    <!-- Image Upload -->
+                    <div class="image-upload-zone" id="imageUploadZone">
+                        <input type="file" id="imageInput" accept="image/*" multiple style="display:none;" max="4">
+                        <button type="button" class="upload-btn" id="uploadBtn">📷 Add Photos (max 4)</button>
+                        <div class="image-preview-grid" id="imagePreviewGrid"></div>
+                    </div>
+
+                    <!-- Category Select -->
+                    <div class="post-options-row">
+                        <select id="postCategory">
+                            <option value="show-tell">🏆 Show & Tell</option>
+                            <option value="help">🆘 Help Needed</option>
+                            <option value="tips">💡 Tips & Tricks</option>
+                            <option value="diy">🔧 DIY & Hacks</option>
+                            <option value="balcony">🏠 Balcony Garden</option>
+                            <option value="terrace">🌇 Terrace Garden</option>
+                            <option value="indoor">🪴 Indoor Plants</option>
+                            <option value="organic">🌿 Organic Care</option>
+                        </select>
+                        <button class="btn-post" id="submitPost">Post 🌱</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Feed Filters -->
+            <div class="feed-toolbar">
+                <div class="feed-tabs">
+                    <button class="feed-tab active" data-sort="latest">🕐 Latest</button>
+                    <button class="feed-tab" data-sort="popular">🔥 Popular</button>
+                    <button class="feed-tab" data-sort="my-posts">📝 My Posts</button>
+                </div>
+                <span class="post-total" id="feedPostCount">0 posts</span>
+            </div>
+
+            <!-- Feed Posts -->
+            <div id="feedContainer">
+                <!-- Posts rendered by JS -->
+            </div>
+
+            <!-- Load More -->
+            <button class="btn-load-more" id="loadMoreBtn" style="display:none;">Load More Posts ↓</button>
+
+            <!-- Empty State -->
+            <div class="empty-feed" id="emptyFeed" style="display:none;">
+                <div class="empty-icon">🌿</div>
+                <h3>No posts yet</h3>
+                <p>Be the first to share something with the community!</p>
+            </div>
+        </section>
+
+        <!-- Right Sidebar -->
+        <aside class="sidebar sidebar-right">
+            <!-- Trending Topics -->
+            <div class="sidebar-card">
+                <h3>🔥 Trending Topics</h3>
+                <div class="trending-list">
+                    <a href="#" class="trending-item" data-topic="monsoon-care">
+                        <span class="trend-tag">#MonsoonCare</span>
+                        <span class="trend-count">142 posts</span>
+                    </a>
+                    <a href="#" class="trending-item" data-topic="balcony-garden">
+                        <span class="trend-tag">#BalconyGarden</span>
+                        <span class="trend-count">98 posts</span>
+                    </a>
+                    <a href="#" class="trending-item" data-topic="neem-hacks">
+                        <span class="trend-tag">#NeemHacks</span>
+                        <span class="trend-count">87 posts</span>
+                    </a>
+                    <a href="#" class="trending-item" data-topic="first-bloom">
+                        <span class="trend-tag">#FirstBloom</span>
+                        <span class="trend-count">76 posts</span>
+                    </a>
+                    <a href="#" class="trending-item" data-topic="desi-jugaad">
+                        <span class="trend-tag">#DesiJugaad</span>
+                        <span class="trend-count">65 posts</span>
+                    </a>
+                    <a href="#" class="trending-item" data-topic="organic-only">
+                        <span class="trend-tag">#OrganicOnly</span>
+                        <span class="trend-count">54 posts</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Top Contributors -->
+            <div class="sidebar-card">
+                <h3>🏅 Top Plant Parents</h3>
+                <div class="leaderboard">
+                    <div class="leader-row">
+                        <span class="leader-rank">🥇</span>
+                        <span class="leader-avatar">🌻</span>
+                        <div class="leader-info">
+                            <span class="leader-name">Sunita Devi</span>
+                            <span class="leader-detail">Lucknow · 89 posts</span>
+                        </div>
+                    </div>
+                    <div class="leader-row">
+                        <span class="leader-rank">🥈</span>
+                        <span class="leader-avatar">🌵</span>
+                        <div class="leader-info">
+                            <span class="leader-name">Rahul Verma</span>
+                            <span class="leader-detail">Delhi · 67 posts</span>
+                        </div>
+                    </div>
+                    <div class="leader-row">
+                        <span class="leader-rank">🥉</span>
+                        <span class="leader-avatar">🌺</span>
+                        <div class="leader-info">
+                            <span class="leader-name">Meera Patel</span>
+                            <span class="leader-detail">Ahmedabad · 54 posts</span>
+                        </div>
+                    </div>
+                    <div class="leader-row">
+                        <span class="leader-rank">4</span>
+                        <span class="leader-avatar">🌱</span>
+                        <div class="leader-info">
+                            <span class="leader-name">Arjun Nair</span>
+                            <span class="leader-detail">Bangalore · 43 posts</span>
+                        </div>
+                    </div>
+                    <div class="leader-row">
+                        <span class="leader-rank">5</span>
+                        <span class="leader-avatar">🍃</span>
+                        <div class="leader-info">
+                            <span class="leader-name">Neha Singh</span>
+                            <span class="leader-detail">Jaipur · 38 posts</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Weekly Challenge -->
+            <div class="sidebar-card challenge-card">
+                <div class="challenge-badge">🏆 WEEKLY CHALLENGE</div>
+                <h3>Show Us Your Winter Blooms!</h3>
+                <p>Share a photo of your best winter flower. Top 3 posts win 20% off coupons!</p>
+                <div class="challenge-timer">
+                    <span>⏰ Ends in</span>
+                    <strong id="challengeTimer">3d 14h</strong>
+                </div>
+                <button class="btn-challenge" onclick="document.getElementById('createTrigger').click();">Join Challenge →</button>
+            </div>
+
+            <!-- Quick Links -->
+            <div class="sidebar-card">
+                <h3>🔗 Quick Links</h3>
+                <div class="quick-links">
+                    <a href="plant-scanner.html">🔬 Plant Disease Scanner</a>
+                    <a href="index.html#care">🛒 Shop Plant Care</a>
+                    <a href="contact.html">📞 Contact Us</a>
+                    <a href="index.html#blog">📖 Care Guides</a>
+                </div>
+            </div>
+        </aside>
+    </main>
+
+    <!-- Post Detail Modal -->
+    <div class="modal-overlay" id="postModal" style="display:none;">
+        <div class="modal-card modal-post-detail">
+            <button class="modal-close" id="closePostModal">✕</button>
+            <div id="postModalContent"></div>
+        </div>
+    </div>
+
+    <!-- Share Modal -->
+    <div class="modal-overlay" id="shareModal" style="display:none;">
+        <div class="modal-card modal-share">
+            <h3>📤 Share this post</h3>
+            <div class="share-options">
+                <button class="share-btn whatsapp" id="shareWhatsApp">💬 WhatsApp</button>
+                <button class="share-btn copy-link" id="shareCopyLink">🔗 Copy Link</button>
+                <button class="share-btn twitter" id="shareTwitter">🐦 Twitter</button>
+            </div>
+            <button class="btn-cancel" id="closeShareModal">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="community-footer">
+        <div class="footer-inner">
+            <div class="footer-brand">
+                <img src="Images/logo.png" alt="The Nursery Green" style="height:40px;">
+                <span>The Nursery Green</span>
+            </div>
+            <div class="footer-links-row">
+                <a href="index.html">Home</a>
+                <a href="index.html#care">Products</a>
+                <a href="plant-scanner.html">Plant Scanner</a>
+                <a href="contact.html">Contact</a>
+            </div>
+            <div class="footer-contact">
+                <p>📞 +91-8887608236</p>
+                <p>📧 thenurserygreen@gmail.com</p>
+            </div>
+            <p class="footer-copy">© 2026 The Nursery Green. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="shared-auth.js?v=20260225d"></script>
+    <script src="community.js?v=20260225d"></script>
+
+<script src="/chatbot-widget.js"></script>
+</body>
+</html>

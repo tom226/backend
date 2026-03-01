@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Profile | The Nursery Green</title>
+    <link rel="stylesheet" href="styles.css?v=20260225b">
+    <style>
+        body { font-family: 'Manrope', sans-serif; background: #f5f7f2; margin:0; }
+        .profile-shell { max-width: 900px; margin: 40px auto; background: #fff; border:1px solid #dfe5d9; border-radius: 16px; box-shadow: 0 12px 35px rgba(12,53,36,0.08); padding: 28px; }
+        .profile-header { display:flex; align-items:center; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+        .profile-main { display:flex; gap:16px; align-items:center; }
+        .avatar { width:64px; height:64px; border-radius:16px; display:flex; align-items:center; justify-content:center; background: linear-gradient(135deg,#1c6b44,#2dc653); color:#fff; font-size:28px; font-weight:800; }
+        .meta h1 { margin:0; font-size:1.5rem; color:#1f2b2a; }
+        .meta p { margin:4px 0; color:#5c6f68; font-size:0.95rem; }
+        .pill { display:inline-flex; align-items:center; gap:6px; background:#f0f7ed; color:#1c6b44; padding:6px 10px; border-radius:999px; font-weight:700; font-size:0.85rem; border:1px solid #dfe5d9; }
+        .actions { display:flex; flex-wrap:wrap; gap:12px; margin-top:6px; }
+        .btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:12px 18px; border-radius:12px; border:1px solid transparent; cursor:pointer; font-weight:700; text-decoration:none; }
+        .btn-primary { background: linear-gradient(120deg,#1c6b44,#1f8a55); color:#fff; box-shadow:0 6px 18px rgba(28,107,68,0.25); }
+        .btn-ghost { background:#fff; color:#1c6b44; border:1px solid #dfe5d9; }
+        .grid { display:grid; grid-template-columns: repeat(auto-fit,minmax(240px,1fr)); gap:14px; margin-top:18px; }
+        .card { border:1px solid #dfe5d9; border-radius:14px; padding:14px; background:#fff; }
+        .card h3 { margin:0 0 6px; font-size:1rem; color:#1f2b2a; }
+        .card p { margin:0; color:#5c6f68; font-size:0.92rem; line-height:1.5; }
+        .status { color:#1c6b44; font-weight:700; }
+        .error { color:#c62828; font-weight:700; margin-top:10px; }
+        .logout { margin-top:18px; }
+    </style>
+</head>
+<body>
+    <div class="profile-shell" id="profileShell">
+        <div class="profile-header">
+            <div class="profile-main">
+                <div class="avatar" id="avatar">NG</div>
+                <div class="meta">
+                    <h1 id="name">Loading profile...</h1>
+                    <p id="contact"></p>
+                    <div class="pill" id="statusPill">Authenticating...</div>
+                </div>
+            </div>
+            <div class="actions">
+                <a class="btn btn-primary" href="dashboard.html">Go to Dashboard</a>
+                <a class="btn btn-ghost" href="plant-scanner.html">Use Plant Scanner</a>
+                <a class="btn btn-ghost" href="index.html#organic">Shop Products</a>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h3>Account</h3>
+                <p><strong>Email/Phone:</strong> <span id="accountContact">-</span></p>
+                <p><strong>Member Since:</strong> <span id="memberSince">-</span></p>
+            </div>
+            <div class="card">
+                <h3>Orders & Dashboard</h3>
+                <p>Access your orders, downloads, and shipping details in Dashboard.</p>
+            </div>
+            <div class="card">
+                <h3>Scanner Access</h3>
+                <p>Use the same login for Plant Scanner and community features.</p>
+            </div>
+        </div>
+
+        <div class="logout">
+            <button class="btn btn-ghost" id="logoutBtn">Logout</button>
+            <div class="error" id="errorBox" style="display:none;"></div>
+        </div>
+    </div>
+
+    <script>
+        const BACKEND_URL = 'https://backend-production-f128.up.railway.app';
+        let authToken = localStorage.getItem('authToken');
+
+        function setStatus(text, ok=true) {
+            const pill = document.getElementById('statusPill');
+            pill.textContent = text;
+            pill.style.color = ok ? '#1c6b44' : '#c62828';
+            pill.style.background = ok ? '#f0f7ed' : '#fdecea';
+            pill.style.borderColor = ok ? '#dfe5d9' : '#f5c6cb';
+        }
+
+        function safeGet(param) {
+            const params = new URLSearchParams(window.location.search);
+            return params.get(param);
+        }
+
+        function cleanUrl() {
+            const url = new URL(window.location);
+            url.searchParams.delete('token');
+            url.searchParams.delete('user');
+            window.history.replaceState({}, document.title, url.pathname);
+        }
+
+        async function loadProfile() {
+            const urlToken = safeGet('token');
+            if (urlToken) {
+                localStorage.setItem('authToken', urlToken);
+                authToken = urlToken;
+                cleanUrl();
+            }
+
+            if (!authToken) {
+                setStatus('Not logged in', false);
+                document.getElementById('name').textContent = 'Please login to continue';
+                document.getElementById('contact').textContent = '';
+                return;
+            }
+
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/users/profile`, {
+                    headers: { Authorization: `Bearer ${authToken}` }
+                });
+                if (!res.ok) throw new Error('Profile fetch failed');
+                const data = await res.json();
+                const user = data.user || {};
+                const displayName = user.firstName || user.email || 'Plant Parent';
+                const contact = user.phone || user.email || 'Signed in';
+                const created = user.createdAt ? new Date(user.createdAt).toLocaleDateString() : '-';
+
+                document.getElementById('name').textContent = displayName;
+                document.getElementById('contact').textContent = contact;
+                document.getElementById('accountContact').textContent = contact;
+                document.getElementById('memberSince').textContent = created;
+                document.getElementById('avatar').textContent = (displayName || 'NG').slice(0,2).toUpperCase();
+                setStatus('Authenticated');
+            } catch (err) {
+                setStatus('Session expired - please login', false);
+                document.getElementById('errorBox').style.display = 'block';
+                document.getElementById('errorBox').textContent = 'Could not load profile. Please login again.';
+                localStorage.removeItem('authToken');
+            }
+        }
+
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userData');
+            setStatus('Logged out', false);
+            document.getElementById('name').textContent = 'Logged out';
+            document.getElementById('contact').textContent = '';
+            window.location.href = 'login.html';
+        });
+
+        loadProfile();
+    </script>
+</body>
+</html>

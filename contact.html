@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Us - The Nursery Green</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .contact-container {
+            max-width: 1200px;
+            margin: 3rem auto;
+            padding: 0 2rem;
+        }
+
+        .contact-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .contact-header h1 {
+            font-size: 2.5rem;
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .contact-header p {
+            font-size: 1.1rem;
+            color: var(--text-light);
+        }
+
+        .contact-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            margin-bottom: 4rem;
+        }
+
+        .contact-form {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: 0.75rem;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-dark);
+            font-weight: 600;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid #E5E7EB;
+            border-radius: 0.5rem;
+            font-family: inherit;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary-green);
+            box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 150px;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, var(--primary-green), var(--dark-green));
+            color: var(--white);
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(34, 197, 94, 0.5);
+        }
+
+        .contact-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .info-box {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: 0.75rem;
+            box-shadow: var(--shadow-lg);
+            border-left: 4px solid var(--primary-green);
+        }
+
+        .info-box:nth-child(2) {
+            border-left-color: var(--bright-yellow);
+        }
+
+        .info-box:nth-child(3) {
+            border-left-color: var(--bright-orange);
+        }
+
+        .info-box h3 {
+            color: var(--primary-green);
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+
+        .info-box:nth-child(2) h3 {
+            color: #DAA520;
+        }
+
+        .info-box:nth-child(3) h3 {
+            color: var(--bright-orange);
+        }
+
+        .info-box p {
+            color: var(--text-light);
+            margin-bottom: 0.5rem;
+            line-height: 1.8;
+        }
+
+        .info-box a {
+            color: var(--primary-green);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .info-box a:hover {
+            color: var(--bright-orange);
+        }
+
+        .social-boxes {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .social-box {
+            background: var(--light-green);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .social-box:hover {
+            background: var(--primary-green);
+            color: var(--white);
+        }
+
+        .stores-section {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.05), rgba(251, 146, 60, 0.05));
+            padding: 3rem 2rem;
+            border-radius: 0.75rem;
+            margin-top: 4rem;
+        }
+
+        .stores-section h2 {
+            text-align: center;
+            font-size: 2rem;
+            margin-bottom: 2rem;
+            color: var(--text-dark);
+        }
+
+        .stores-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+
+        .store-card {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: 0.75rem;
+            box-shadow: var(--shadow);
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .store-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .store-card h3 {
+            color: var(--text-dark);
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+
+        .store-card p {
+            color: var(--text-light);
+            margin-bottom: 0.5rem;
+        }
+
+        .store-card .store-hours {
+            background: var(--light-green);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .faq-section {
+            max-width: 800px;
+            margin: 4rem auto;
+            padding: 0 2rem;
+        }
+
+        .faq-section h2 {
+            text-align: center;
+            font-size: 2rem;
+            margin-bottom: 2rem;
+            color: var(--text-dark);
+        }
+
+        .faq-item {
+            background: var(--white);
+            margin-bottom: 1rem;
+            border-radius: 0.75rem;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .faq-question {
+            padding: 1.5rem;
+            background: linear-gradient(135deg, var(--light-green), rgba(34, 197, 94, 0.1));
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .faq-question:hover {
+            background: var(--primary-green);
+            color: var(--white);
+        }
+
+        .faq-answer {
+            padding: 0 1.5rem;
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            color: var(--text-light);
+        }
+
+        .faq-item.active .faq-answer {
+            padding: 1.5rem;
+            max-height: 500px;
+        }
+
+        .faq-icon {
+            font-size: 1.5rem;
+            transition: transform 0.3s ease;
+        }
+
+        .faq-item.active .faq-icon {
+            transform: rotate(180deg);
+        }
+
+        @media (max-width: 768px) {
+            .contact-content {
+                grid-template-columns: 1fr;
+            }
+
+            .contact-header h1 {
+                font-size: 1.8rem;
+            }
+
+            .faq-section {
+                margin: 2rem auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">🌿 The Nursery Green</div>
+            <ul class="nav-menu">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="index.html#plants">Plants</a></li>
+                <li><a href="index.html#care">Care Products</a></li>
+                <li><a href="index.html#pots">Pots & Planters</a></li>
+                <li><a href="index.html#blog">Blog</a></li>
+            </ul>
+            <div class="nav-icons">
+                <button class="search-btn">🔍</button>
+                <button class="cart-btn">🛒 <span class="cart-count">0</span></button>
+                <button class="login-btn">👤 Login</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Contact Header -->
+    <div class="contact-header">
+        <h1>Get in Touch with Us 📞</h1>
+        <p>We'd love to hear from you! Our team is here to help with any questions about our plants and services.</p>
+    </div>
+
+    <!-- Contact Content -->
+    <div class="contact-container">
+        <div class="contact-content">
+            <!-- Contact Form -->
+            <div class="contact-form">
+                <h2 style="margin-bottom: 1.5rem; color: var(--text-dark);">Send us a Message</h2>
+                <form id="contactForm" onsubmit="handleContactSubmit(event)">
+                    <div class="form-group">
+                        <label for="name">Full Name *</label>
+                        <input type="text" id="name" name="name" required placeholder="Your name">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email Address *</label>
+                        <input type="email" id="email" name="email" required placeholder="your@email.com">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phone">Phone Number</label>
+                        <input type="tel" id="phone" name="phone" placeholder="+91-9876543210">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="subject">Subject *</label>
+                        <input type="text" id="subject" name="subject" required placeholder="How can we help?">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="message">Message *</label>
+                        <textarea id="message" name="message" required placeholder="Tell us more about your inquiry..."></textarea>
+                    </div>
+
+                    <button type="submit" class="submit-btn">Send Message</button>
+                </form>
+            </div>
+
+            <!-- Contact Information -->
+            <div class="contact-info">
+                <div class="info-box">
+                    <h3>📞 Call Us</h3>
+                    <p><strong>Main Line:</strong></p>
+                    <p><a href="tel:+919876543210">+91-9876543210</a></p>
+                    <p><strong>WhatsApp Support:</strong></p>
+                    <p><a href="https://wa.me/919876543210">Send WhatsApp Message</a></p>
+                    <p><strong>Hours:</strong></p>
+                    <p>Monday - Saturday: 9 AM - 6 PM<br>Sunday: 10 AM - 4 PM</p>
+                </div>
+
+                <div class="info-box">
+                    <h3>✉️ Email Us</h3>
+                    <p><strong>General Inquiries:</strong></p>
+                    <p><a href="mailto:support@thenurserygreen.com">support@thenurserygreen.com</a></p>
+                    <p><strong>Orders & Shipping:</strong></p>
+                    <p><a href="mailto:orders@thenurserygreen.com">orders@thenurserygreen.com</a></p>
+                    <p><strong>Plant Care Help:</strong></p>
+                    <p><a href="mailto:care@thenurserygreen.com">care@thenurserygreen.com</a></p>
+                </div>
+
+                <div class="info-box">
+                    <h3>🌐 Follow Us Online</h3>
+                    <div class="social-boxes">
+                        <div class="social-box">📘 Facebook</div>
+                        <div class="social-box">📷 Instagram</div>
+                        <div class="social-box">🐦 Twitter</div>
+                        <div class="social-box">▶️ YouTube</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Our Store Locations -->
+    <section class="stores-section">
+        <h2>🏪 Visit Our Stores</h2>
+        <div class="stores-grid">
+            <div class="store-card">
+                <h3>🌆 Mumbai Store</h3>
+                <p><strong>Address:</strong></p>
+                <p>123 Green Street<br>Mumbai, Maharashtra 400001</p>
+                <p><strong>Phone:</strong> +91-9876543211</p>
+                <div class="store-hours">
+                    <strong>Hours:</strong><br>
+                    Mon-Sun: 10 AM - 8 PM
+                </div>
+            </div>
+
+            <div class="store-card">
+                <h3>🏞️ Pune Store</h3>
+                <p><strong>Address:</strong></p>
+                <p>456 Plant Avenue<br>Pune, Maharashtra 411001</p>
+                <p><strong>Phone:</strong> +91-9876543212</p>
+                <div class="store-hours">
+                    <strong>Hours:</strong><br>
+                    Mon-Sun: 10 AM - 7 PM
+                </div>
+            </div>
+
+            <div class="store-card">
+                <h3>🌴 Bangalore Store</h3>
+                <p><strong>Address:</strong></p>
+                <p>789 Garden Road<br>Bangalore, Karnataka 560001</p>
+                <p><strong>Phone:</strong> +91-9876543213</p>
+                <div class="store-hours">
+                    <strong>Hours:</strong><br>
+                    Mon-Sun: 11 AM - 8 PM
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="faq-section">
+        <h2>❓ Frequently Asked Questions</h2>
+        
+        <div class="faq-item active">
+            <div class="faq-question">
+                How long does shipping take?
+                <span class="faq-icon">▼</span>
+            </div>
+            <div class="faq-answer">
+                We offer next-day delivery in major cities and 3-5 business days for other locations. All plants are carefully packed to ensure they arrive in perfect condition.
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question">
+                Do you offer a guarantee or warranty on plants?
+                <span class="faq-icon">▼</span>
+            </div>
+            <div class="faq-answer">
+                Yes! We offer a 30-day replacement guarantee. If your plant doesn't thrive or arrives in poor condition, we'll replace it free of charge.
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question">
+                How do I care for my new plant?
+                <span class="faq-icon">▼</span>
+            </div>
+            <div class="faq-answer">
+                Each plant comes with a detailed care guide. You can also visit our blog section for comprehensive plant care tips, or email us at care@thenurserygreen.com for personalized advice.
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question">
+                What's your return/refund policy?
+                <span class="faq-icon">▼</span>
+            </div>
+            <div class="faq-answer">
+                We accept returns within 7 days of purchase if the product is unused and in original packaging. For damaged plants, our 30-day replacement policy applies.
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question">
+                Do you ship plants outside India?
+                <span class="faq-icon">▼</span>
+            </div>
+            <div class="faq-answer">
+                Currently, we only ship within India. However, we're working on international shipping options. Subscribe to our newsletter to stay updated!
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question">
+                How can I join the rewards club?
+                <span class="faq-icon">▼</span>
+            </div>
+            <div class="faq-answer">
+                Joining is free! Simply visit our website and click "Join Now" in the Rewards Club section. Start earning points on every purchase and enjoy exclusive member benefits.
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>About Us</h4>
+                <ul>
+                    <li><a href="#">Our Story</a></li>
+                    <li><a href="#">Contact Us</a></li>
+                    <li><a href="#">Careers</a></li>
+                    <li><a href="#">Locate Stores</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-section">
+                <h4>Customer Care</h4>
+                <ul>
+                    <li><a href="#">Plant Care Guide</a></li>
+                    <li><a href="#">Shipping Policy</a></li>
+                    <li><a href="#">Returns & Refunds</a></li>
+                    <li><a href="#">FAQs</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-section">
+                <h4>Get in Touch</h4>
+                <p>📞 +91-9876543210</p>
+                <p>📧 support@thenurserygreen.com</p>
+                <p>💬 WhatsApp: 9876543210</p>
+            </div>
+
+            <div class="footer-section">
+                <h4>Follow Us</h4>
+                <div class="social-links">
+                    <a href="#">Facebook</a>
+                    <a href="#">Instagram</a>
+                    <a href="#">Twitter</a>
+                    <a href="#">YouTube</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <p>© 2026 The Nursery Green. All rights reserved. | <a href="#">Privacy Policy</a> | <a href="#">Terms & Conditions</a></p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+        function handleContactSubmit(event) {
+            event.preventDefault();
+            
+            const form = event.target;
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const phone = document.getElementById('phone').value;
+            const subject = document.getElementById('subject').value;
+            const message = document.getElementById('message').value;
+            
+            // Store contact submission
+            const submissions = JSON.parse(localStorage.getItem('contactSubmissions') || '[]');
+            submissions.push({
+                name,
+                email,
+                phone,
+                subject,
+                message,
+                timestamp: new Date().toISOString()
+            });
+            localStorage.setItem('contactSubmissions', JSON.stringify(submissions));
+            
+            showNotification(`✓ Message sent successfully! We'll contact you at ${email} soon.`);
+            form.reset();
+        }
+
+        // FAQ functionality
+        const faqItems = document.querySelectorAll('.faq-item');
+        faqItems.forEach(item => {
+            const question = item.querySelector('.faq-question');
+            question.addEventListener('click', () => {
+                faqItems.forEach(otherItem => {
+                    if (otherItem !== item) {
+                        otherItem.classList.remove('active');
+                    }
+                });
+                item.classList.toggle('active');
+            });
+        });
+
+        // Social box clicks
+        document.querySelectorAll('.social-box').forEach(box => {
+            box.addEventListener('click', function() {
+                const platform = this.textContent.trim();
+                showNotification(`Following us on ${platform}!`);
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Plant Knowledge Admin | The Nursery Green</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; background: #f5f8f4; color: #1f2b2a; }
+    .wrap { max-width: 900px; margin: 32px auto; padding: 20px; }
+    .card { background: #fff; border-radius: 12px; padding: 16px; margin-bottom: 16px; border: 1px solid #dbe4dd; }
+    h1 { margin: 0 0 10px; color: #1c6b44; }
+    h2 { margin: 0 0 10px; font-size: 18px; }
+    input, textarea { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cdd8cf; box-sizing: border-box; }
+    textarea { min-height: 220px; font-family: Consolas, monospace; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .btns { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+    button { background: #1c6b44; color: #fff; border: 0; border-radius: 8px; padding: 10px 14px; cursor: pointer; }
+    button.secondary { background: #456d58; }
+    button.warn { background: #b26b00; }
+    .muted { color: #60756c; font-size: 13px; }
+    pre { background: #0f1c18; color: #d6f7e9; padding: 10px; border-radius: 8px; overflow: auto; max-height: 260px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Plant Knowledge Admin</h1>
+    <p class="muted">Private internal tool. Do not share admin token.</p>
+
+    <div class="card">
+      <h2>Connection</h2>
+      <div class="row">
+        <div>
+          <label>Backend URL</label>
+          <input id="backendUrl" value="https://backend-production-f128.up.railway.app" />
+        </div>
+        <div>
+          <label>Admin Token</label>
+          <input id="adminToken" type="password" placeholder="KNOWLEDGE_ADMIN_TOKEN" />
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Upsert Knowledge Entries</h2>
+      <p class="muted">Paste JSON array or object: {"entries": [...]}</p>
+      <textarea id="entriesInput" placeholder='{"entries":[{"slug":"new-disease","diseaseName":"...","category":"fungal","summary":"...","symptoms":["..."],"solutions":[{"title":"...","steps":["..."]}]}]}'></textarea>
+      <div class="btns">
+        <button id="btnValidate">Validate JSON</button>
+        <button id="btnUpsert">Upsert Entries</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Daily Refresh</h2>
+      <p class="muted">Triggers server-side seed/review/daily-file sync now.</p>
+      <div class="btns">
+        <button class="secondary" id="btnRefresh">Run Daily Refresh</button>
+        <button class="warn" id="btnRefs">Check References (leaf spot)</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Output</h2>
+      <pre id="output">Ready.</pre>
+    </div>
+  </div>
+
+  <script src="knowledge-admin.js"></script>
+</body>
+</html>

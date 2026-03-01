@@ -1,0 +1,9 @@
+Options -Indexes
+DirectoryIndex index.html
+<FilesMatch "\.(php|phps|php5|php7|php8)$">
+  SetHandler none
+</FilesMatch>
+
+# Redirect any /public_html/* requests to site root
+RewriteEngine On
+RewriteRule ^public_html/(.*)$ /$1 [L,R=301]

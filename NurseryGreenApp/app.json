@@ -1,0 +1,74 @@
+{
+  "expo": {
+    "name": "The Nursery Green",
+    "slug": "nursery-green",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": false,
+    "scheme": "nurserygreen",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#F5F9E8"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.nurserygreen.app",
+      "buildNumber": "1",
+      "backgroundColor": "#F5F9E8",
+      "config": {
+        "usesNonExemptEncryption": false
+      },
+      "infoPlist": {
+        "NSCameraUsageDescription": "The Nursery Green needs camera access to scan and diagnose your plants.",
+        "NSPhotoLibraryUsageDescription": "The Nursery Green needs photo library access to select plant images for scanning and community posts.",
+        "NSPhotoLibraryAddUsageDescription": "The Nursery Green needs permission to save plant scan results to your photo library.",
+        "CFBundleDevelopmentRegion": "en",
+        "UIBackgroundModes": [],
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "splash": {
+        "image": "./assets/splash-ios.png",
+        "resizeMode": "contain",
+        "backgroundColor": "#F5F9E8",
+        "tabletImage": "./assets/splash-tablet.png"
+      },
+      "requireFullScreen": true,
+      "userInterfaceStyle": "light"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#F5F9E8"
+      },
+      "package": "com.nurserygreen.app",
+      "versionCode": 1
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-dev-client",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "The Nursery Green needs access to your photos to upload plant images.",
+          "cameraPermission": "The Nursery Green needs camera access to scan and diagnose your plants."
+        }
+      ],
+      "expo-asset",
+      "expo-font"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "nursery-green-app"
+      }
+    }
+  }
+}

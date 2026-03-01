@@ -1,0 +1,1992 @@
+/* ============================================
+   PLANT DISEASE SCANNER — JavaScript
+   AI Analysis + 50+ Disease Indian Remedy DB
+   ============================================ */
+
+const BACKEND_URL = 'https://backend-production-f128.up.railway.app';
+const SCANNER_DEBUG_FLAG = 'scannerDebug';
+const SCANNER_DEBUG_QUERY = 'debugScanner';
+
+let environmentGuess = makeDefaultEnvironmentGuess();
+let scannerUser = null;
+let storageHealthy = true;
+let authToken = null;
+
+function isScannerDebugEnabled() {
+    try {
+        const params = new URLSearchParams(window.location.search || '');
+        const queryValue = params.get(SCANNER_DEBUG_QUERY);
+
+        if (queryValue === '1') {
+            localStorage.setItem(SCANNER_DEBUG_FLAG, '1');
+            return true;
+        }
+        if (queryValue === '0') {
+            localStorage.removeItem(SCANNER_DEBUG_FLAG);
+            return false;
+        }
+
+        return localStorage.getItem(SCANNER_DEBUG_FLAG) === '1';
+    } catch (error) {
+        return false;
+    }
+}
+
+function getPlantCheckDebugDetails(plantCheck) {
+    if (!plantCheck || !plantCheck.stats) return '';
+    const stats = plantCheck.stats;
+    return `Debug: green=${stats.greenRatio}, strongGreen=${stats.strongGreenRatio}, wood=${stats.woodRatio}, signal=${stats.vegSignal}, var=${stats.brightnessVar}`;
+}
+
+function buildNotPlantStatusHtml(data, plantCheck) {
+    const message = data.message || 'Please upload a clear photo of leaves or stems.';
+    const detailLine = data.detail ? `<p class="hint">${data.detail}</p>` : '';
+    const debugLine = isScannerDebugEnabled() ? getPlantCheckDebugDetails(plantCheck) : '';
+    const debugHtml = debugLine ? `<p class="hint" style="opacity:.8">${debugLine}</p>` : '';
+
+    return `<h3>🚫 Not a Plant</h3><p>${message}</p>${detailLine}${debugHtml}`;
+}
+
+// =============================================
+// COMPREHENSIVE INDIAN PLANT DISEASE DATABASE
+// =============================================
+const DISEASE_DB = {
+    'powdery-mildew': {
+        name: 'Powdery Mildew (Safed Chita)',
+        severity: 'moderate',
+        description: 'A common fungal disease that appears as white powdery patches on leaves, stems, and buds. Very common in Indian winters and humid conditions.',
+        cause: 'Caused by Erysiphales fungi. Spreads in humid conditions with poor air circulation, especially during winters (Oct-Feb) in North India.',
+        symptoms: ['White/gray powdery coating on leaf surfaces', 'Yellowing and curling of affected leaves', 'Stunted growth of new shoots', 'Premature leaf drop', 'Distorted flower buds'],
+        remedies: [
+            {
+                name: 'Neem Oil Spray',
+                icon: '🌿',
+                ingredients: 'Neem oil (5ml) + liquid soap (2ml) + water (1L)',
+                steps: 'Mix neem oil with a few drops of liquid soap in water. Shake well and spray on all affected parts, covering both sides of leaves. Best applied in early morning or late evening.',
+                frequency: 'Spray every 5-7 days for 3 weeks'
+            },
+            {
+                name: 'Doodh (Milk) Spray',
+                icon: '🥛',
+                ingredients: 'Raw milk (100ml) + water (1L)',
+                steps: 'Mix 1 part milk with 9 parts water. Spray directly on affected leaves. The proteins in milk have antifungal properties and help build plant immunity.',
+                frequency: 'Spray every 3-4 days until cleared'
+            },
+            {
+                name: 'Haldi + Baking Soda Mix',
+                icon: '🧡',
+                ingredients: 'Haldi/Turmeric (1 tsp) + baking soda (1 tsp) + liquid soap (few drops) + water (1L)',
+                steps: 'Mix turmeric and baking soda in water, add soap. Spray thoroughly on leaves. Turmeric is antifungal and baking soda changes leaf pH making it hostile for fungus.',
+                frequency: 'Apply every 5 days for 2-3 weeks'
+            }
+        ],
+        prevention: [
+            '🌬️ Ensure good air circulation between plants — don\'t crowd them',
+            '💧 Water at the base, avoid wetting leaves — use drip irrigation',
+            '☀️ Ensure plants get 4-6 hours of sunlight daily',
+            '✂️ Prune dense growth regularly to improve airflow',
+            '🍂 Remove and dispose of infected leaves immediately'
+        ],
+        products: ['Neem Oil', 'Plant Protection Spray', 'Neem Cake Powder']
+    },
+
+    'leaf-spot': {
+        name: 'Leaf Spot (Patti ka Dhaag)',
+        severity: 'moderate',
+        description: 'Brown or black spots with yellow halos on leaves. Can be caused by various fungi or bacteria. Very common during Indian monsoon season.',
+        cause: 'Caused by Cercospora, Alternaria, or Colletotrichum fungi. Thrives in warm, wet conditions — peak during July-September monsoon.',
+        symptoms: ['Circular brown/black spots on leaves', 'Yellow halo around spots', 'Spots may merge to cover large areas', 'Leaf edges turn brown and crispy', 'Premature leaf drop in severe cases'],
+        remedies: [
+            {
+                name: 'Neem + Haldi Spray',
+                icon: '🌿',
+                ingredients: 'Neem oil (5ml) + haldi powder (1 tsp) + water (1L)',
+                steps: 'Mix neem oil and turmeric in water. Spray on all leaves, focusing on affected areas. Both have strong antifungal properties widely used in Ayurveda.',
+                frequency: 'Spray every 5 days for 3 weeks'
+            },
+            {
+                name: 'Lahsun (Garlic) Spray',
+                icon: '🧄',
+                ingredients: 'Garlic cloves (10-15) + water (1L) + liquid soap (2-3 drops)',
+                steps: 'Crush garlic cloves and soak in water overnight. Strain, add soap, and spray. Garlic contains allicin which is a powerful natural fungicide.',
+                frequency: 'Spray every 4-5 days'
+            },
+            {
+                name: 'Chuna (Lime) Solution',
+                icon: '⚪',
+                ingredients: 'Chuna/slaked lime (2 tsp) + water (1L)',
+                steps: 'Dissolve lime in water and let it settle. Use the clear water to spray on leaves. Creates an alkaline environment that stops fungal growth.',
+                frequency: 'Apply once a week for 3 weeks'
+            }
+        ],
+        prevention: [
+            '💧 Avoid overhead watering — water at the soil level',
+            '🍂 Remove fallen leaves promptly — they harbor fungal spores',
+            '✂️ Prune infected leaves and destroy them (don\'t compost)',
+            '🌤️ Ensure adequate sunlight and air circulation',
+            '🫧 Clean gardening tools with bleach solution between plants'
+        ],
+        products: ['Neem Oil', 'Plant Protection Spray', 'Neem Cake Powder']
+    },
+
+    'aphids': {
+        name: 'Aphids / Maahu (माहू)',
+        severity: 'moderate',
+        description: 'Tiny sap-sucking insects (green, black, or brown) that cluster on tender shoots and under leaves. Extremely common in Indian gardens, especially on roses, hibiscus, and vegetables.',
+        cause: 'Aphids (Aphis gossypii, Myzus persicae) multiply rapidly in warm weather. They secrete honeydew which attracts ants and promotes sooty mold.',
+        symptoms: ['Clusters of small insects on tender shoots', 'Curling and distortion of new leaves', 'Sticky honeydew on leaves', 'Black sooty mold growth', 'Stunted growth of young plants'],
+        remedies: [
+            {
+                name: 'Neem Oil + Soap Spray',
+                icon: '🌿',
+                ingredients: 'Neem oil (10ml) + liquid soap (5ml) + water (1L)',
+                steps: 'Mix well and spray directly on aphid clusters. The soap breaks their waxy coating, and neem disrupts their feeding and reproduction. Spray undersides of leaves too.',
+                frequency: 'Spray every 3-4 days for 2 weeks'
+            },
+            {
+                name: 'Mirchi-Lahsun Spray (Chilli-Garlic)',
+                icon: '🌶️',
+                ingredients: 'Green chillies (5-6) + garlic (10 cloves) + water (1L)',
+                steps: 'Grind chillies and garlic to a paste. Soak in water overnight. Strain and spray on infested plants. The capsaicin repels aphids instantly.',
+                frequency: 'Spray every 3-4 days until cleared'
+            },
+            {
+                name: 'Sabun-Paani (Soap Water)',
+                icon: '🫧',
+                ingredients: 'Liquid dish soap (1 tbsp) + water (1L)',
+                steps: 'Mix soap in water and spray directly on aphids. The soap suffocates them by blocking their breathing pores. Rinse plant with plain water after 2-3 hours.',
+                frequency: 'Apply every 2-3 days'
+            }
+        ],
+        prevention: [
+            '🌼 Plant marigolds (genda) nearby — they repel aphids naturally',
+            '🐞 Encourage ladybugs — they eat 50+ aphids per day',
+            '💦 Hose off aphids with strong water spray early morning',
+            '🌿 Plant tulsi (basil) near susceptible plants as a natural repellent',
+            '🧹 Regularly inspect tender growth and undersides of leaves'
+        ],
+        products: ['Neem Oil', 'Plant Protection Spray', 'Plant Booster Spray']
+    },
+
+    'root-rot': {
+        name: 'Root Rot (Jad Sadna)',
+        severity: 'severe',
+        description: 'A deadly fungal infection that causes roots to turn brown/black and mushy. Usually caused by overwatering — the #1 plant killer in Indian households.',
+        cause: 'Caused by Pythium, Phytophthora, or Fusarium fungi. Develops in waterlogged soil with poor drainage, especially common in monsoon and in pots without drainage holes.',
+        symptoms: ['Wilting despite moist soil', 'Yellowing of lower leaves first', 'Roots are brown/black and mushy (not white)', 'Foul smell from soil', 'Plant easily pulls out of soil'],
+        remedies: [
+            {
+                name: 'Daalchini (Cinnamon) Treatment',
+                icon: '🟤',
+                ingredients: 'Cinnamon powder (2 tbsp) + fresh potting mix',
+                steps: 'Remove plant, trim all rotten roots with clean scissors. Dust cinnamon powder on cut ends — it\'s a natural antifungal. Repot in fresh, well-draining soil mix.',
+                frequency: 'One-time treatment; monitor weekly'
+            },
+            {
+                name: 'Haldi (Turmeric) Root Dip',
+                icon: '🧡',
+                ingredients: 'Haldi powder (2 tsp) + water (500ml)',
+                steps: 'After trimming rotten roots, soak remaining healthy roots in turmeric solution for 20-30 minutes. Turmeric is a powerful antifungal used in Ayurveda for centuries.',
+                frequency: 'One-time dip before repotting'
+            },
+            {
+                name: 'Neem Cake Soil Amendment',
+                icon: '🌿',
+                ingredients: 'Neem cake powder (50g per pot) + cocopeat + perlite',
+                steps: 'Mix neem cake into fresh potting soil (10% by volume). Repot the treated plant. Neem cake prevents future fungal attacks and also adds nitrogen.',
+                frequency: 'Mix into soil at repotting; top dress monthly'
+            }
+        ],
+        prevention: [
+            '🏺 Always use pots with drainage holes — place gravel at bottom',
+            '💧 Water only when top 1-2 inches of soil feels dry (finger test)',
+            '🌱 Use well-draining soil mix — 40% garden soil + 30% cocopeat + 30% perlite/sand',
+            '☀️ Don\'t keep pots in water-collecting saucers during monsoon',
+            '🫧 Sterilize old pots with diluted bleach before reuse'
+        ],
+        products: ['Neem Cake Powder', 'Root Booster', 'Vermi Compost']
+    },
+
+    'mealybugs': {
+        name: 'Mealybugs (Safed Makhi)',
+        severity: 'moderate',
+        description: 'White cottony/waxy pests that cluster at leaf joints, stems, and roots. They suck sap and weaken the plant. Very common on hibiscus, crotons, and succulents in India.',
+        cause: 'Mealybugs (Pseudococcus, Planococcus spp.) thrive in warm, protected spots. Spread through contaminated plants, ants, and wind.',
+        symptoms: ['White cottony masses at stem joints and leaf bases', 'Sticky honeydew on leaves and nearby surfaces', 'Yellowing and wilting of leaves', 'Stunted growth and leaf drop', 'Ants crawling on the plant (farming mealybugs)'],
+        remedies: [
+            {
+                name: 'Rubbing Alcohol Swab',
+                icon: '🧴',
+                ingredients: 'Rubbing alcohol (isopropyl) + cotton buds/earbuds',
+                steps: 'Dip cotton bud in rubbing alcohol and directly touch each mealybug cluster. The alcohol dissolves their waxy coating instantly. Good for early infestations.',
+                frequency: 'Every 2-3 days until clear'
+            },
+            {
+                name: 'Neem + Dish Soap Spray',
+                icon: '🌿',
+                ingredients: 'Neem oil (10ml) + dish soap (1 tsp) + water (1L)',
+                steps: 'Mix neem oil and dish soap in water thoroughly. Spray generously on all affected areas, especially hidden joints and undersides. The soap strips their waxy coating while neem poisons them.',
+                frequency: 'Spray every 4-5 days for 3-4 weeks'
+            },
+            {
+                name: 'Pressure Water + Neem Oil',
+                icon: '💦',
+                ingredients: 'Garden hose/spray bottle + neem oil solution',
+                steps: 'First, blast the plant with a strong water spray to dislodge mealybugs physically. Then immediately spray with neem oil solution. Repeat this two-step treatment.',
+                frequency: 'Every 3-4 days for 2 weeks'
+            }
+        ],
+        prevention: [
+            '🔍 Quarantine new plants for 2 weeks before placing near others',
+            '🐜 Control ant populations — ants protect and farm mealybugs',
+            '🌬️ Ensure good air circulation; don\'t crowd plants together',
+            '🌿 Apply neem oil preventively once a month',
+            '🧹 Keep plants clean — wipe leaves regularly with damp cloth'
+        ],
+        products: ['Neem Oil', 'Plant Protection Spray', 'Neem Cake Powder']
+    },
+
+    'yellow-leaves': {
+        name: 'Yellowing Leaves (Peeli Patti)',
+        severity: 'mild',
+        description: 'Leaves turning yellow is one of the most common plant problems in India. Can indicate overwatering, nutrient deficiency, or pest issues.',
+        cause: 'Multiple causes: overwatering (most common in India), nitrogen deficiency, iron chlorosis (high pH soil), root problems, or natural aging of lower leaves.',
+        symptoms: ['Leaves turning yellow from edges or between veins', 'Lower leaves affected first (nitrogen deficiency)', 'New leaves yellow with green veins (iron deficiency)', 'Overall pale color (light deficiency)', 'Yellow + mushy stem (overwatering)'],
+        remedies: [
+            {
+                name: 'Chai Patti (Used Tea Leaves)',
+                icon: '🍵',
+                ingredients: 'Used tea leaves (from 2-3 cups) + soil',
+                steps: 'Dry used tea leaves in sunlight for 1-2 days. Mix into soil around the plant. Tea leaves add nitrogen, improve soil acidity, and provide micronutrients. Works especially well for roses and acid-loving plants.',
+                frequency: 'Add once every 2-3 weeks'
+            },
+            {
+                name: 'Kele ka Chilka (Banana Peel) Fertilizer',
+                icon: '🍌',
+                ingredients: 'Banana peels (2-3) + water (1L)',
+                steps: 'Chop banana peels and soak in water for 24-48 hours. Strain and use the brown water to water plants. Rich in potassium and phosphorus. Alternative: dry peels, powder them, and mix into soil.',
+                frequency: 'Use banana water once a week'
+            },
+            {
+                name: 'Epsom Salt (Sendha Namak) Solution',
+                icon: '🧂',
+                ingredients: 'Epsom salt (1 tsp) + water (1L)',
+                steps: 'Dissolve Epsom salt in water and use to water the plant. Provides magnesium which is essential for chlorophyll production. Leaves green up within 1-2 weeks.',
+                frequency: 'Apply once every 2 weeks'
+            }
+        ],
+        prevention: [
+            '💧 Follow the "finger test" — water only when top 1 inch of soil is dry',
+            '🌱 Feed plants every 2-3 weeks with vermicompost or organic fertilizer',
+            '🔆 Ensure adequate sunlight — most plants need 4-6 hours minimum',
+            '🏺 Use well-draining soil; repot if soil has become compacted',
+            '🍃 Remove yellowed leaves to redirect energy to healthy growth'
+        ],
+        products: ['All in One Mixture', 'Vermi Compost', 'Plant Diet']
+    },
+
+    'whitefly': {
+        name: 'Whitefly (Safed Makhi)',
+        severity: 'moderate',
+        description: 'Tiny white winged insects that fly up in clouds when plant is disturbed. Suck sap from underside of leaves. Very common on tomatoes, brinjal, and chillies across India.',
+        cause: 'Bemisia tabaci (most common in India) and Trialeurodes vaporariorum. Thrives in warm, dry conditions. Can transmit viral diseases to vegetables.',
+        symptoms: ['Tiny white flies under leaves — fly up when disturbed', 'Sticky honeydew on leaf surfaces', 'Yellow speckled leaves', 'Sooty black mold on honeydew', 'Wilting and stunted growth in severe cases'],
+        remedies: [
+            {
+                name: 'Yellow Sticky Traps',
+                icon: '🟡',
+                ingredients: 'Yellow chart paper/card + castor oil or Vaseline',
+                steps: 'Cut yellow paper into A4 sheets, coat with oil or Vaseline, and hang near plants at canopy height. Whiteflies are attracted to yellow and get stuck. Replace every 3-5 days.',
+                frequency: 'Keep traps throughout growing season'
+            },
+            {
+                name: 'Mirchi (Chilli) + Neem Spray',
+                icon: '🌶️',
+                ingredients: 'Red chilli powder (1 tbsp) + neem oil (5ml) + soap (few drops) + water (1L)',
+                steps: 'Mix chilli powder in water, add neem oil and soap. Spray undersides of leaves early morning. Capsaicin repels whiteflies while neem disrupts their lifecycle.',
+                frequency: 'Spray every 3-4 days for 2-3 weeks'
+            },
+            {
+                name: 'Dish Soap Water Spray',
+                icon: '🫧',
+                ingredients: 'Liquid dish soap (2 tsp) + water (1L)',
+                steps: 'Mix soap in water and spray undersides of all leaves thoroughly. The soap suffocates the adults and nymphs. Rinse with clean water after 3-4 hours.',
+                frequency: 'Spray every 2-3 days for 2 weeks'
+            }
+        ],
+        prevention: [
+            '🟡 Use yellow sticky traps as early warning system',
+            '🌿 Plant marigolds and tulsi around vegetable beds as repellents',
+            '🌬️ Use reflective mulch (aluminum foil) around base — confuses whiteflies',
+            '🕸️ Use fine mesh/net covers over vegetable beds',
+            '🧹 Check undersides of leaves weekly for early detection'
+        ],
+        products: ['Neem Oil', 'Plant Protection Spray', 'Neem Cake Powder']
+    },
+
+    'rust': {
+        name: 'Rust Disease (Geru Rog)',
+        severity: 'moderate',
+        description: 'Orange, yellow, or rust-brown raised pustules on undersides of leaves. Common on roses, chrysanthemums, and beans in Indian climates.',
+        cause: 'Caused by Puccinia and Uromyces fungi. Spores spread by wind and rain splash. Peak during monsoon and post-monsoon (July-November) in India.',
+        symptoms: ['Orange/rust-colored raised bumps under leaves', 'Yellow spots on upper leaf surface', 'Powdery orange spores when touched', 'Leaves dry up and fall prematurely', 'Weakened stems'],
+        remedies: [
+            {
+                name: 'Baking Soda + Neem Spray',
+                icon: '🧹',
+                ingredients: 'Baking soda (1 tbsp) + neem oil (5ml) + liquid soap (few drops) + water (1L)',
+                steps: 'Dissolve baking soda in water, add neem oil and soap. Spray all parts of plant, especially undersides. Soda creates alkaline conditions hostile to rust fungi.',
+                frequency: 'Spray every 5-7 days for 3 weeks'
+            },
+            {
+                name: 'Lahsun-Adrak (Garlic-Ginger) Spray',
+                icon: '🧄',
+                ingredients: 'Garlic (10 cloves) + ginger (1 inch piece) + water (1L)',
+                steps: 'Blend garlic and ginger, soak in water for 24 hours. Strain and spray on plants. Both have strong antifungal compounds. Add a drop of soap for better coverage.',
+                frequency: 'Apply every 5 days until cleared'
+            },
+            {
+                name: 'Neem Cake Soil Drench',
+                icon: '🌿',
+                ingredients: 'Neem cake powder (2 tbsp) + water (1L)',
+                steps: 'Soak neem cake in water for 12 hours. Strain and drench the soil around the plant. This strengthens plant immunity from the roots up.',
+                frequency: 'Apply once every 2 weeks'
+            }
+        ],
+        prevention: [
+            '✂️ Remove and destroy infected leaves immediately — don\'t compost',
+            '💧 Water at base only — avoid wetting foliage, especially in evening',
+            '🌤️ Plant in sunny locations with good air circulation',
+            '🧹 Clean up fallen leaves around plants — spores overwinter there',
+            '🌿 Apply neem oil spray preventively every 2 weeks during monsoon'
+        ],
+        products: ['Neem Oil', 'Neem Cake Powder', 'Plant Protection Spray']
+    },
+
+    'spider-mites': {
+        name: 'Spider Mites (Makdi Keet)',
+        severity: 'moderate',
+        description: 'Microscopic arachnids that suck cell contents from leaves, causing stippling and yellowing. Very common in hot, dry Indian summers on indoor and outdoor plants.',
+        cause: 'Tetranychus urticae (two-spotted spider mite) thrives in hot, dry conditions. Often appear when humidity drops below 40% — common in Delhi, Rajasthan summers.',
+        symptoms: ['Fine webbing between leaves and stems', 'Tiny yellow/white dots (stippling) on leaves', 'Leaves become bronze or rusty colored', 'Fine silk threads visible in sunlight', 'Leaf drop and plant decline'],
+        remedies: [
+            {
+                name: 'Water Spray + Neem',
+                icon: '💦',
+                ingredients: 'Strong water spray + neem oil (5ml) + soap (2ml) + water (1L)',
+                steps: 'First blast plant with strong water spray — mites hate moisture. Then spray neem oil solution on all leaves, especially undersides. Increase humidity around plant.',
+                frequency: 'Water spray daily; neem every 4-5 days'
+            },
+            {
+                name: 'Haldi-Mirchi (Turmeric-Chilli) Spray',
+                icon: '🌶️',
+                ingredients: 'Haldi (1 tsp) + red chilli powder (1/2 tsp) + water (1L)',
+                steps: 'Mix turmeric and chilli powder in water. Let it sit for 4 hours. Strain and spray. The combination creates a hostile environment for mites.',
+                frequency: 'Spray every 3-4 days for 2 weeks'
+            }
+        ],
+        prevention: [
+            '💨 Mist plants regularly in summer to raise humidity',
+            '🌬️ Keep plants clean — wipe leaves with wet cloth weekly',
+            '🔍 Check undersides of leaves routinely with a hand lens',
+            '🌿 Apply neem oil preventively every 2 weeks in dry weather',
+            '♻️ Isolate new plants for 2 weeks before mixing with collection'
+        ],
+        products: ['Neem Oil', 'Plant Protection Spray', 'Plant Booster Spray']
+    },
+
+    'fungal-wilt': {
+        name: 'Fusarium/Verticillium Wilt (Murjhana Rog)',
+        severity: 'severe',
+        description: 'Soil-borne fungal disease causing sudden wilting despite adequate watering. Very destructive in tomato, brinjal, and ornamental plants across India.',
+        cause: 'Fusarium oxysporum or Verticillium spp. live in soil and block water-conducting vessels inside the stem. Spread through contaminated soil, water, and tools.',
+        symptoms: ['Wilting on one side of plant first', 'Yellowing starts from lower leaves upward', 'Brown discoloration inside stem (cut stem to check)', 'Plant wilts during hot afternoons, recovers at night (early stage)', 'Complete collapse in severe cases'],
+        remedies: [
+            {
+                name: 'Trichoderma + Neem Cake Treatment',
+                icon: '🌿',
+                ingredients: 'Neem cake (100g) + Trichoderma viride (if available, 10g) + compost',
+                steps: 'Mix neem cake and Trichoderma into compost. Apply around the base of the plant and water in. Trichoderma is a beneficial fungus that attacks Fusarium. Available at agricultural shops across India.',
+                frequency: 'Apply once; follow up monthly'
+            },
+            {
+                name: 'Solarization + Haldi Treatment',
+                icon: '☀️',
+                ingredients: 'Clear plastic sheet + haldi (turmeric) solution',
+                steps: 'For soil sterilization: water the area well, cover with clear plastic for 4-6 weeks in peak summer. Then treat soil with haldi solution (2 tbsp per 5L water) before replanting.',
+                frequency: 'Once before new planting season'
+            }
+        ],
+        prevention: [
+            '🌱 Use disease-resistant varieties when available',
+            '♻️ Rotate crops — don\'t plant same family in same spot for 3 years',
+            '🏺 Sterilize potting soil by sun-baking before use',
+            '🧹 Clean and disinfect gardening tools regularly',
+            '🌿 Add neem cake to soil at planting time as preventive measure'
+        ],
+        products: ['Neem Cake Powder', 'Root Booster', 'Vermi Compost']
+    },
+
+    'scale-insects': {
+        name: 'Scale Insects (Chhilka Keet)',
+        severity: 'mild',
+        description: 'Small armored or soft-bodied insects that attach to stems and leaves, resembling tiny brown or white bumps. Common on citrus, ficus, and ornamental plants in India.',
+        cause: 'Various species of Coccoidea. They secrete a protective waxy covering making them resistant to sprays. Spread by ants, wind, and contaminated plants.',
+        symptoms: ['Small raised bumps on stems and leaves', 'Sticky honeydew residue', 'Sooty mold (black coating)', 'Yellowing leaves near infestation', 'Branch dieback in severe cases'],
+        remedies: [
+            {
+                name: 'Neem Oil + Alcohol Scrub',
+                icon: '🌿',
+                ingredients: 'Neem oil (10ml) + rubbing alcohol (10ml) + dish soap (5ml) + water (1L)',
+                steps: 'Mix all ingredients. Use a soft toothbrush dipped in solution to scrub scale off stems and leaves. Then spray entire plant. The alcohol penetrates their waxy armor.',
+                frequency: 'Scrub every 3-4 days; spray weekly'
+            },
+            {
+                name: 'Sarson ka Tel (Mustard Oil) Treatment',
+                icon: '🫒',
+                ingredients: 'Mustard oil (2 tbsp) + water (1L) + dish soap (1 tsp)',
+                steps: 'Mix mustard oil with soapy water. Spray on scale-infested areas. The oil suffocates them by blocking breathing. Very effective in Indian households where mustard oil is readily available.',
+                frequency: 'Apply every 5-7 days for 3 weeks'
+            }
+        ],
+        prevention: [
+            '🔍 Inspect new plants carefully before bringing home',
+            '🐜 Control ants — they protect scale from predators',
+            '✂️ Prune heavily infested branches and destroy them',
+            '🌿 Apply neem oil monthly as preventive spray',
+            '🐞 Encourage ladybugs and lacewings — natural predators'
+        ],
+        products: ['Neem Oil', 'Plant Protection Spray', 'Neem Cake Powder']
+    },
+
+    'damping-off': {
+        name: 'Damping Off (Galne ka Rog)',
+        severity: 'severe',
+        description: 'A disease of seedlings where young plants rot at the soil line and topple over. Every Indian gardener starting seeds has faced this frustrating problem.',
+        cause: 'Caused by Pythium, Rhizoctonia, or Fusarium in soil. Triggered by overwatering, poor drainage, and overcrowded seedlings — common during monsoon seed starting.',
+        symptoms: ['Seedlings collapse at soil line', 'Stem turns brown/mushy at base', 'White cotton-like fungus on soil surface', 'Seeds fail to germinate (pre-emergence)', 'Entire seedling trays wiped out quickly'],
+        remedies: [
+            {
+                name: 'Daalchini (Cinnamon) Soil Dust',
+                icon: '🟤',
+                ingredients: 'Cinnamon powder (generously)',
+                steps: 'Dust cinnamon powder on soil surface around seedlings. Cinnamon is a powerful natural fungicide. Can also mix into top layer of soil before sowing seeds.',
+                frequency: 'Dust after every watering'
+            },
+            {
+                name: 'Chamomile Tea Spray',
+                icon: '🍵',
+                ingredients: 'Chamomile tea bags (2) + water (500ml)',
+                steps: 'Brew strong chamomile tea, let it cool. Use to water seedlings. Chamomile has natural antifungal properties. Alternative: use diluted haldi water.',
+                frequency: 'Water with tea solution every other day'
+            }
+        ],
+        prevention: [
+            '🏺 Use sterilized/fresh seed-starting mix — never reuse old soil',
+            '💧 Water from bottom — never overhead water seedlings',
+            '🌬️ Ensure good air circulation with a small fan',
+            '🌱 Don\'t sow seeds too close together — thin early',
+            '☀️ Provide bright light to keep soil surface dry'
+        ],
+        products: ['Neem Cake Powder', 'Vermi Compost', 'Root Booster']
+    },
+
+    'blight': {
+        name: 'Blight (Anga Maari / Jhulsa Rog)',
+        severity: 'severe',
+        description: 'Rapid browning and death of leaves, often starting from tips. Early and late blight devastate tomato and potato crops across India every monsoon.',
+        cause: 'Phytophthora infestans (late blight) or Alternaria solani (early blight). Spread rapidly in humid, rainy conditions. Major crop loss during Indian monsoon.',
+        symptoms: ['Large brown/dark patches on leaves', 'Water-soaked spots that turn brown quickly', 'White fuzzy growth under leaves (late blight)', 'Concentric rings in spots (early blight)', 'Rapid leaf and fruit rot'],
+        remedies: [
+            {
+                name: 'Copper Solution (Neela Thotha)',
+                icon: '🔵',
+                ingredients: 'Copper sulphate (Neela Thotha) — 3g + lime (Chuna) — 3g + water (1L)',
+                steps: 'Make Bordeaux mixture: dissolve copper sulphate in 500ml water, dissolve lime in another 500ml, then slowly add lime solution to copper. Spray on plants. This traditional remedy has been used by Indian farmers for generations.',
+                frequency: 'Spray every 7 days during monsoon'
+            },
+            {
+                name: 'Neem + Garlic + Chilli Combo Spray',
+                icon: '🌿',
+                ingredients: 'Neem oil (10ml) + garlic (5 cloves) + green chilli (3) + water (1L)',
+                steps: 'Blend garlic and chilli, strain into water, add neem oil. This triple-action spray has antifungal, antibacterial, and pest-repelling properties.',
+                frequency: 'Spray every 4-5 days during monsoon'
+            }
+        ],
+        prevention: [
+            '🌱 Use disease-resistant tomato varieties (like Arka Rakshak)',
+            '💧 Avoid overhead watering; use drip irrigation',
+            '🌤️ Ensure adequate spacing for air circulation',
+            '♻️ Practice crop rotation — 3 year gap for same crop',
+            '🍂 Remove and burn all infected plant material'
+        ],
+        products: ['Neem Oil', 'Neem Cake Powder', 'Plant Protection Spray']
+    },
+
+    'nitrogen-deficiency': {
+        name: 'Nitrogen Deficiency (Naitrojan ki Kami)',
+        severity: 'mild',
+        description: 'Most common nutrient deficiency in Indian gardens. Plants become pale, growth slows, and older leaves turn yellow. Easy to fix with organic supplements.',
+        cause: 'Insufficient nitrogen in soil, depleted by repeated cropping without fertilizing, heavy rains washing away nutrients, or using inert growing media.',
+        symptoms: ['Overall pale green/yellow color', 'Lower/older leaves yellow first', 'Slow, stunted growth', 'Thin, weak stems', 'Small leaves and few flowers'],
+        remedies: [
+            {
+                name: 'Vermicompost Top Dressing',
+                icon: '🪱',
+                ingredients: 'Vermicompost (handful per pot)',
+                steps: 'Add a generous layer (1-2 inches) of vermicompost around the base of the plant and water in. Vermicompost is the single best organic fertilizer — slowly releases nitrogen and other nutrients.',
+                frequency: 'Apply every 3-4 weeks'
+            },
+            {
+                name: 'Dal ka Paani (Lentil Water)',
+                icon: '🫘',
+                ingredients: 'Water used for soaking/washing dal/rice',
+                steps: 'Save the starchy water from washing rice or soaking dal. Let it cool and use to water plants. Rich in nitrogen and starch. Every Indian kitchen produces this daily — zero cost!',
+                frequency: 'Use 2-3 times per week'
+            },
+            {
+                name: 'Onion Peel Fertilizer',
+                icon: '🧅',
+                ingredients: 'Onion peels (from 4-5 onions) + water (1L)',
+                steps: 'Soak onion peels in water for 24-48 hours. Strain and use the brown water to water plants. Rich in potassium, phosphorus, and nitrogen. Can also dry and powder peels to mix into soil.',
+                frequency: 'Water with onion peel tea weekly'
+            }
+        ],
+        prevention: [
+            '🪱 Add vermicompost to soil every 3-4 weeks',
+            '🌿 Use neem cake as slow-release nitrogen source',
+            '🫘 Regularly use kitchen waste water (dal/rice water)',
+            '🍃 Mulch with dry leaves to retain nutrients',
+            '♻️ Compost kitchen waste and add to garden beds'
+        ],
+        products: ['Vermi Compost', 'All in One Mixture', 'Plant Diet']
+    },
+
+    'sunburn': {
+        name: 'Sunburn / Sun Scald (Dhoop se Jalana)',
+        severity: 'mild',
+        description: 'Brown/white bleached patches on leaves from excessive direct sunlight. Common in harsh Indian summers (April-June) especially for shade-loving plants moved outdoors.',
+        cause: 'Excessive UV exposure, especially when plants are suddenly moved from shade to full sun. Peak in Indian summer when temperatures cross 40°C.',
+        symptoms: ['White or bleached patches on leaves', 'Brown crispy edges on foliage', 'Scorched appearance on sun-facing side', 'Wilting during afternoon heat', 'Faded leaf color'],
+        remedies: [
+            {
+                name: 'Relocate + Recovery Care',
+                icon: '🏠',
+                ingredients: 'Shade cloth (50%) or indoor location',
+                steps: 'Move plant to partial shade immediately. Remove severely damaged leaves. Water deeply. Apply diluted seaweed solution or vermicompost tea to help recovery. Gradually reintroduce to sunlight over 2 weeks.',
+                frequency: 'Ongoing care for 2-3 weeks'
+            },
+            {
+                name: 'Buttermilk (Chhach) Spray',
+                icon: '🥛',
+                ingredients: 'Buttermilk/chhach (100ml) + water (500ml)',
+                steps: 'Dilute buttermilk and spray on leaves. Contains beneficial bacteria that help plant recover. Also provides mild nutrition. An old dadi-nani remedy used across Indian villages.',
+                frequency: 'Spray every 3-4 days during recovery'
+            }
+        ],
+        prevention: [
+            '☀️ Acclimatize plants gradually when moving to brighter spots',
+            '🏗️ Use 50% shade cloth/green net during peak summer (April-June)',
+            '💧 Water deeply in morning — never during hot afternoon',
+            '🍃 Use mulching to keep roots cool',
+            '🌿 Group shade-loving plants under trees or taller plants'
+        ],
+        products: ['Plant Booster Spray', 'Vermi Compost', 'Plant Diet']
+    }
+};
+
+// Product catalog matching
+const PRODUCT_CATALOG = {
+    'Neem Oil': { name: 'Neem Oil (250ml)', price: '₹150', image: 'Images/Flower mixture 2.png', match: 'Natural pesticide & fungicide' },
+    'Neem Cake Powder': { name: 'Neem Cake Powder (1kg)', price: '₹150', image: 'Images/Flower mixture 2.png', match: 'Soil treatment & pest prevention' },
+    'Plant Protection Spray': { name: 'Plant Protection Spray (500ml)', price: '₹230', image: 'Images/Flower mixture 2.png', match: 'Fights pests & diseases' },
+    'Plant Booster Spray': { name: 'Plant Booster Spray (500ml)', price: '₹230', image: 'Images/Flower mixture 2.png', match: 'Strengthens plant immunity' },
+    'Flower Booster Spray': { name: 'Flower Booster Spray (500ml)', price: '₹230', image: 'Images/Flower mixture 2.png', match: 'Promotes healthy blooming' },
+    'Vermi Compost': { name: 'Vermi Compost (2kg)', price: '₹150', image: 'Images/Flower mixture 2.png', match: 'Complete organic nutrition' },
+    'All in One Mixture': { name: 'All in One Mixture (2kg)', price: '₹130', image: 'Images/Flower mixture 2.png', match: 'Balanced soil nutrition' },
+    'Root Booster': { name: 'Root Booster (800g)', price: '₹150', image: 'Images/Flower mixture 2.png', match: 'Strengthens root system' },
+    'Plant Diet': { name: 'Plant Diet (500g)', price: '₹150', image: 'Images/Flower mixture 2.png', match: 'Complete micro/macro nutrients' },
+    'Flower Mixture': { name: 'Flower Mixture (1kg)', price: '₹130', image: 'Images/Flower mixture 2.png', match: 'Promotes flowering' }
+};
+
+// =============================================
+// PLANT ENERGY KNOWLEDGE DATABASE (Vastu + Feng Shui + Botanical Science)
+// =============================================
+const PLANT_ENERGY_DB = {
+    // ---- Positive Energy Indoor Plants ----
+    'tulsi':        { name: 'Tulsi (Holy Basil)', energy: 'positive', placement: 'indoor', direction: 'North/East', vastu: 'Sacred plant — purifies air and radiates spiritual positivity. Tulsi is worshipped in Indian homes and is believed to ward off negativity.', tips: ['Place near entrance or in prayer area', 'Water daily at sunrise for best energy', 'Never place in bedroom — too stimulating'], oxygenBoost: 'high', airPurify: true },
+    'money-plant':  { name: 'Money Plant (Pothos)', energy: 'positive', placement: 'indoor', direction: 'South-East', vastu: 'Attracts wealth and prosperity according to Vastu Shastra. Its heart-shaped leaves symbolise love and abundance.', tips: ['Place in South-East corner for financial growth', 'Never let it touch the floor — keep elevated', 'Grows well in water or soil'], oxygenBoost: 'medium', airPurify: true },
+    'snake-plant':  { name: 'Snake Plant (Sansevieria)', energy: 'positive', placement: 'indoor', direction: 'South/South-East', vastu: 'One of the best air purifiers — releases oxygen at night. Creates a protective energy shield and absorbs toxins.', tips: ['Ideal for bedrooms — produces O₂ at night', 'Place near electronics to absorb radiation', 'Low maintenance, thrives on neglect'], oxygenBoost: 'very-high', airPurify: true },
+    'bamboo':       { name: 'Lucky Bamboo', energy: 'positive', placement: 'indoor', direction: 'East/South-East', vastu: 'Represents the five elements of Feng Shui. Number of stalks determines the type of luck it brings.', tips: ['3 stalks = happiness, 5 = health, 7 = wealth', 'Keep in clean water, change weekly', 'Avoid direct sunlight — prefers shade'], oxygenBoost: 'low', airPurify: false },
+    'peace-lily':   { name: 'Peace Lily', energy: 'positive', placement: 'indoor', direction: 'North', vastu: 'Symbolises peace, harmony, and spiritual growth. Excellent air purifier that removes formaldehyde, benzene, and other toxins.', tips: ['Place in living room or meditation area', 'Keep away from pets — mildly toxic if ingested', 'Thrives in low light with weekly watering'], oxygenBoost: 'high', airPurify: true },
+    'jade':         { name: 'Jade Plant (Crassula)', energy: 'positive', placement: 'indoor', direction: 'South-East/East', vastu: 'Known as the "money tree" — its round leaves resemble coins and attract prosperity. Common gift for new businesses.', tips: ['Place near entrance or on work desk', 'Let soil dry between waterings', 'Prune regularly for bushy, coin-like growth'], oxygenBoost: 'low', airPurify: false },
+    'aloe-vera':    { name: 'Aloe Vera', energy: 'positive', placement: 'indoor', direction: 'North/East', vastu: 'Powerful healer — absorbs negative energy and EMF radiation. Medicinal gel has cooling, healing properties used in Ayurveda.', tips: ['Place near windows for bright indirect light', 'Use gel for burns, skin care, hair health', 'Avoid overwatering — succulent needs dry soil'], oxygenBoost: 'medium', airPurify: true },
+    'lavender':     { name: 'Lavender', energy: 'positive', placement: 'indoor', direction: 'North', vastu: 'Promotes calmness, reduces stress, and aids sleep. Its fragrance is scientifically proven to lower anxiety and heart rate.', tips: ['Place in bedroom for better sleep', 'Needs 6+ hours of sunlight daily', 'Dried flowers can be used in pillows'], oxygenBoost: 'low', airPurify: false },
+    'jasmine':      { name: 'Jasmine (Mogra)', energy: 'positive', placement: 'both', direction: 'South/South-East', vastu: 'Enhances romantic energy and brings sweetness to relationships. Its night-blooming fragrance calms the mind.', tips: ['Place in bedroom or balcony facing South', 'Water regularly, needs 4+ hours sunlight', 'Offer flowers in puja for spiritual merit'], oxygenBoost: 'medium', airPurify: false },
+    'spider-plant': { name: 'Spider Plant', energy: 'positive', placement: 'indoor', direction: 'Any', vastu: 'NASA-approved air purifier. Absorbs carbon monoxide and xylene. Creates a calm, clean environment and is very easy to grow.', tips: ['Hang in kitchen or near stove to purify cooking fumes', 'Safe for pets and children', 'Produces baby plantlets you can propagate'], oxygenBoost: 'high', airPurify: true },
+    'rose':         { name: 'Rose (Gulab)', energy: 'positive', placement: 'outdoor', direction: 'South-West', vastu: 'Symbolises love and beauty. Red roses attract romantic energy. White roses bring peace. Yellow roses bring friendship.', tips: ['Place in garden facing South-West for love energy', 'Needs 6+ hours of direct sunlight', 'Prune spent blooms to encourage new flowers'], oxygenBoost: 'medium', airPurify: false },
+    'marigold':     { name: 'Marigold (Genda)', energy: 'positive', placement: 'outdoor', direction: 'North/North-East', vastu: 'Auspicious flower used in puja. Its bright orange-yellow colour radiates warm, positive energy and keeps pests away.', tips: ['Plant near entrance for welcoming energy', 'Used in festivals, weddings, and daily puja', 'Natural pest repellent — great companion plant'], oxygenBoost: 'medium', airPurify: false },
+    'neem':         { name: 'Neem Tree', energy: 'positive', placement: 'outdoor', direction: 'North-West', vastu: 'Sacred tree in Indian tradition. Purifies air, repels insects, and is used extensively in Ayurvedic medicine. Symbol of protection.', tips: ['Plant in North-West for health protection', 'Every part is medicinal — leaves, bark, seeds', 'Provides natural shade and cooling'], oxygenBoost: 'very-high', airPurify: true },
+    'peepal':       { name: 'Peepal Tree', energy: 'positive', placement: 'outdoor', direction: 'West', vastu: 'One of few trees that release oxygen 24/7. Sacred in Hinduism, Buddhism, and Jainism. Believed to be the abode of Lord Vishnu.', tips: ['Do not plant too close to buildings — large root system', 'Sitting under it improves respiratory health', 'Sacred — never cut without necessity'], oxygenBoost: 'very-high', airPurify: true },
+    'banana':       { name: 'Banana Plant (Kela)', energy: 'positive', placement: 'outdoor', direction: 'North-East', vastu: 'Symbol of Lord Vishnu. Brings prosperity, health, and positive vibrations. Its large leaves create a tropical, lush energy.', tips: ['Plant in North-East corner of garden', 'Leaves used in puja and serving food', 'Needs regular watering and rich soil'], oxygenBoost: 'high', airPurify: true },
+    'curry-leaf':   { name: 'Curry Leaf Plant', energy: 'positive', placement: 'both', direction: 'East', vastu: 'Culinary herb with strong protective energy. Used daily in Indian cooking. Believed to ward off evil eye (nazar).', tips: ['Plant near kitchen garden for daily use', 'Rich in iron and antioxidants', 'Needs full sun and well-drained soil'], oxygenBoost: 'medium', airPurify: false },
+    'hibiscus':     { name: 'Hibiscus (Gudhal)', energy: 'positive', placement: 'outdoor', direction: 'South', vastu: 'Offered to Goddess Kali and Lord Ganesha. Red hibiscus attracts fame and recognition. Promotes courage and passion.', tips: ['Place in South direction for fame/recognition', 'Flowers used in hair oil and herbal tea', 'Needs full sunlight and regular pruning'], oxygenBoost: 'medium', airPurify: false },
+    'areca-palm':   { name: 'Areca Palm', energy: 'positive', placement: 'indoor', direction: 'South/East', vastu: 'Best tropical air purifier. Humidifies dry air naturally. Creates a resort-like ambiance and filters formaldehyde.', tips: ['Place in living room as statement piece', 'Mist leaves in dry weather', 'Avoid direct harsh sunlight — prefers bright indirect'], oxygenBoost: 'very-high', airPurify: true },
+    'fern':         { name: 'Boston Fern', energy: 'positive', placement: 'indoor', direction: 'North/East', vastu: 'Excellent air purifier and natural humidifier. Creates a calm, forest-like energy. Removes toxins from indoor air.', tips: ['Hang in bathroom or kitchen for humidity', 'Mist daily in dry season', 'Keep away from direct sunlight'], oxygenBoost: 'high', airPurify: true },
+    'rubber-plant': { name: 'Rubber Plant (Ficus)', energy: 'positive', placement: 'indoor', direction: 'South-East', vastu: 'Round, dark green leaves symbolise wealth and abundance. Powerful air purifier that absorbs formaldehyde from furniture.', tips: ['Wipe leaves monthly to keep pores open', 'Place in wealth corner (South-East)', 'Avoid moving frequently — prefers a fixed spot'], oxygenBoost: 'high', airPurify: true },
+
+    // ---- Negative/Caution Energy Plants ----
+    'cactus':       { name: 'Cactus', energy: 'negative', placement: 'outdoor', direction: 'Avoid indoors', vastu: 'Thorns create "sha chi" (negative/piercing energy) in Feng Shui. Can cause arguments and financial stress when kept indoors.', tips: ['Keep only outdoors or on balcony railing', 'Never place in bedroom or living room', 'If kept, place facing South to deflect negativity outside'], oxygenBoost: 'low', airPurify: false },
+    'bonsai':       { name: 'Bonsai Tree', energy: 'negative', placement: 'outdoor', direction: 'Avoid indoors', vastu: 'Represents stunted growth in Vastu. Its dwarfed form symbolises restricted potential and can hinder career growth.', tips: ['Avoid in home office or study room', 'If you love bonsai, keep on outdoor porch only', 'Replace with jade plant for similar aesthetic + positive energy'], oxygenBoost: 'low', airPurify: false },
+    'cotton-plant': { name: 'Cotton Plant', energy: 'negative', placement: 'outdoor', direction: 'Avoid at home', vastu: 'Attracts negative energy and is considered inauspicious in residential spaces. Associated with mourning in some cultures.', tips: ['Strictly avoid indoors', 'Not recommended for home gardens', 'Fine for agricultural/commercial farming'], oxygenBoost: 'low', airPurify: false },
+    'tamarind':     { name: 'Tamarind Tree (Imli)', energy: 'negative', placement: 'outdoor', direction: 'Avoid near home', vastu: 'Believed to attract negative spirits and cause quarrels. Its sour fruit symbolises bitterness in relationships.', tips: ['Do not plant near the house entrance', 'Keep at a distance if in compound', 'Use fruit for cooking but avoid planting close'], oxygenBoost: 'medium', airPurify: false },
+    'dead-dry':     { name: 'Dead/Dried Plants', energy: 'negative', placement: 'avoid', direction: 'Remove immediately', vastu: 'Dead or dying plants accumulate stagnant, negative energy. They symbolise decay and neglect and block positive flow.', tips: ['Remove dead plants immediately from home', 'Replace with a fresh, healthy plant', 'Compost dead plants — recycle the energy'], oxygenBoost: 'none', airPurify: false },
+    'thorny':       { name: 'Thorny Plants (General)', energy: 'negative', placement: 'outdoor', direction: 'Only at boundary', vastu: 'Thorns represent conflict, aggression, and sharp energy. They block the smooth flow of positive chi/prana in living spaces.', tips: ['Use only as boundary/fence plants for protection', 'Never keep on desk, dining table, or bedroom', 'Exception: roses for South-West garden are okay'], oxygenBoost: 'varies', airPurify: false },
+    'milky-sap':    { name: 'Milky Sap Plants (Euphorbia)', energy: 'caution', placement: 'outdoor', direction: 'Keep away from living areas', vastu: 'Plants with white milky sap are considered inauspicious in Vastu. They may cause skin irritation and represent hidden toxicity.', tips: ['Keep away from children and pets', 'Only suitable for outdoor garden corners', 'Wash hands after handling'], oxygenBoost: 'low', airPurify: false }
+};
+
+// =============================================
+// PLANT ENERGY ANALYSIS ENGINE
+// =============================================
+
+/**
+ * Fetch plant energy data from backend first, fall back to local DB.
+ * Returns a resolved backend entry or null.
+ */
+async function fetchEnergyFromBackend(plantName) {
+    try {
+        var res = await fetch(BACKEND_URL + '/api/plant-scanner/energy/match', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ plantName: plantName, limit: 1 })
+        });
+        if (!res.ok) return null;
+        var json = await res.json();
+        if (json.status === 'matched' && json.matches && json.matches.length > 0) {
+            return json.matches[0].plant;
+        }
+        return null;
+    } catch (e) {
+        console.warn('Backend energy fetch failed, using local DB:', e.message);
+        return null;
+    }
+}
+
+async function analyzeEnergy(plantCheck, envInfo, diseaseData) {
+    var stats = plantCheck ? plantCheck.stats || {} : {};
+    var greenRatio = stats.greenRatio || 0;
+    var strongGreen = stats.strongGreenRatio || 0;
+    var woodRatio = stats.woodRatio || 0;
+    var brightMean = stats.brightnessMean || 130;
+    var brightVar = stats.brightnessVar || 0;
+    var envType = envInfo ? envInfo.type || 'unknown' : 'unknown';
+    var envConfidence = envInfo ? envInfo.confidence || 0.5 : 0.5;
+
+    // --- 1. Vitality Score (0-100): How alive/healthy does the plant look? ---
+    var vitalityScore = 50; // baseline
+    if (greenRatio > 0.25) vitalityScore += 20;
+    else if (greenRatio > 0.18) vitalityScore += 12;
+    else if (greenRatio < 0.12) vitalityScore -= 15;
+
+    if (strongGreen > 0.15) vitalityScore += 15;
+    else if (strongGreen > 0.08) vitalityScore += 8;
+
+    if (woodRatio > 0.1) vitalityScore -= 10; // dry/woody = stress
+    if (brightVar > 1000) vitalityScore -= 8; // spotty = disease
+    if (brightMean > 160 && brightMean < 210) vitalityScore += 5; // well-lit healthy range
+
+    // Disease penalty
+    if (diseaseData && diseaseData.severity) {
+        if (diseaseData.severity === 'severe') vitalityScore -= 20;
+        else if (diseaseData.severity === 'moderate') vitalityScore -= 10;
+        else if (diseaseData.severity === 'mild') vitalityScore -= 5;
+    }
+    if (diseaseData && diseaseData.healthy) vitalityScore += 15;
+
+    vitalityScore = Math.max(5, Math.min(100, vitalityScore));
+
+    // --- 2. Try to identify the plant from backend DB, then local fallback ---
+    var matchedPlant = null;   // local DB entry (old format)
+    var backendPlant = null;   // rich backend entry (new format)
+    var plantName = (diseaseData && (diseaseData.plantName || diseaseData.plant || '')) || '';
+    var fileName = selectedFile ? selectedFile.name.toLowerCase() : '';
+    var searchText = (plantName + ' ' + fileName).toLowerCase();
+
+    // Try backend first
+    if (searchText.trim()) {
+        try {
+            backendPlant = await fetchEnergyFromBackend(searchText.trim());
+        } catch (e) { /* ignore */ }
+    }
+
+    // If backend miss, try local PLANT_ENERGY_DB
+    if (!backendPlant) {
+        var energyKeys = Object.keys(PLANT_ENERGY_DB);
+        for (var i = 0; i < energyKeys.length; i++) {
+            var key = energyKeys[i];
+            var dbEntry = PLANT_ENERGY_DB[key];
+            var nameWords = dbEntry.name.toLowerCase().split(/[\s()\/]+/);
+            for (var j = 0; j < nameWords.length; j++) {
+                if (nameWords[j].length > 2 && searchText.indexOf(nameWords[j]) !== -1) {
+                    matchedPlant = dbEntry;
+                    break;
+                }
+            }
+            if (!matchedPlant && searchText.indexOf(key) !== -1) {
+                matchedPlant = dbEntry;
+            }
+            if (matchedPlant) break;
+        }
+    }
+
+    // --- 3. Determine energy rating ---
+    var energyType, energyLabel, energyIcon, energyColor, energyDesc;
+    var vastuAdvice = '';
+    var vastuDetailed = '';
+    var vastuDosAndDonts = [];
+    var energyDetailed = '';
+    var healthSummary = '';
+    var healthDetailed = '';
+    var spiritualInfo = null;
+    var careInfo = null;
+    var healthyIndicators = null;
+    var medicinalUses = [];
+    var placementTips = [];
+    var plantDisplayName = '';
+    var nasaApproved = false;
+    var toxinsRemoved = [];
+    var references = [];
+
+    if (backendPlant) {
+        // ===== RICH BACKEND DATA =====
+        var bp = backendPlant;
+        plantDisplayName = bp.commonName || bp.slug;
+        energyType = bp.energy ? bp.energy.type : 'neutral';
+        vitalityScore = bp.energy ? Math.max(5, Math.min(100, (vitalityScore + bp.energy.score) / 2)) : vitalityScore;
+        energyDesc = bp.energy ? bp.energy.summary : '';
+        energyDetailed = bp.energy ? bp.energy.detailedDescription : '';
+        vastuAdvice = bp.vastu ? bp.vastu.insight : '';
+        vastuDetailed = bp.vastu ? bp.vastu.detailedInsight : '';
+        vastuDosAndDonts = bp.vastu ? (bp.vastu.dosAndDonts || []) : [];
+        placementTips = bp.placement ? (bp.placement.tips || []) : [];
+        healthSummary = bp.healthBenefits ? bp.healthBenefits.healthSummary : '';
+        healthDetailed = bp.healthBenefits ? bp.healthBenefits.healthDetailed : '';
+        nasaApproved = bp.healthBenefits ? bp.healthBenefits.nasaApproved : false;
+        toxinsRemoved = bp.healthBenefits ? (bp.healthBenefits.toxinsRemoved || []) : [];
+        medicinalUses = bp.healthBenefits ? (bp.healthBenefits.medicinalUses || []) : [];
+        spiritualInfo = bp.spiritual || null;
+        careInfo = bp.care || null;
+        healthyIndicators = bp.healthyIndicators || null;
+        references = bp.references || [];
+
+        if (energyType === 'positive') {
+            energyLabel = 'Positive Energy';
+            energyIcon = '✨';
+            energyColor = '#2e7d32';
+        } else if (energyType === 'negative') {
+            energyLabel = 'Negative Energy';
+            energyIcon = '⚠️';
+            energyColor = '#c62828';
+        } else if (energyType === 'caution') {
+            energyLabel = 'Use with Caution';
+            energyIcon = '⚡';
+            energyColor = '#e65100';
+        } else {
+            energyLabel = 'Neutral Energy';
+            energyIcon = '🔵';
+            energyColor = '#1565c0';
+        }
+
+        // Placement mismatch check
+        var idealPlacement = bp.placement ? bp.placement.ideal : 'both';
+        if (idealPlacement === 'outdoor' && envType === 'indoor') {
+            placementTips.unshift('⚠️ This plant is better suited outdoors — consider moving it to balcony/terrace for best energy.');
+            if (energyType !== 'negative') { energyLabel = 'Good Energy, Wrong Spot'; energyIcon = '🔄'; energyColor = '#e65100'; }
+        } else if (idealPlacement === 'indoor' && envType === 'outdoor') {
+            placementTips.unshift('💡 This plant thrives indoors — bring it inside for stronger energy benefits.');
+        }
+
+        // Air purification and oxygen info
+        var airPurify = bp.healthBenefits ? bp.healthBenefits.airPurify : false;
+        var oxygenOutput = bp.healthBenefits ? bp.healthBenefits.oxygenOutput : 'medium';
+        if (airPurify) placementTips.push('🌬️ Air Purifier — actively cleans your indoor air of toxins and pollutants.');
+        var oxygenLabels = { 'very-high': '🫁 Very High O₂ output', 'high': '🫁 High O₂ output', 'medium': '🫁 Moderate O₂ output', 'low': '🫁 Low O₂ output', 'none': '🫁 No O₂ output' };
+        if (oxygenOutput && oxygenLabels[oxygenOutput]) placementTips.push(oxygenLabels[oxygenOutput]);
+        if (bp.vastu && bp.vastu.direction) placementTips.push('🧭 Best Vastu direction: ' + bp.vastu.direction);
+
+    } else if (matchedPlant) {
+        // ===== LOCAL FALLBACK (old format) =====
+        plantDisplayName = matchedPlant.name;
+        energyType = matchedPlant.energy;
+        vastuAdvice = matchedPlant.vastu;
+        placementTips = matchedPlant.tips.slice();
+
+        if (matchedPlant.energy === 'positive') {
+            energyLabel = 'Positive Energy'; energyIcon = '✨'; energyColor = '#2e7d32';
+            energyDesc = matchedPlant.name + ' radiates positive energy. ' + matchedPlant.vastu;
+        } else if (matchedPlant.energy === 'negative') {
+            energyLabel = 'Negative Energy'; energyIcon = '⚠️'; energyColor = '#c62828';
+            energyDesc = matchedPlant.name + ' may bring negative energy indoors. ' + matchedPlant.vastu;
+        } else {
+            energyLabel = 'Use with Caution'; energyIcon = '⚡'; energyColor = '#e65100';
+            energyDesc = matchedPlant.name + ' needs careful placement. ' + matchedPlant.vastu;
+        }
+
+        if (matchedPlant.placement === 'outdoor' && envType === 'indoor') {
+            placementTips.unshift('⚠️ This plant is better suited outdoors — consider moving it to balcony/terrace.');
+            if (matchedPlant.energy !== 'negative') { energyLabel = 'Good Energy, Wrong Spot'; energyIcon = '🔄'; energyColor = '#e65100'; }
+        } else if (matchedPlant.placement === 'indoor' && envType === 'outdoor') {
+            placementTips.unshift('💡 This plant thrives indoors — bring it inside for stronger energy benefits.');
+        }
+
+        if (matchedPlant.airPurify) placementTips.push('🌬️ Air Purifier — actively cleans your indoor air.');
+        var oxygenLabels2 = { 'very-high': '🫁 Very High O₂ output', 'high': '🫁 High O₂ output', 'medium': '🫁 Moderate O₂ output', 'low': '🫁 Low O₂ output' };
+        if (matchedPlant.oxygenBoost && oxygenLabels2[matchedPlant.oxygenBoost]) placementTips.push(oxygenLabels2[matchedPlant.oxygenBoost]);
+        if (matchedPlant.direction) placementTips.push('🧭 Best Vastu direction: ' + matchedPlant.direction);
+
+    } else {
+        // Unknown plant — infer energy from vitality + environment
+        if (vitalityScore >= 65) {
+            energyType = 'positive'; energyLabel = 'Positive Energy'; energyIcon = '✨'; energyColor = '#2e7d32';
+            energyDesc = 'Your plant looks healthy and vibrant! Lush green plants radiate positive prana (life force) and improve the energy of any space.';
+            vastuAdvice = 'Healthy green plants are natural energy boosters. They absorb CO₂, release O₂, and create a calming, productive atmosphere.';
+            placementTips = ['Keep in a well-lit area to maintain vitality', 'Healthy plants attract positive energy — maintain regular watering and feeding', 'Talk to your plants — studies show attention improves growth'];
+        } else if (vitalityScore >= 40) {
+            energyType = 'neutral'; energyLabel = 'Neutral Energy'; energyIcon = '🔵'; energyColor = '#1565c0';
+            energyDesc = 'Your plant is showing mild stress. While it still provides oxygen, its energy output is reduced. Treat issues to restore vitality.';
+            vastuAdvice = 'Stressed plants emit stagnant energy. Treating diseases and improving care will restore their positive energy flow.';
+            placementTips = ['Move to a spot with better lighting', 'Follow the remedies above to restore health', 'Once healthy, this plant will radiate positive energy again'];
+        } else {
+            energyType = 'negative'; energyLabel = 'Low/Negative Energy'; energyIcon = '⚠️'; energyColor = '#c62828';
+            energyDesc = 'Your plant is significantly stressed or dying. Wilting or diseased plants accumulate stagnant energy.';
+            vastuAdvice = 'In Vastu Shastra, keeping sick or dying plants indoors blocks positive energy (prana). Either revive it urgently or replace it.';
+            placementTips = ['🚨 Urgently treat the disease/deficiency detected above', 'If plant cannot be revived, compost it and get a fresh plant', 'Never keep dead or dying plants indoors — they drain energy', 'Clean the pot and soil before replanting'];
+        }
+
+        if (envType === 'indoor') {
+            placementTips.push('🏠 Indoor: Ensure at least 4 hours of indirect sunlight for healthy energy.');
+            placementTips.push('🧭 Vastu tip: Place green plants in the North or East for best energy flow.');
+        } else if (envType === 'outdoor') {
+            placementTips.push('🌿 Outdoor: Excellent! Peak energy producers with natural sunlight.');
+            placementTips.push('🧭 Vastu tip: Tall plants in the South-West, flowering plants in the South.');
+        }
+    }
+
+    // --- 4. Build energy meter visual data ---
+    var meterPercent = vitalityScore;
+    var meterColor;
+    if (vitalityScore >= 65) meterColor = '#2e7d32';
+    else if (vitalityScore >= 40) meterColor = '#f9a825';
+    else meterColor = '#c62828';
+
+    return {
+        energyType: energyType,
+        energyLabel: energyLabel,
+        energyIcon: energyIcon,
+        energyColor: energyColor,
+        energyDesc: energyDesc,
+        energyDetailed: energyDetailed,
+        vastuAdvice: vastuAdvice,
+        vastuDetailed: vastuDetailed,
+        vastuDosAndDonts: vastuDosAndDonts,
+        healthSummary: healthSummary,
+        healthDetailed: healthDetailed,
+        medicinalUses: medicinalUses,
+        spiritualInfo: spiritualInfo,
+        careInfo: careInfo,
+        healthyIndicators: healthyIndicators,
+        nasaApproved: nasaApproved,
+        toxinsRemoved: toxinsRemoved,
+        references: references,
+        placementTips: placementTips,
+        vitalityScore: vitalityScore,
+        meterPercent: meterPercent,
+        meterColor: meterColor,
+        envType: envType,
+        envConfidence: Math.round(envConfidence * 100),
+        matchedPlant: plantDisplayName || (matchedPlant ? matchedPlant.name : null),
+        airPurify: backendPlant ? (backendPlant.healthBenefits ? backendPlant.healthBenefits.airPurify : false) : (matchedPlant ? matchedPlant.airPurify : (greenRatio > 0.2)),
+        oxygenBoost: backendPlant ? (backendPlant.healthBenefits ? backendPlant.healthBenefits.oxygenOutput : 'medium') : (matchedPlant ? matchedPlant.oxygenBoost : (greenRatio > 0.25 ? 'high' : 'medium')),
+        isBackendData: !!backendPlant
+    };
+}
+
+// Render energy card into DOM with Read More expandable sections
+function displayEnergyCard(energyResult) {
+    var card = document.getElementById('energyCard');
+    if (!card) return;
+    card.style.display = '';
+
+    // Energy badge
+    var badge = document.getElementById('energyBadge');
+    badge.textContent = energyResult.energyIcon + ' ' + energyResult.energyLabel;
+    badge.className = 'energy-badge ' + energyResult.energyType;
+
+    // Plant name display
+    var nameEl = document.getElementById('energyPlantName');
+    if (nameEl) {
+        nameEl.textContent = energyResult.matchedPlant || '';
+        nameEl.style.display = energyResult.matchedPlant ? '' : 'none';
+    }
+
+    // Environment tag
+    var envTag = document.getElementById('energyEnvTag');
+    var envLabel = energyResult.envType === 'outdoor' ? '☀️ Outdoor' : '🏠 Indoor';
+    envTag.textContent = envLabel + ' · ' + energyResult.envConfidence + '% confidence';
+    envTag.className = 'energy-env-tag ' + energyResult.envType;
+
+    // Vitality meter
+    var meterFill = document.getElementById('vitalityFill');
+    var meterLabel = document.getElementById('vitalityLabel');
+    meterFill.style.width = energyResult.meterPercent + '%';
+    meterFill.style.background = 'linear-gradient(90deg, ' + energyResult.meterColor + ', ' + lightenColor(energyResult.meterColor, 30) + ')';
+    meterLabel.textContent = energyResult.vitalityScore + '/100';
+    meterLabel.style.color = energyResult.meterColor;
+
+    // Description (brief)
+    document.getElementById('energyDesc').textContent = energyResult.energyDesc;
+
+    // Read More: Energy Detailed
+    var energyDetailWrap = document.getElementById('energyDetailedWrap');
+    if (energyDetailWrap) {
+        if (energyResult.energyDetailed) {
+            energyDetailWrap.style.display = '';
+            document.getElementById('energyDetailedContent').textContent = energyResult.energyDetailed;
+            document.getElementById('energyDetailedContent').style.display = 'none';
+            var btn = document.getElementById('energyDetailedBtn');
+            btn.textContent = '📖 Read More about Energy';
+            btn.onclick = function () { toggleReadMore('energyDetailedContent', btn, 'Energy'); };
+        } else {
+            energyDetailWrap.style.display = 'none';
+        }
+    }
+
+    // Vastu advice (brief)
+    document.getElementById('vastuAdvice').textContent = energyResult.vastuAdvice;
+
+    // Read More: Vastu Detailed
+    var vastuDetailWrap = document.getElementById('vastuDetailedWrap');
+    if (vastuDetailWrap) {
+        if (energyResult.vastuDetailed) {
+            vastuDetailWrap.style.display = '';
+            document.getElementById('vastuDetailedContent').textContent = energyResult.vastuDetailed;
+            document.getElementById('vastuDetailedContent').style.display = 'none';
+            var vBtn = document.getElementById('vastuDetailedBtn');
+            vBtn.textContent = '📖 Read More about Vastu';
+            vBtn.onclick = function () { toggleReadMore('vastuDetailedContent', vBtn, 'Vastu'); };
+        } else {
+            vastuDetailWrap.style.display = 'none';
+        }
+    }
+
+    // Vastu Dos and Don'ts
+    var dosWrap = document.getElementById('vastuDosAndDonts');
+    if (dosWrap) {
+        if (energyResult.vastuDosAndDonts && energyResult.vastuDosAndDonts.length) {
+            dosWrap.style.display = '';
+            var dosList = document.getElementById('vastuDosList');
+            dosList.innerHTML = '';
+            energyResult.vastuDosAndDonts.forEach(function (item) {
+                var li = document.createElement('li');
+                li.className = item.indexOf('DON') === 0 ? 'vastu-dont' : 'vastu-do';
+                li.textContent = item;
+                dosList.appendChild(li);
+            });
+        } else {
+            dosWrap.style.display = 'none';
+        }
+    }
+
+    // Placement tips
+    var tipsList = document.getElementById('energyTips');
+    tipsList.innerHTML = '';
+    energyResult.placementTips.forEach(function (tip) {
+        var li = document.createElement('li');
+        li.textContent = tip;
+        tipsList.appendChild(li);
+    });
+
+    // Quick stats row
+    var statsRow = document.getElementById('energyStats');
+    var airIcon = energyResult.airPurify ? '✅' : '❌';
+    var o2Labels = { 'very-high': '🟢 Very High', 'high': '🟢 High', 'medium': '🟡 Medium', 'low': '🔴 Low', 'none': '⚫ None' };
+    var o2Display = o2Labels[energyResult.oxygenBoost] || '🟡 Medium';
+    var nasaBadge = energyResult.nasaApproved ? '<div class="energy-stat"><span class="energy-stat-icon">🛰️</span><span class="energy-stat-label">NASA Approved</span></div>' : '';
+    statsRow.innerHTML =
+        '<div class="energy-stat"><span class="energy-stat-icon">' + airIcon + '</span><span class="energy-stat-label">Air Purifier</span></div>' +
+        '<div class="energy-stat"><span class="energy-stat-icon">' + o2Display.split(' ')[0] + '</span><span class="energy-stat-label">O₂: ' + o2Display.split(' ').slice(1).join(' ') + '</span></div>' +
+        '<div class="energy-stat"><span class="energy-stat-icon">' + (energyResult.envType === 'indoor' ? '🏠' : '☀️') + '</span><span class="energy-stat-label">' + (energyResult.envType === 'indoor' ? 'Indoor' : 'Outdoor') + '</span></div>' +
+        nasaBadge;
+
+    // Health Benefits section (if backend data)
+    var healthWrap = document.getElementById('energyHealthWrap');
+    if (healthWrap) {
+        if (energyResult.healthSummary) {
+            healthWrap.style.display = '';
+            document.getElementById('healthSummaryText').textContent = energyResult.healthSummary;
+            if (energyResult.healthDetailed) {
+                document.getElementById('healthDetailedContent').textContent = energyResult.healthDetailed;
+                document.getElementById('healthDetailedContent').style.display = 'none';
+                var hBtn = document.getElementById('healthDetailedBtn');
+                hBtn.style.display = '';
+                hBtn.textContent = '📖 Read More about Health Benefits';
+                hBtn.onclick = function () { toggleReadMore('healthDetailedContent', hBtn, 'Health Benefits'); };
+            }
+            // Toxins removed
+            var toxinsEl = document.getElementById('toxinsRemovedList');
+            if (toxinsEl && energyResult.toxinsRemoved && energyResult.toxinsRemoved.length) {
+                toxinsEl.innerHTML = '<strong>Toxins removed:</strong> ' + energyResult.toxinsRemoved.join(', ');
+                toxinsEl.style.display = '';
+            } else if (toxinsEl) { toxinsEl.style.display = 'none'; }
+
+            // Medicinal uses
+            var medEl = document.getElementById('medicinalUsesList');
+            if (medEl && energyResult.medicinalUses && energyResult.medicinalUses.length) {
+                medEl.innerHTML = '';
+                energyResult.medicinalUses.forEach(function (use) {
+                    var li = document.createElement('li');
+                    li.textContent = use;
+                    medEl.appendChild(li);
+                });
+                medEl.parentElement.style.display = '';
+            } else if (medEl) { medEl.parentElement.style.display = 'none'; }
+        } else {
+            healthWrap.style.display = 'none';
+        }
+    }
+
+    // Spiritual & Care section (collapsible)
+    var extraWrap = document.getElementById('energyExtraWrap');
+    if (extraWrap) {
+        var hasExtra = energyResult.spiritualInfo || energyResult.careInfo || energyResult.healthyIndicators;
+        if (hasExtra) {
+            extraWrap.style.display = 'none'; // collapsed by default
+            var extraContent = document.getElementById('energyExtraContent');
+            extraContent.innerHTML = '';
+
+            // Spiritual
+            if (energyResult.spiritualInfo && energyResult.spiritualInfo.significance) {
+                extraContent.innerHTML += '<div class="extra-section"><h5>🙏 Spiritual Significance</h5><p>' + energyResult.spiritualInfo.significance + '</p></div>';
+                if (energyResult.spiritualInfo.traditions && energyResult.spiritualInfo.traditions.length) {
+                    extraContent.innerHTML += '<ul class="extra-list">' + energyResult.spiritualInfo.traditions.map(function (t) { return '<li>' + t + '</li>'; }).join('') + '</ul>';
+                }
+            }
+
+            // Care
+            if (energyResult.careInfo) {
+                var ci = energyResult.careInfo;
+                extraContent.innerHTML += '<div class="extra-section"><h5>🌱 Care Guide</h5><ul class="extra-list">' +
+                    (ci.sunlight ? '<li>☀️ ' + ci.sunlight + '</li>' : '') +
+                    (ci.watering ? '<li>💧 ' + ci.watering + '</li>' : '') +
+                    (ci.soil ? '<li>🪴 ' + ci.soil + '</li>' : '') +
+                    (ci.temperature ? '<li>🌡️ ' + ci.temperature + '</li>' : '') +
+                    (ci.difficulty ? '<li>📊 Difficulty: ' + ci.difficulty + '</li>' : '') +
+                    '</ul></div>';
+            }
+
+            // Healthy indicators
+            if (energyResult.healthyIndicators) {
+                var hi = energyResult.healthyIndicators;
+                extraContent.innerHTML += '<div class="extra-section"><h5>✅ Signs of a Healthy Plant</h5><ul class="extra-list">' +
+                    (hi.leafColor ? '<li>🍃 Leaf colour: ' + hi.leafColor + '</li>' : '') +
+                    (hi.leafTexture ? '<li>🍃 Texture: ' + hi.leafTexture + '</li>' : '') +
+                    (hi.growth ? '<li>📈 Growth: ' + hi.growth + '</li>' : '') +
+                    (hi.signs ? hi.signs.map(function (s) { return '<li>✓ ' + s + '</li>'; }).join('') : '') +
+                    '</ul></div>';
+            }
+
+            var extraBtn = document.getElementById('energyExtraBtn');
+            if (extraBtn) {
+                extraBtn.style.display = '';
+                extraBtn.textContent = '📖 Show Spiritual, Care & Health Indicators';
+                extraBtn.onclick = function () {
+                    if (extraWrap.style.display === 'none') {
+                        extraWrap.style.display = '';
+                        extraBtn.textContent = '🔽 Hide Details';
+                    } else {
+                        extraWrap.style.display = 'none';
+                        extraBtn.textContent = '📖 Show Spiritual, Care & Health Indicators';
+                    }
+                };
+            }
+        } else {
+            extraWrap.style.display = 'none';
+            var extraBtn2 = document.getElementById('energyExtraBtn');
+            if (extraBtn2) extraBtn2.style.display = 'none';
+        }
+    }
+
+    // References
+    var refsEl = document.getElementById('energyReferences');
+    if (refsEl) {
+        if (energyResult.references && energyResult.references.length) {
+            refsEl.innerHTML = '<strong>📚 Sources:</strong> ' + energyResult.references.map(function (r) {
+                return '<a href="' + r.url + '" target="_blank" rel="noopener">' + (r.source || r.title) + '</a>';
+            }).join(' · ');
+            refsEl.style.display = '';
+        } else {
+            refsEl.style.display = 'none';
+        }
+    }
+
+    // Data source badge
+    var srcBadge = document.getElementById('energySourceBadge');
+    if (srcBadge) {
+        srcBadge.textContent = energyResult.isBackendData ? '🔗 Verified data from database' : '📦 Local data (offline mode)';
+        srcBadge.className = 'energy-source-badge ' + (energyResult.isBackendData ? 'verified' : 'local');
+    }
+}
+
+// Toggle Read More sections
+function toggleReadMore(contentId, btn, label) {
+    var el = document.getElementById(contentId);
+    if (!el) return;
+    if (el.style.display === 'none') {
+        el.style.display = '';
+        btn.textContent = '🔽 Show Less';
+    } else {
+        el.style.display = 'none';
+        btn.textContent = '📖 Read More about ' + label;
+    }
+}
+
+// Utility: lighten a hex color
+function lightenColor(hex, percent) {
+    hex = hex.replace('#', '');
+    var r = parseInt(hex.substring(0, 2), 16);
+    var g = parseInt(hex.substring(2, 4), 16);
+    var b = parseInt(hex.substring(4, 6), 16);
+    r = Math.min(255, r + Math.round((255 - r) * percent / 100));
+    g = Math.min(255, g + Math.round((255 - g) * percent / 100));
+    b = Math.min(255, b + Math.round((255 - b) * percent / 100));
+    return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+}
+
+// =============================================
+// IMAGE HANDLING
+// =============================================
+let selectedFile = null;
+
+const uploadZone = document.getElementById('uploadZone');
+const previewZone = document.getElementById('previewZone');
+const plantImageInput = document.getElementById('plantImage');
+const previewImg = document.getElementById('previewImg');
+const gateOverlay = document.getElementById('gateOverlay');
+const loginRedirectBtn = document.getElementById('loginRedirect');
+const accessBar = document.getElementById('accessBar');
+const userNameLabel = document.getElementById('userNameLabel');
+const userContactLabel = document.getElementById('userContactLabel');
+const switchAccountBtn = document.getElementById('switchAccountBtn');
+
+// Drag and drop
+uploadZone.addEventListener('dragover', e => {
+    e.preventDefault();
+    uploadZone.classList.add('drag-over');
+});
+uploadZone.addEventListener('dragleave', () => {
+    uploadZone.classList.remove('drag-over');
+});
+uploadZone.addEventListener('drop', e => {
+    e.preventDefault();
+    uploadZone.classList.remove('drag-over');
+    if (!requireLogin()) return;
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) handleFile(file);
+});
+
+// File input change
+plantImageInput.addEventListener('change', e => {
+    if (!requireLogin()) return;
+    const file = e.target.files[0];
+    if (file) handleFile(file);
+});
+
+function handleFile(file) {
+    if (file.size > 10 * 1024 * 1024) {
+        alert('Image too large. Please use an image under 10MB.');
+        return;
+    }
+    if (!requireLogin()) return;
+    selectedFile = file;
+    const reader = new FileReader();
+    reader.onload = e => {
+        previewImg.onload = () => {
+            environmentGuess = estimateEnvironmentFromImage(previewImg, file.name);
+        };
+        previewImg.src = e.target.result;
+        uploadZone.style.display = 'none';
+        previewZone.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+}
+
+function openCamera() {
+    if (!requireLogin()) return;
+    plantImageInput.setAttribute('capture', 'environment');
+    plantImageInput.click();
+    // Reset capture so choose file works normally next time
+    setTimeout(() => plantImageInput.removeAttribute('capture'), 500);
+}
+
+function resetScanner() {
+    selectedFile = null;
+    environmentGuess = makeDefaultEnvironmentGuess();
+    plantImageInput.value = '';
+    previewImg.src = '';
+    
+    uploadZone.style.display = '';
+    previewZone.style.display = 'none';
+    document.getElementById('scanLoading').style.display = 'none';
+    document.getElementById('scanResults').style.display = 'none';
+    var energyReset = document.getElementById('energyCard');
+    if (energyReset) energyReset.style.display = 'none';
+    
+    // Scroll to scanner
+    document.querySelector('.scanner-main').scrollIntoView({ behavior: 'smooth' });
+}
+
+function makeDefaultEnvironmentGuess() {
+    return { type: 'unknown', confidence: 0.5, reason: 'Awaiting photo analysis' };
+}
+
+function getAuthToken() {
+    return localStorage.getItem('authToken');
+}
+
+function normalizeEnvironment(env) {
+    if (!env) return makeDefaultEnvironmentGuess();
+    if (typeof env === 'string') {
+        return { type: env.toLowerCase().includes('out') ? 'outdoor' : 'indoor', confidence: 0.7, reason: 'Backend classification' };
+    }
+    return {
+        type: env.type || 'unknown',
+        confidence: env.confidence || 0.6,
+        reason: env.reason || 'Backend classification'
+    };
+}
+
+function estimateEnvironmentFromImage(imgEl, fileName = '') {
+    const name = (fileName || '').toLowerCase();
+    const indoorHints = ['indoor', 'room', 'office', 'desk', 'table', 'living', 'bed'];
+    const outdoorHints = ['garden', 'lawn', 'park', 'terrace', 'balcony', 'outdoor'];
+    let scoreIndoor = 0;
+    let scoreOutdoor = 0;
+
+    indoorHints.forEach(h => { if (name.includes(h)) scoreIndoor += 0.6; });
+    outdoorHints.forEach(h => { if (name.includes(h)) scoreOutdoor += 0.6; });
+
+    try {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        const w = Math.min(imgEl.naturalWidth || imgEl.width || 0, 200);
+        const h = Math.min(imgEl.naturalHeight || imgEl.height || 0, 200);
+        if (w > 0 && h > 0) {
+            canvas.width = w;
+            canvas.height = h;
+            ctx.drawImage(imgEl, 0, 0, w, h);
+            const data = ctx.getImageData(0, 0, w, h).data;
+            let brightSum = 0, blueSum = 0, greenSum = 0, samples = 0;
+            for (let i = 0; i < data.length; i += 16) {
+                const r = data[i];
+                const g = data[i + 1];
+                const b = data[i + 2];
+                const avg = (r + g + b) / 3;
+                brightSum += avg;
+                blueSum += b;
+                greenSum += g;
+                samples++;
+            }
+            const avgBright = brightSum / samples;
+            const colorSum = Math.max(blueSum + greenSum, 1);
+            const blueShare = blueSum / colorSum;
+
+            if (avgBright > 175) scoreOutdoor += 1.1;
+            if (avgBright < 140) scoreIndoor += 1.0;
+            if (blueShare > 0.32 && avgBright > 150) scoreOutdoor += 0.8; // sky/light hint
+            if (greenSum > blueSum && avgBright < 165) scoreIndoor += 0.3; // softer indoor light
+        }
+    } catch (err) {
+        // Fallback silently if canvas read fails
+    }
+
+    const type = scoreOutdoor > scoreIndoor ? 'outdoor' : 'indoor';
+    const confidence = Math.min(0.9, Math.max(0.55, 0.5 + Math.abs(scoreOutdoor - scoreIndoor) * 0.3));
+    const reason = scoreOutdoor > scoreIndoor ? 'Bright/sky tones indicate outdoor light' : 'Softer light and no sky tones indicate indoor/balcony';
+    return { type, confidence: Number(confidence.toFixed(2)), reason };
+}
+
+function buildSoilPlan(envInfo = makeDefaultEnvironmentGuess(), diseaseMeta = {}) {
+    const envType = envInfo.type === 'outdoor' ? 'outdoor' : (envInfo.type === 'indoor' ? 'indoor' : 'indoor');
+    const confidence = envInfo.confidence ? Math.round(envInfo.confidence * 100) : 0;
+    const month = new Date().getMonth();
+    const isMonsoon = month >= 5 && month <= 8; // Jun-Sep
+    const isSummer = month >= 2 && month <= 5;  // Mar-Jun
+    const items = [];
+
+    if (diseaseMeta.key === 'root-rot' || diseaseMeta.severity === 'severe') {
+        items.push('Repot in a fresh, airy mix; remove soggy soil and ensure drainage holes are clear to stop rot from spreading.');
+    }
+
+    if (envType === 'outdoor') {
+        items.push('Outdoor mix for Indian weather: ~40% garden soil + 30% vermicompost/compost + 20% cocopeat + 10% river sand/perlite for drainage.');
+        items.push('Mulch lightly with cocopeat/leaf mulch in summer; during monsoon, reduce cocopeat and add extra sand to avoid waterlogging.');
+        items.push('Feed a balanced organic fertilizer (All in One/Plant Diet) every 20-25 days; add a handful of vermicompost near the root zone.');
+        items.push('Top-dress with 1-2 tbsp neem cake monthly to keep soil pests down; keep pots raised so water does not pool in rains.');
+    } else {
+        items.push('Indoor/balcony mix: ~30% garden soil + 40% cocopeat + 20% vermicompost + 10% perlite/sand for breathable, light soil.');
+        items.push('Use half-strength liquid feed (seaweed/plant booster) every 15 days in summer, monthly in winter; flush with plain water once a month.');
+        items.push('Top-dress with 1-2 tbsp neem cake + a small handful of vermicompost every 30-40 days to keep nutrients steady and pests low.');
+        items.push('Water only when the top inch dries; in humid/monsoon weather, cut watering frequency to prevent fungus and gnats.');
+    }
+
+    if (isMonsoon) {
+        items.push('Monsoon note: shift pots under cover during heavy rain, cut nitrogen doses in half, and favor faster-draining sand/perlite.');
+    } else if (isSummer) {
+        items.push('Summer note: water early morning, add a thin cocopeat or leaf mulch to slow evaporation, and provide noon shade for tender plants.');
+    }
+
+    const intro = envType === 'outdoor'
+        ? 'Photo looks outdoor - keep mix airy for rain/heat while feeding steadily.'
+        : 'Photo looks indoor/balcony - keep soil light, well-draining, and gentle on roots.';
+
+    const badge = envInfo.type === 'unknown'
+        ? 'Photo check pending'
+        : `${envType === 'outdoor' ? 'Outdoor' : 'Indoor'} | ${confidence || 'est.'}%`;
+
+    return { type: envType, badge, intro, items };
+}
+
+// =============================================
+// ANALYSIS LOGIC
+// =============================================
+async function analyzePlant() {
+    if (!requireLogin()) return;
+    if (!selectedFile) return;
+
+    // Fast gate: detect if the photo even looks like a plant/leaf/grass before doing AI calls
+    const plantCheck = await quickPlantCheck(selectedFile);
+    if (!plantCheck.isPlant) {
+        displayResults({
+            notPlant: true,
+            message: 'This photo does not look like a plant. Please retake a clear photo of leaves/stems.',
+            detail: plantCheck.reason
+        }, environmentGuess, plantCheck);
+        return;
+    }
+
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    analyzeBtn.disabled = true;
+    previewZone.querySelector('.preview-img-wrap').style.display = 'none';
+    analyzeBtn.style.display = 'none';
+    
+    const loading = document.getElementById('scanLoading');
+    loading.style.display = 'block';
+
+    let analysisDone = false;
+    const analysisPromise = (async () => {
+        try {
+            const backendResult = await analyzeWithBackend(plantCheck);
+            if (backendResult.environment) {
+                environmentGuess = normalizeEnvironment(backendResult.environment);
+            }
+            return backendResult;
+        } catch {
+            return analyzeLocally(plantCheck);
+        } finally {
+            analysisDone = true;
+        }
+    })();
+
+    // Animate quickly while analysis runs; stop early once analysis finishes.
+    const steps = ['ls1', 'ls2', 'ls3', 'ls4', 'ls5'];
+    for (let i = 0; i < steps.length; i++) {
+        await delay(180);
+        steps.forEach(s => document.getElementById(s).classList.remove('active'));
+        document.getElementById(steps[i]).classList.add('active');
+        if (analysisDone && i >= 1) break;
+    }
+
+    const result = await analysisPromise;
+    await delay(120);
+    loading.style.display = 'none';
+    displayResults(result, environmentGuess, plantCheck);
+}
+
+function buildObservationPayload(plantCheck = {}) {
+    const stats = plantCheck.stats || {};
+    const green = stats.greenRatio || 0;
+    const wood = stats.woodRatio || 0;
+    const variance = stats.brightnessVar || 0;
+
+    return {
+        source: 'scanner',
+        plantName: 'unknown',
+        symptoms: [],
+        leafCondition: {
+            color: green < 0.16 ? 'yellow' : 'green',
+            texture: variance > 900 ? 'spotted' : 'normal',
+            hasSpots: variance > 900,
+            isWilting: wood > 0.08,
+            hasPests: false
+        },
+        soilCondition: {
+            moisture: 'unknown',
+            drainage: 'unknown',
+            smell: 'unknown',
+            texture: 'unknown'
+        },
+        environment: {
+            locationType: environmentGuess.type || 'unknown',
+            sunlightHours: environmentGuess.type === 'outdoor' ? 6 : 4,
+            humidity: 60,
+            temperatureC: 28
+        }
+    };
+}
+
+async function analyzeWithBackend(plantCheck = {}) {
+    const observation = buildObservationPayload(plantCheck);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 7000);
+
+    let res;
+    try {
+        res = await fetch(`${BACKEND_URL}/api/plant-scanner/analyze`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(observation),
+            signal: controller.signal
+        });
+    } finally {
+        clearTimeout(timeoutId);
+    }
+
+    if (!res.ok) throw new Error('Backend unavailable');
+    const data = await res.json();
+
+    if (data.status === 'insufficient-match') {
+        return {
+            notPlant: true,
+            message: 'Need a little more detail to verify diagnosis.',
+            detail: data.askFor?.length
+                ? `Please provide: ${data.askFor.join(', ')}`
+                : 'Please share leaf and soil details for an exact result.'
+        };
+    }
+
+    return data;
+}
+
+function analyzeLocally(plantCheck = { isPlant: true }) {
+    if (!plantCheck.isPlant) {
+        return {
+            notPlant: true,
+            message: 'Photo likely not a plant. Please retake a clearer plant image.',
+            detail: plantCheck.reason
+        };
+    }
+
+    // Smart local analysis using image characteristics; avoid random generic outputs
+    const commonDiseases = [
+        'powdery-mildew', 'leaf-spot', 'aphids', 'yellow-leaves',
+        'mealybugs', 'whitefly', 'root-rot', 'rust'
+    ];
+    
+    // Pick based on file name hints or lean toward foliage stress instead of randomness
+    const fileName = selectedFile.name.toLowerCase();
+    let diseaseKey;
+    const stats = plantCheck.stats || {};
+    const g = stats.greenRatio || 0;
+    const s = stats.strongGreenRatio || 0;
+    const wood = stats.woodRatio || 0;
+    const varBright = stats.brightnessVar || 0;
+    const hasDiseaseHintInName = /(yellow|peel|spot|brown|white|powder|bug|insect|rot|wilt|rust|orange|dry|dead)/.test(fileName);
+
+    const looksHealthy =
+        g >= 0.18 &&
+        s >= 0.05 &&
+        wood <= 0.11 &&
+        varBright >= 80 &&
+        varBright <= 1050;
+
+    const strongStressSignal =
+        g < 0.14 ||
+        wood > 0.16 ||
+        varBright > 1250;
+
+    if (looksHealthy && !strongStressSignal && !hasDiseaseHintInName) {
+        return {
+            success: true,
+            healthy: true,
+            confidence: 0.84,
+            source: 'local',
+            description: 'Leaf color and texture look normal with no strong stress signal.',
+            products: ['Plant Booster Spray', 'Vermi Compost'],
+            environment: environmentGuess
+        };
+    }
+
+    if (fileName.includes('yellow') || fileName.includes('peel')) {
+        diseaseKey = 'yellow-leaves';
+    } else if (fileName.includes('spot') || fileName.includes('brown')) {
+        diseaseKey = 'leaf-spot';
+    } else if (fileName.includes('white') || fileName.includes('powder')) {
+        diseaseKey = 'powdery-mildew';
+    } else if (fileName.includes('bug') || fileName.includes('insect')) {
+        diseaseKey = 'aphids';
+    } else if (fileName.includes('rot') || fileName.includes('wilt')) {
+        diseaseKey = 'root-rot';
+    } else if (fileName.includes('rust') || fileName.includes('orange')) {
+        diseaseKey = 'rust';
+    } else {
+        // Use pixel stats from plantCheck to choose a likely issue
+        if (g < 0.16 || wood > 0.08) {
+            diseaseKey = 'yellow-leaves'; // low green or woody/dry indicates stress/deficiency
+        } else if (varBright > 900) {
+            diseaseKey = 'leaf-spot'; // spotty contrast
+        } else if (s > 0.12 && g > 0.22) {
+            diseaseKey = 'aphids'; // lush foliage with likely pest risk
+        } else {
+            diseaseKey = 'yellow-leaves';
+        }
+    }
+
+    const disease = DISEASE_DB[diseaseKey];
+    return {
+        success: true,
+        diseaseKey,
+        disease: disease.name,
+        severity: disease.severity,
+        description: `${disease.description} (local quick check — please confirm with a clearer photo if unsure).`,
+        cause: disease.cause,
+        symptoms: disease.symptoms,
+        remedies: disease.remedies,
+        prevention: disease.prevention,
+        products: disease.products,
+        confidence: 0.78,
+        source: 'local',
+        environment: environmentGuess
+    };
+}
+
+// Lightweight plant vs. non-plant gate using pixel-level green-ness
+function quickPlantCheck(file) {
+    return new Promise((resolve) => {
+        const url = URL.createObjectURL(file);
+        const img = new Image();
+
+        img.onload = () => {
+            try {
+                const canvas = document.createElement('canvas');
+                const size = 96;
+                canvas.width = size;
+                canvas.height = size;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, size, size);
+                const data = ctx.getImageData(0, 0, size, size).data;
+
+                let greenish = 0;
+                let strongGreen = 0;
+                let brownish = 0;
+                let total = 0;
+                let brightSum = 0;
+                let brightSqSum = 0;
+
+                for (let i = 0; i < data.length; i += 4) {
+                    const r = data[i];
+                    const g = data[i + 1];
+                    const b = data[i + 2];
+                    const sum = r + g + b || 1;
+                    const greenShare = g / sum;
+                    const bright = (r + g + b) / 3;
+
+                    if (g > r * 1.1 && g > b * 1.1) {
+                        greenish++;
+                        if (greenShare > 0.4) strongGreen++;
+                    }
+                    if (r > 90 && g > 70 && b < 80) {
+                        brownish++;
+                    }
+                    brightSum += bright;
+                    brightSqSum += bright * bright;
+                    total++;
+                }
+
+                const greenRatio = greenish / total;
+                const strongGreenRatio = strongGreen / total;
+                const woodRatio = brownish / total;
+                const vegSignal = strongGreenRatio - woodRatio;
+                const meanBright = brightSum / total;
+                const variance = brightSqSum / total - meanBright * meanBright;
+                const likelyNonPlant =
+                    (greenRatio < 0.03 && strongGreenRatio < 0.008 && vegSignal < 0 && variance < 180) ||
+                    (greenRatio < 0.02 && strongGreenRatio < 0.005 && woodRatio > 0.22 && variance < 500);
+                const isPlant = !likelyNonPlant;
+
+                resolve({
+                    isPlant,
+                    score: Number((greenRatio + strongGreenRatio).toFixed(2)),
+                    reason: isPlant
+                        ? 'Plant-like texture/color signal detected'
+                        : 'Very low plant-like texture/color signal; likely non-plant',
+                    stats: {
+                        greenRatio: Number(greenRatio.toFixed(3)),
+                        strongGreenRatio: Number(strongGreenRatio.toFixed(3)),
+                        woodRatio: Number(woodRatio.toFixed(3)),
+                        vegSignal: Number(vegSignal.toFixed(3)),
+                        brightnessMean: Number(meanBright.toFixed(1)),
+                        brightnessVar: Number(variance.toFixed(1))
+                    }
+                });
+            } catch (err) {
+                resolve({ isPlant: true, score: 0, reason: 'Image read issue, skipping pre-check' });
+            } finally {
+                URL.revokeObjectURL(url);
+            }
+        };
+
+        img.onerror = () => {
+            URL.revokeObjectURL(url);
+            // Fail-open on decode errors (e.g., HEIC/browser codec mismatch) to avoid false "Not a Plant".
+            resolve({ isPlant: true, score: 0, reason: 'Image decode issue; skipping pre-check' });
+        };
+
+        img.src = url;
+    });
+}
+
+// =============================================
+// DISPLAY RESULTS
+// =============================================
+async function displayResults(data, envInfo = environmentGuess, plantCheck = null) {
+    const results = document.getElementById('scanResults');
+    results.style.display = 'block';
+
+    // Look up from DB if backend returned a key
+    let diseaseData;
+    if (data.diseaseKey && DISEASE_DB[data.diseaseKey]) {
+        diseaseData = DISEASE_DB[data.diseaseKey];
+    } else {
+        diseaseData = data;
+    }
+
+    // Status header
+    const statusEl = document.getElementById('resultStatus');
+    const plantLabel = data.plantName || data.plant || '';
+
+    if (data.notPlant) {
+        statusEl.className = 'result-status diseased';
+        statusEl.innerHTML = buildNotPlantStatusHtml(data, plantCheck);
+        document.getElementById('diseaseCard').style.display = 'none';
+        document.querySelector('.remedies-card').style.display = 'none';
+        var energyCardEl = document.getElementById('energyCard');
+        if (energyCardEl) energyCardEl.style.display = 'none';
+        return;
+    }
+
+    if (data.healthy) {
+        statusEl.className = 'result-status healthy';
+        statusEl.innerHTML = '<h3>✅ Your Plant Looks Healthy!</h3><p>No diseases detected. Keep up the good care!</p>';
+        document.getElementById('diseaseCard').style.display = 'none';
+        document.querySelector('.remedies-card').style.display = 'none';
+    } else {
+        statusEl.className = 'result-status diseased';
+        const plantCopy = plantLabel ? ` on ${plantLabel}` : '';
+        statusEl.innerHTML = `<h3>⚠️ Issue Detected${plantCopy}</h3><p>We found potential signs of <strong>${diseaseData.name || data.disease}</strong></p>`;
+        document.getElementById('diseaseCard').style.display = '';
+        document.querySelector('.remedies-card').style.display = '';
+    }
+
+    // Severity badge
+    const badge = document.getElementById('severityBadge');
+    const sev = diseaseData.severity || 'moderate';
+    badge.textContent = sev.charAt(0).toUpperCase() + sev.slice(1);
+    badge.className = `severity-badge ${sev}`;
+
+    // Disease info
+    document.getElementById('diseaseName').textContent = diseaseData.name || data.disease;
+    document.getElementById('diseaseDesc').textContent = diseaseData.description || data.description;
+    document.getElementById('diseaseCause').textContent = diseaseData.cause || data.cause;
+
+    // Symptoms
+    const sympList = document.getElementById('symptomsList');
+    sympList.innerHTML = '';
+    (diseaseData.symptoms || data.symptoms || []).forEach(s => {
+        const li = document.createElement('li');
+        li.textContent = s;
+        sympList.appendChild(li);
+    });
+
+    // Remedies
+    const remedyContainer = document.getElementById('remediesList');
+    remedyContainer.innerHTML = '';
+    (diseaseData.remedies || data.remedies || []).forEach(r => {
+        const div = document.createElement('div');
+        div.className = 'remedy-item';
+        div.innerHTML = `
+            <h5>${r.icon || '🌿'} ${r.name}</h5>
+            <div class="ingredients">Ingredients: ${r.ingredients}</div>
+            <p>${r.steps}</p>
+            <div class="frequency">📅 ${r.frequency}</div>
+        `;
+        remedyContainer.appendChild(div);
+    });
+
+    // Prevention
+    const prevList = document.getElementById('preventionList');
+    prevList.innerHTML = '';
+    (diseaseData.prevention || data.prevention || []).forEach(p => {
+        const li = document.createElement('li');
+        li.textContent = p;
+        prevList.appendChild(li);
+    });
+
+    // Soil & feeding plan based on environment guess
+    const soilCard = document.getElementById('soilCard');
+    if (soilCard) {
+        const soilPlan = buildSoilPlan(envInfo || environmentGuess, { key: data.diseaseKey, severity: diseaseData.severity });
+        const envBadge = document.getElementById('envBadge');
+        const soilIntro = document.getElementById('soilIntro');
+        const soilList = document.getElementById('soilList');
+
+        envBadge.textContent = soilPlan.badge;
+        envBadge.className = `env-badge ${soilPlan.type}`;
+        soilIntro.textContent = soilPlan.intro;
+        soilList.innerHTML = '';
+        soilPlan.items.forEach(item => {
+            const li = document.createElement('li');
+            li.textContent = item;
+            soilList.appendChild(li);
+        });
+        soilCard.style.display = '';
+    }
+
+    // Plant Energy Analysis (async — fetches from backend first)
+    try {
+        var energyResult = await analyzeEnergy(plantCheck || { stats: {} }, envInfo || environmentGuess, data);
+        displayEnergyCard(energyResult);
+    } catch (energyErr) {
+        console.warn('Energy analysis skipped:', energyErr);
+    }
+
+    // Products
+    const productsGrid = document.getElementById('recommendedProducts');
+    productsGrid.innerHTML = '';
+    const productNames = diseaseData.products || data.products || [];
+    productNames.forEach(pName => {
+        const product = PRODUCT_CATALOG[pName];
+        if (product) {
+            const div = document.createElement('div');
+            div.className = 'rec-product';
+            div.onclick = () => window.location.href = 'index.html#organic';
+            div.innerHTML = `
+                <h5>${product.name}</h5>
+                <div class="rec-price">${product.price}</div>
+                <div class="rec-match">${product.match}</div>
+            `;
+            productsGrid.appendChild(div);
+        }
+    });
+
+    // Scroll to results
+    results.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// =============================================
+// SHARE ON WHATSAPP
+// =============================================
+function shareResult() {
+    if (!requireLogin()) return;
+    const diseaseName = document.getElementById('diseaseName').textContent;
+    const text = `🌿 I used The Nursery Green's free Plant Disease Scanner!
+
+My plant has: ${diseaseName}
+
+It gave me homemade desi remedies using neem, haldi, and more. Try it free:
+https://thenurserygreen.com/plant-scanner.html
+
+#PlantCare #TheNurseryGreen`;
+
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+}
+
+// =============================================
+// QUICK REMEDY MODAL (Common Diseases Section)
+// =============================================
+function showQuickRemedy(diseaseKey) {
+    const disease = DISEASE_DB[diseaseKey];
+    if (!disease) return;
+
+    const content = document.getElementById('quickRemedyContent');
+    let remediesHTML = disease.remedies.map(r => `
+        <div class="remedy-item">
+            <h5>${r.icon || '🌿'} ${r.name}</h5>
+            <div class="ingredients">Ingredients: ${r.ingredients}</div>
+            <p>${r.steps}</p>
+            <div class="frequency">📅 ${r.frequency}</div>
+        </div>
+    `).join('');
+
+    let preventionHTML = disease.prevention.map(p => `<li>${p}</li>`).join('');
+
+    let productsHTML = disease.products.map(p => {
+        const prod = PRODUCT_CATALOG[p];
+        return prod ? `<span style="display:inline-block;background:#f0f7ed;padding:6px 12px;border-radius:8px;font-size:0.8rem;margin:4px;">${prod.name} — ${prod.price}</span>` : '';
+    }).join('');
+
+    content.innerHTML = `
+        <h3>${disease.name}</h3>
+        <p class="qr-desc">${disease.description}</p>
+        <span class="severity-badge ${disease.severity}" style="margin-bottom:16px;">${disease.severity}</span>
+        
+        <h4>🦠 Cause</h4>
+        <p style="font-size:0.9rem;color:#5c6f68;margin-bottom:16px;">${disease.cause}</p>
+        
+        <h4>🔍 Symptoms</h4>
+        <ul class="symptom-list" style="margin-bottom:16px;">
+            ${disease.symptoms.map(s => `<li>${s}</li>`).join('')}
+        </ul>
+        
+        <h4>🏠 Desi Home Remedies</h4>
+        <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:16px;">
+            ${remediesHTML}
+        </div>
+        
+        <h4>🛡️ Prevention</h4>
+        <ul class="prevention-list" style="margin-bottom:16px;">
+            ${preventionHTML}
+        </ul>
+        
+        <h4>🛒 Recommended Products</h4>
+        <div style="margin-bottom:12px;">${productsHTML}</div>
+        <a href="index.html#organic" class="btn-scan shop-link" style="display:inline-flex;font-size:0.85rem;padding:10px 20px;">Shop Now →</a>
+    `;
+
+    document.getElementById('quickRemedyModal').classList.add('active');
+}
+
+function closeQuickRemedy() {
+    document.getElementById('quickRemedyModal').classList.remove('active');
+}
+
+// Close modal on overlay click
+document.getElementById('quickRemedyModal').addEventListener('click', e => {
+    if (e.target === document.getElementById('quickRemedyModal')) closeQuickRemedy();
+});
+
+// =============================================
+// UTILITIES
+// =============================================
+function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// =============================================
+// SIMPLE ACCOUNT (LOCAL ONLY)
+// =============================================
+function loadScannerUser() {
+    try {
+        const raw = localStorage.getItem('scannerUser');
+        if (!raw) return null;
+        return JSON.parse(raw);
+    } catch {
+        storageHealthy = false;
+        return null;
+    }
+}
+
+function saveScannerUser(user) {
+    try {
+        localStorage.setItem('scannerUser', JSON.stringify(user));
+        storageHealthy = true;
+    } catch {
+        storageHealthy = false;
+    }
+}
+
+function requireLogin() {
+    authToken = getAuthToken();
+    if (authToken) return true;
+    showGate();
+    return false;
+}
+
+function showGate() {
+    if (!gateOverlay) return;
+    gateOverlay.style.display = 'block';
+    document.querySelector('.scanner-main').scrollIntoView({ behavior: 'smooth' });
+}
+
+function hideGate() {
+    if (!gateOverlay) return;
+    gateOverlay.style.display = 'none';
+}
+
+function updateAccessBar() {
+    if (!accessBar) return;
+    if (scannerUser) {
+        accessBar.style.display = 'flex';
+        userNameLabel.textContent = scannerUser.name;
+        userContactLabel.textContent = scannerUser.contact;
+    } else {
+        accessBar.style.display = 'none';
+        userNameLabel.textContent = 'Plant Parent';
+        userContactLabel.textContent = '-';
+    }
+}
+
+// Avatar picker
+if (switchAccountBtn) {
+    switchAccountBtn.addEventListener('click', () => {
+        scannerUser = null;
+        localStorage.removeItem('scannerUser');
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userData');
+        updateAccessBar();
+        showGate();
+        if (loginRedirectBtn) loginRedirectBtn.focus();
+    });
+}
+
+async function hydrateUserFromAuth() {
+    authToken = getAuthToken();
+    if (!authToken) {
+        scannerUser = null;
+        updateAccessBar();
+        showGate();
+        return;
+    }
+
+    // Try local userData first
+    const localUser = loadScannerUser();
+    if (localUser) {
+        scannerUser = localUser;
+        hideGate();
+        updateAccessBar();
+    }
+
+    try {
+        const res = await fetch(`${BACKEND_URL}/api/users/profile`, {
+            headers: { Authorization: `Bearer ${authToken}` }
+        });
+        if (!res.ok) throw new Error('profile fetch failed');
+        const data = await res.json();
+        const user = data.user || {};
+        const name = user.firstName || user.email || 'Plant Parent';
+        const contact = user.phone || user.email || 'Signed in';
+        scannerUser = { name, contact, avatar: '🌿', createdAt: Date.now() };
+        saveScannerUser(scannerUser);
+        hideGate();
+        updateAccessBar();
+    } catch (err) {
+        console.warn('Auth token invalid or profile fetch failed, showing gate', err);
+        scannerUser = null;
+        localStorage.removeItem('authToken');
+        showGate();
+        updateAccessBar();
+    }
+}
+
+hydrateUserFromAuth();

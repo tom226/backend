@@ -1,0 +1,113 @@
+<!-- Google Analytics - Add this to the <head> section of index.html -->
+<!-- Replace GOOGLE_ANALYTICS_ID with your actual GA4 ID from Google Analytics -->
+
+<!-- Google Analytics 4 (GA4) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=GOOGLE_ANALYTICS_ID"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  // Replace GOOGLE_ANALYTICS_ID with your actual Google Analytics 4 ID
+  gtag('config', 'GOOGLE_ANALYTICS_ID', {
+    'page_path': window.location.pathname,
+    'send_page_view': true
+  });
+
+  // Track custom events
+  function trackEvent(eventName, eventData = {}) {
+    gtag('event', eventName, eventData);
+  }
+
+  // Track product view
+  function trackProductView(product) {
+    gtag('event', 'view_item', {
+      'currency': 'INR',
+      'value': product.price,
+      'items': [{
+        'item_id': product.id,
+        'item_name': product.name,
+        'price': product.price,
+        'quantity': 1
+      }]
+    });
+  }
+
+  // Track add to cart
+  function trackAddToCart(product, quantity) {
+    gtag('event', 'add_to_cart', {
+      'currency': 'INR',
+      'value': product.price * quantity,
+      'items': [{
+        'item_id': product.id,
+        'item_name': product.name,
+        'price': product.price,
+        'quantity': quantity
+      }]
+    });
+  }
+
+  // Track purchase
+  function trackPurchase(order) {
+    gtag('event', 'purchase', {
+      'transaction_id': order.id,
+      'currency': 'INR',
+      'value': order.total,
+      'tax': order.tax || 0,
+      'shipping': order.shipping || 0,
+      'items': order.items.map(item => ({
+        'item_id': item.id,
+        'item_name': item.name,
+        'price': item.price,
+        'quantity': item.quantity
+      }))
+    });
+  }
+
+  // Track chatbot interaction
+  function trackChatbotMessage(userMessage) {
+    gtag('event', 'chatbot_engagement', {
+      'message_type': 'user_message',
+      'message_preview': userMessage.substring(0, 50)
+    });
+  }
+
+  // Track newsletter signup
+  function trackNewsletterSignup(email) {
+    gtag('event', 'sign_up', {
+      'method': 'newsletter'
+    });
+  }
+</script>
+
+<!-- Setup Instructions:
+1. Go to Google Analytics (analytics.google.com)
+2. Create a new property for your website
+3. You'll get a Measurement ID (looks like: G-XXXXXXXXXX)
+4. Replace GOOGLE_ANALYTICS_ID with your Measurement ID
+5. Add this entire script to the <head> section of index.html
+6. Place it AFTER the existing meta tags and before </head>
+
+Integration Points in Your Code:
+- Product View: Call trackProductView(product) when user clicks on a product
+- Add to Cart: Call trackAddToCart(product, qty) from addToCart() function
+- Purchase: Call trackPurchase(order) after successful Razorpay payment
+- Chatbot: Call trackChatbotMessage() in sendChatMessage() function
+- Newsletter: Call trackNewsletterSignup() in newsletter signup handler
+
+Common Events Tracked by GA4:
+- page_view: Automatically tracked
+- view_item: User views product details
+- add_to_cart: User adds product to shopping cart
+- purchase: Successful order placement
+- sign_up: Newsletter subscription
+- Custom events: Any user engagement
+
+Benefits:
+- Track visitor behavior and conversion funnel
+- Identify popular products and pages
+- Monitor traffic sources (organic, direct, referral)
+- Analyze user demographics and interests
+- Optimize marketing campaigns
+- A/B testing capabilities
+-->

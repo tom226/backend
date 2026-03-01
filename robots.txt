@@ -1,0 +1,36 @@
+# Robots.txt for The Nursery Green
+# Allow all search engines to crawl the site
+
+User-agent: *
+Allow: /
+Allow: /Images/
+Allow: /index.html
+Allow: /styles.css
+Allow: /script.js
+Allow: /chatbot.js
+
+# Specific rules
+Disallow: /admin/
+Disallow: /private/
+Disallow: /temp/
+Disallow: *.pdf
+
+# Sitemap location
+Sitemap: https://thenurserygreen.com/sitemap.xml
+
+# Crawl delay
+Crawl-delay: 1
+
+# Specific bot rules
+User-agent: Googlebot
+Allow: /
+Priority: 1.0
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Baiduspider
+Allow: /
+
+User-agent: YandexBot
+Allow: /

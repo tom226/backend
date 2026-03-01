@@ -1,0 +1,25 @@
+# AI Coding Guide for Nursery Green
+
+- **Primary backend**: Express app in [server.js](server.js) serving static HTML plus REST under `/api/*` and `/auth/*`. Duplicate copy lives in [backend/server.js](backend/server.js); keep changes in sync if you touch backend code.
+- **Run locally**: from repo root `npm install` then `npm run dev` (nodemon) or `npm start` (node). Requires MongoDB and `.env` with `MONGODB_URI`, `JWT_SECRET`, `FRONTEND_URL`, Google/Facebook OAuth creds. Default port 5000.
+- **Session/JWT model**: Passport handles Google/Facebook OAuth (see [config/passport.js](config/passport.js)). OAuth callbacks issue a JWT and redirect to `login.html?token=...&user=...`. APIs expect `Authorization: Bearer <token>` (shared secret `JWT_SECRET`).
+- **Auth bootstrap on web**: [shared-auth.js](shared-auth.js) reads `token`/`user` from URL, persists them to `localStorage`, exposes `window.authSession` helpers, and renders a floating auth badge. Frontend pages rely on these helpers instead of refetching login state.
+- **Key APIs** (see routes):
+  - Auth: `/auth/google`, `/auth/google/callback`, `/auth/facebook`, `/auth/facebook/callback`, `/auth/logout`, `/auth/me`, `/auth/verify-token` ([routes/auth.js](routes/auth.js)).
+  - Orders: `/api/orders/create`, `/api/orders/my-orders`, `/api/orders/:orderId`, `/api/orders/track/:orderId`, `/api/orders/:orderId/status` ([routes/orders.js](routes/orders.js)).
+  - Users: `/api/users/profile` GET/PUT, `/api/users/:userId`, `/api/users` list ([routes/users.js](routes/users.js)).
+  - Excel exports: `/api/excel/export-orders` and `/api/excel/export-user-orders/:userId` returning XLSX streams ([routes/excel.js](routes/excel.js)).
+  - Community: `/api/community` CRUD-ish feed, likes, comments, optional Google One-Tap login fallback ([routes/community.js](routes/community.js)).
+- **Data models**: Mongoose schemas in [models](models) — `User` stores OAuth ids + contact/preferences; `Order` auto-creates `ORD-YYYYMMDD-n` IDs with pricing/shipping fields and status enums; `Product` basic catalog; `CommunityPost` stores posts, likes, comments with timestamps.
+- **Frontend patterns**:
+  - [script.js](script.js) drives cart, checkout summaries, and user display; uses `BACKEND_URL` constant (currently Railway) and expects `authToken`/`userData` in `localStorage` to gate dashboard/checkout.
+  - [chatbot.js](chatbot.js) and [whatsapp.js](whatsapp.js) share a product catalog, mutate the same cart in `localStorage`, and call `/api/orders/create` with the JWT; keep cart schema aligned with `Order.items`.
+  - [community.js](community.js) consumes `/api/community`, falls back to seeded posts, polls every 20s, and mirrors auth from `window.authSession` — preserve this handshake when changing auth flows.
+  - [scanner.js](scanner.js) is a large client-only plant-disease knowledgebase; no backend calls — avoid blocking bundle size or refactors that alter its data shape.
+- **Mobile app**: Expo client under [mobile/](mobile) uses API base `https://backend-production-f128.up.railway.app` (see [mobile/src/api/client.js](mobile/src/api/client.js)) and WebView login that captures `token`/`user` redirect params; ensure web auth redirect remains stable.
+- **Static hosting**: Express serves files from repo root; `/` renders [index.html](index.html). Adjust static path cautiously if restructuring.
+- **Excel generation**: Exports stream workbooks via ExcelJS with summary sheets and currency formatting; keep headers/widths compatible with downstream consumers.
+- **Seeding**: Community route seeds three starter posts when DB is empty; mobile/FE also seed client-side samples. Avoid duplicate seeding by checking counts as done in [routes/community.js](routes/community.js).
+- **Testing/health**: Quick check via `/health`. No automated test suite; validate flows manually (OAuth redirect → token issuance → protected route with Bearer token → order creation → excel export).
+- **Env defaults**: If env vars missing, app falls back to `mongodb://localhost:27017/nursery-green`, `http://localhost:3000`, and dev JWT secret; hardcoded defaults are for local only — override in production.
+- **Versioning note**: Backend dependencies are plain JS (no TS). Keep code ES5/ES2015 compatible for browser files; avoid introducing build steps unless updating frontend pipeline intentionally.

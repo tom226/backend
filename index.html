@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="The Nursery Green - Buy premium plant care products, organic fertilizers, and organic food online. 100% organic, free shipping on orders above ₹1999, 30-day guarantee.">
+    <meta name="keywords" content="plant care products, fertilizers, organic food, dal, pulses, herbal tea, spices, herbs, vermicompost, plant spray, online shopping India">
+    <meta name="author" content="The Nursery Green">
+    <meta name="robots" content="index, follow">
+    <meta name="language" content="English">
+    
+    <!-- Open Graph Tags for Social Sharing -->
+    <meta property="og:title" content="The Nursery Green - Premium Plant Care & Organic Products">
+    <meta property="og:description" content="Shop 100% organic plant care products and food items. Free shipping above ₹1999. 30-day quality guarantee.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://thenurserygreen.com">
+    <meta property="og:image" content="Images/logo.png">
+    
+    <!-- Twitter Card Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="The Nursery Green - Plant Care & Organic Products">
+    <meta name="twitter:description" content="Premium organic plant care products and food delivered to your doorstep">
+    
+    <!-- Performance Meta Tags -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="theme-color" content="#22863A">
+    <meta name="revisit-after" content="7 days">
+    <meta name="rating" content="general">
+    <meta name="format-detection" content="telephone=no">
+    
+    <title>The Nursery Green - Plant Care & Organic Fertilizers Online India | Shop Now</title>
+    <link rel="canonical" href="https://thenurserygreen.com/">
+    <link rel="icon" href="Images/logo.png" type="image/png">
+    
+    <!-- Performance Optimization Hints -->
+    <link rel="preconnect" href="https://checkout.razorpay.com">
+    <link rel="dns-prefetch" href="https://checkout.razorpay.com">
+    <link rel="preload" href="styles.css" as="style">
+    <link rel="preload" href="script.js" as="script">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="styles.css">
+    
+    <!-- Structured Data (Schema.org) -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "The Nursery Green",
+        "url": "https://thenurserygreen.com",
+        "logo": "Images/logo.png",
+        "description": "Premium plant care products and organic food",
+        "telephone": "+91-8887608236",
+        "email": "thenurserygreen@gmail.com",
+        "contactPoint": {
+            "@type": "ContactPoint",
+            "telephone": "+91-8887608236",
+            "contactType": "Customer Service",
+            "areaServed": "India"
+        }
+    }
+    </script>
+    
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "LocalBusiness",
+        "name": "The Nursery Green",
+        "description": "Plant care products, fertilizers, and organic food",
+        "url": "https://thenurserygreen.com",
+        "telephone": "+91-8887608236",
+        "areaServed": "India"
+    }
+    </script>
+    
+    <!-- Razorpay Payment Gateway (Async for performance) -->
+    <script async src="https://checkout.razorpay.com/v1/checkout.js"></script></head>
+<body>
+    <!-- Chatbot Widget -->
+    <div id="chatbotWidget" class="chatbot-widget chatbot-hidden">
+        <div class="chatbot-header">
+            <h3>Chat Support</h3>
+            <button class="chatbot-close" onclick="closeChatbot()">&times;</button>
+        </div>
+        <div id="chatbotMessages" class="chatbot-messages"></div>
+        <div class="chatbot-input-area">
+            <input type="text" id="chatbotInput" class="chatbot-input" placeholder="Ask anything..." onkeypress="handleChatInput(event)">
+            <button class="chatbot-send" onclick="sendChatMessage()">Send</button>
+        </div>
+    </div>
+
+    <button id="chatbotToggle" class="chatbot-toggle" onclick="toggleChatbot()">
+        💬 Chat Support
+    </button>
+    <!-- Top Notification Bar -->
+    <div class="notification-bar">
+        <p>🚚 Free Shipping on orders above ₹1999 | 30-Day Replacement Guarantee</p>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo-section">
+                <img src="Images/logo.png" alt="The Nursery Green Logo" class="logo-img">
+                <div>
+                    <div class="logo">The Nursery Green</div>
+                    <p class="tagline">Premium Plant Care & Fertilizers</p>
+                </div>
+            </div>
+            
+            <div class="search-bar">
+                <input type="text" placeholder="Search fertilizers, care products, organic food...">
+                <button class="search-btn">🔍</button>
+            </div>
+
+            <div class="nav-icons">
+                <a href="login.html" class="login-btn" title="Login with Gmail or Facebook">
+                    <span>🔐</span>
+                    <small>Login</small>
+                </a>
+                <button class="account-btn">
+                    <span>👤</span>
+                    <small>Account</small>
+                </button>
+                <button class="cart-btn">
+                    <span>🛒</span>
+                    <span class="cart-count">0</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Category Menu -->
+        <div class="category-menu">
+            <a href="#care" class="category-link">Plant Care</a>
+            <a href="#fertilizers" class="category-link">Fertilizers</a>
+            <a href="#organic" class="category-link">Organic Food</a>
+            <a href="plant-scanner.html" class="category-link" style="color:#e65100;font-weight:700;">🔬 Plant Scanner</a>
+            <a href="community.html" class="category-link" style="color:#1c6b44;font-weight:700;">👥 Community</a>
+            <a href="#blog" class="category-link">Care Guide</a>
+            <a href="#offers" class="category-link active-offer">🔥 Offers</a>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero-shell">
+        <div class="hero-grid">
+            <div class="hero-copy">
+                <p class="eyebrow">Premium, planet-kind plant nutrition</p>
+                <h1>Grow bold, healthy plants with organic fertilizers that simply work.</h1>
+                <p class="hero-lede">Science-led blends, zero nasties, and fast guidance. Free shipping above ₹1999 and a 30-day replacement guarantee.</p>
+                <div class="hero-actions">
+                    <a href="#organic" class="btn-primary solid">Shop plant care</a>
+                    <a href="#blog" class="btn-ghost">Explore care guides</a>
+                </div>
+                <div class="hero-metrics">
+                    <div class="metric-pill">
+                        <span class="metric-value">100K+</span>
+                        <span class="metric-label">Happy growers</span>
+                    </div>
+                    <div class="metric-pill">
+                        <span class="metric-value">100% organic</span>
+                        <span class="metric-label">Clean formulations</span>
+                    </div>
+                    <div class="metric-pill">
+                        <span class="metric-value">30-day</span>
+                        <span class="metric-label">Replacement guarantee</span>
+                    </div>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <div class="hero-card">
+                    <div class="hero-badge">New season</div>
+                    <h3>Flower Booster Spray</h3>
+                    <p class="hero-card-text">High-phosphorus organic spray that triggers vivid blooms without stressing the plant.</p>
+                    <div class="hero-price">₹230</div>
+                    <div class="hero-tags">
+                        <span class="pill">Bloom</span>
+                        <span class="pill">Spray</span>
+                        <span class="pill">Organic</span>
+                    </div>
+                    <button class="hero-cta" onclick="document.querySelector('#organic').scrollIntoView({behavior:'smooth'});">Shop boosters →</button>
+                </div>
+                <div class="hero-stack">
+                    <div class="stack-row">
+                        <span class="dot"></span>
+                        <div>
+                            <p class="stack-label">Live care help</p>
+                            <p class="stack-desc">Chat for dosages, schedules, and pest fixes.</p>
+                        </div>
+                    </div>
+                    <div class="stack-row">
+                        <span class="dot"></span>
+                        <div>
+                            <p class="stack-label">Made for Indian climates</p>
+                            <p class="stack-desc">Tested across metros and tier-2 cities.</p>
+                        </div>
+                    </div>
+                    <div class="stack-row">
+                        <span class="dot"></span>
+                        <div>
+                            <p class="stack-label">No harsh chemicals</p>
+                            <p class="stack-desc">Safe for edibles, balconies, and kids.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Feature highlights -->
+    <section class="feature-tiles">
+        <div class="tile">
+            <div class="tile-icon">🧪</div>
+            <h4>Performance-first</h4>
+            <p>Balanced NPK blends, micronutrients, and bio-boosters for visible growth.</p>
+        </div>
+        <div class="tile">
+            <div class="tile-icon">🌿</div>
+            <h4>100% organic inputs</h4>
+            <p>No synthetic fillers. Safe for edible gardens and indoor greens.</p>
+        </div>
+        <div class="tile">
+            <div class="tile-icon">🚚</div>
+            <h4>Fast shipping</h4>
+            <p>Free above ₹1999. Quick dispatch from Lucknow hubs.</p>
+        </div>
+        <div class="tile">
+            <div class="tile-icon">💬</div>
+            <h4>Guidance on demand</h4>
+            <p>Chatbot + human support for dosing, schedules, and pest control.</p>
+        </div>
+        <a href="plant-scanner.html" class="tile" style="text-decoration:none;border:2px solid #e65100;cursor:pointer;">
+            <div class="tile-icon">🔬</div>
+            <h4>Plant Disease Scanner</h4>
+            <p>Upload a photo → get instant diagnosis + homemade desi remedies. Free!</p>
+        </a>
+        <a href="community.html" class="tile" style="text-decoration:none;border:2px solid #1c6b44;cursor:pointer;">
+            <div class="tile-icon">👥</div>
+            <h4>Plant Parents Community</h4>
+            <p>Share your plant journey, swap tips & connect with growers across India!</p>
+        </a>
+    </section>
+
+
+
+
+
+    <!-- Category lanes -->
+    <section class="category-rail">
+        <div class="rail-card">
+            <p class="rail-label">Plant care essentials</p>
+            <h3>Boost roots & foliage</h3>
+            <p class="rail-desc">Root boosters, plant diet mixes, and growth sprays for quick turnarounds.</p>
+            <a href="#organic" class="rail-link">Shop plant care →</a>
+        </div>
+        <div class="rail-card">
+            <p class="rail-label">Bloom boosters</p>
+            <h3>More buds, richer color</h3>
+            <p class="rail-desc">Flower mixes and sprays tuned for long-lasting blooms.</p>
+            <a href="#organic" class="rail-link">See bloom picks →</a>
+        </div>
+        <div class="rail-card">
+            <p class="rail-label">Protection</p>
+            <h3>Keep pests away</h3>
+            <p class="rail-desc">Neem oils and protection sprays that stay gentle on leaves.</p>
+            <a href="#organic" class="rail-link">Protect plants →</a>
+        </div>
+    </section>
+
+    <!-- Plant Care & Fertilizer Products Section -->
+    <section id="organic" class="products-section organic-section">
+        <h2>Plant Care & Fertilizer</h2>
+        <p class="section-subtitle">Premium fertilizers and plant care solutions</p>
+        <div class="products-grid">
+            <div class="product-card" onclick="openProductDetail(this)">
+                <div class="product-image" style="background-size: cover; background-position: center;" data-src="Images/Vermi Compost.jpg" data-alt="Vermi Compost organic fertilizer" alt="Vermi Compost organic fertilizer"></div>
+                <div class="product-content">
+                    <h3>Vermi Compost</h3>
+                    <p class="tags"><span class="tag">Organic</span><span class="tag">Fertilizer</span></p>
+                    <div class="product-rating">⭐⭐⭐⭐⭐ (4.85)</div>
+                    <div class="pricing">
+                        <span class="sale-price">₹150</span>
+                    </div>
+                    <button class="add-btn" onclick="addToCart(event)">Add to Cart</button>
+                </div>
+                <div class="product-data" style="display:none;" data-name="Vermi Compost" data-price="150" data-image="Images/Vermi Compost.jpg" data-rating="4.85" data-reviews="(4.85)" data-description="Rich in nutrients and beneficial microbes, our Vermi Compost is perfect for nurturing your plants. Made from decomposed organic matter using earthworms, it improves soil structure and promotes healthy plant growth." data-benefits="Increases soil fertility|Improves water retention|Enhances plant growth|100% Organic|Eco-friendly|Reduces need for chemical fertilizers" data-usage="Mix 2-4 kg with soil before planting. For existing plants, mix 1-2 kg with top soil layer. Use quarterly for best results." data-type="Organic Fertilizer" data-weight="2kg" data-packaging="Pack of 1" data-shelflife="18 months"></div>
+            </div>
+
+            <div class="product-card" onclick="openProductDetail(this)">
+                <div class="product-image" style="background-size: cover; background-position: center;" data-src="Images/Neem Cake Powder.jpg" data-alt="Neem Cake Powder pest control organic fertilizer"></div>
+                <div class="product-content">
+                    <h3>Neem Cake Powder</h3>
+                    <p class="tags"><span class="tag">Organic</span><span class="tag">Pest Control</span></p>
+                    <div class="product-rating">⭐⭐⭐⭐⭐ (4.89)</div>
+                    <div class="pricing">
+                        <span class="sale-price">₹150</span>
+                    </div>
+                    <button class="add-btn" onclick="addToCart(event)">Add to Cart</button>
+                </div>
+                <div class="product-data" style="display:none;" data-name="Neem Cake Powder" data-price="150" data-image="Images/Neem Cake Powder.jpg" data-rating="4.89" data-reviews="(4.89)" data-description="Natural pest control solution derived from neem kernels. Neem cake powder is rich in nitrogen and acts as both a fertilizer and pesticide, making it perfect for organic gardening." data-benefits="Controls common garden pests|Enriches soil with nitrogen|Improves soil microbial activity|Safe for beneficial insects|100% Natural|Prevents fungal diseases" data-usage="Mix 500g per square meter into soil. For pest control, spray 2-3% solution weekly. Apply in early morning or late evening." data-type="Bio Pesticide & Fertilizer" data-weight="1kg" data-packaging="Pack of 1" data-shelflife="24 months"></div>
+            </div>
+
+            <div class="product-card" onclick="openProductDetail(this)">
+                <div class="product-image" style="background-size: cover; background-position: center;" data-src="Images/Flower Mixture.png" data-alt="Flower Mixture organic fertilizer for flowering plants"></div>
+                <div class="product-content">
+                    <h3>Flower Mixture</h3>
+                    <p class="tags"><span class="tag">Organic</span><span class="tag">Fertilizer</span></p>
+                    <div class="product-rating">⭐⭐⭐⭐⭐ (4.92)</div>
+                    <div class="pricing">
+                        <span class="sale-price">₹130</span>
+                    </div>
+                    <button class="add-btn" onclick="addToCart(event)">Add to Cart</button>
+                </div>
+                <div class="product-data" style="display:none;" data-name="Flower Mixture" data-price="130" data-image="Images/Flower Mixture.png" data-rating="4.92" data-reviews="(4.92)" data-description="Specially formulated blend for flowering plants. Rich in phosphorus and potassium to promote abundant blooms and vibrant colors throughout the season." data-benefits="Promotes flowering|Enhances bloom color|Strengthens flower stems|Increases flower count|Balanced nutrition|Extends flowering season" data-usage="Apply 2 tablespoons per plant monthly. Mix with soil or make a liquid solution. Apply every 4-6 weeks during growing season." data-type="Flowering Plant Fertilizer" data-weight="1kg" data-packaging="Pack of 1" data-shelflife="12 months"></div>
+            </div>
+
+            <div class="product-card" onclick="openProductDetail(this)">
+                <div class="product-image" style="background-size: cover; background-position: center;" data-src="Images/All in one mixture.png" data-alt="All in One Mixture multipurpose organic fertilizer"></div>
+                <div class="product-content">
+                    <h3>All in One Mixture</h3>
+                    <p class="tags"><span class="tag">Organic</span><span class="tag">Multipurpose</span></p>
+                    <div class="product-rating">⭐⭐⭐⭐ (4.76)</div>
+                    <div class="pricing">
+                        <span class="sale-price">₹130</span>
+                    </div>
+                    <button class="add-btn" onclick="addToCart(event)">Add to Cart</button>
+                </div>
+                <div class="product-data" style="display:none;" data-name="All in One Mixture" data-price="130" data-image="Images/All in one mixture.png" data-rating="4.76" data-reviews="(4.76)" data-description="Complete plant nutrition in one pack. This balanced organic mixture contains essential macro and micronutrients needed by all types of plants - flowers, vegetables, fruits, and ornamentals." data-benefits="Universal for all plants|Balanced NPK ratio|Complete nutrition|Improves soil quality|Safe for all plant types|Long-lasting effect" data-usage="Mix 1-2 kg with potting soil. For existing plants, apply 50g per plant monthly. Water after application for best results." data-type="All-Purpose Organic Fertilizer" data-weight="2kg" data-packaging="Pack of 1" data-shelflife="18 months"></div>
+            </div>
+
+            <div class="product-card" onclick="openProductDetail(this)">
+                <div class="product-image" style="background-size: cover; background-position: center;" data-src="Images/Plant Booster Spray.png" data-alt="Plant Booster Spray for plant growth and development"></div>
+                <div class="product-content">
+                    <h3>Plant Booster Spray</h3>
+                    <p class="tags"><span class="tag">Spray</span><span class="tag">Growth</span></p>
+                    <div class="product-rating">⭐⭐⭐⭐⭐ (4.88)</div>
+                    <div class="pricing">
+                        <span class="sale-price">₹230</span>
+                    </div>
+                    <button class="add-btn" onclick="addToCart(event)">Add to Cart</button>
+                </div>
+                <div class="product-data" style="display:none;" data-name="Plant Booster Spray" data-price="230" data-image="Images/Plant Booster Spray.png" data-rating="4.88" data-reviews="(4.88)" data-description="Liquid plant supplement for vigorous growth. Contains amino acids and growth promoters that accelerate vegetative growth and make your plants fuller and bushier." data-benefits="Accelerates plant growth|Fuller foliage|Longer stems|Improves leaf color|Easy to use spray|Fast visible results" data-usage="Dilute 10ml in 1 liter water. Spray on leaves and soil weekly. Best applied in evening for optimal absorption." data-type="Plant Growth Supplement" data-weight="500ml" data-packaging="Spray Bottle" data-shelflife="12 months"></div>
+            </div>
+
+            <div class="product-card" onclick="openProductDetail(this)">
+                <div class="product-image" style="background-size: cover; background-position: center;" data-src="Images/Flower Booster Spray.png" data-alt="Flower Booster Spray for enhanced blooming and flowering"></div>
+                <div class="product-content">
+                    <h3>Flower Booster Spray</h3>
+                    <p class="tags"><span class="tag">Spray</span><span class="tag">Blooming</span></p>
+                    <div class="product-rating">⭐⭐⭐⭐⭐ (4.91)</div>
+                    <div class="pricing">
+                        <span class="sale-price">₹230</span>
+                    </div>
+                    <button class="add-btn" onclick="addToCart(event)">Add to Cart</button>
+                </div>
+                <div class="product-data" style="display:none;" data-name="Flower Booster Spray" data-price="230" data-image="Images/Flower Booster Spray.png" data-rating="4.91" data-reviews="(4.91)" data-description="Premium flower enhancement spray. Loaded with phosphorus and potassium to trigger flowering, increase bud formation, and intensify flower color and fragrance." data-benefits="Increases flower count|Enhances fragrance|Vibrant colors|Longer blooming period|Bigger flowers|Prevents bud drop" data-usage="Dilute 15ml in 1 liter water. Spray weekly during budding season. Apply in early morning for best results." data-type="Flower Enhancement Spray" data-weight="500ml" data-packaging="Spray Bottle" data-shelflife="12 months"></div>
+            </div>
+
+            <div class="product-card" onclick="openProductDetail(this)">
+                <div class="product-image" style="background-size: cover; background-position: center;" data-src="Images/Plant Booster Spray (2).png" data-alt="Plant Protection Spray for plant protection and pest control"></div>
+                <div class="product-content">
+                    <h3>Plant Protection Spray</h3>
+                    <p class="tags"><span class="tag">Spray</span><span class="tag">Protection</span></p>
+                    <div class="product-rating">⭐⭐⭐⭐ (4.79)</div>
+                    <div class="pricing">
+                        <span class="sale-price">₹230</span>
+                    </div>
+                    <button class="add-btn" onclick="addToCart(event)">Add to Cart</button>
+                </div>
+                <div class="product-data" style="display:none;" data-name="Plant Protection Spray" data-price="230" data-image="Images/Plant Booster Spray (2).png" data-rating="4.79" data-reviews="(4.79)" data-description="Comprehensive plant protection against common pests and diseases. Organic formula that protects without harming beneficial insects or your plants." data-benefits="Controls mites and insects|Prevents fungal infections|Safe for edible plants|No harmful chemicals|Protects overall plant health|Natural composition" data-usage="Dilute 20ml in 1 liter water. Spray all leaf surfaces weekly. For heavy infestation, spray every 3-4 days." data-type="Organic Pest & Disease Control" data-weight="500ml" data-packaging="Spray Bottle" data-shelflife="12 months"></div>
+            </div>
+
+            <div class="product-card" onclick="openProductDetail(this)">
+                <div class="product-image" style="background-size: cover; background-position: center;" data-src="Images/Neem Oil.png" data-alt="Neem Oil organic pest control spray for plants"></div>
+                <div class="product-content">
+                    <h3>Neem Oil</h3>
+                    <p class="tags"><span class="tag">Organic</span><span class="tag">Pest Control</span></p>
+                    <div class="product-rating">⭐⭐⭐⭐⭐ (4.87)</div>
+                    <div class="pricing">
+                        <span class="sale-price">₹150</span>
+                    </div>
+                    <button class="add-btn" onclick="addToCart(event)">Add to Cart</button>
+                </div>
+                <div class="product-data" style="display:none;" data-name="Neem Oil" data-price="150" data-image="Images/Neem Oil.png" data-rating="4.87" data-reviews="(4.87)" data-description="Pure cold-pressed neem oil. Effective against a wide range of pests and fungal infections. Completely natural and safe for all plants and beneficial insects." data-benefits="Kills soft-bodied insects|Prevents fungal diseases|Safe for beneficial insects|100% Natural|Non-toxic|Multi-purpose" data-usage="Dilute 5-10ml in 1 liter water with few drops of dish wash liquid. Spray thoroughly on all plant parts. Apply in evening for best results." data-type="Pure Organic Neem Oil" data-weight="250ml" data-packaging="Bottle" data-shelflife="24 months"></div>
+            </div>
+
+            <div class="product-card" onclick="openProductDetail(this)">
+                <div class="product-image" style="background-size: cover; background-position: center;" data-src="Images/Bone Meal.jpg" data-alt="Root Booster organic root growth enhancer"></div>
+                <div class="product-content">
+                    <h3>Root Booster</h3>
+                    <p class="tags"><span class="tag">Organic</span><span class="tag">Root Growth</span></p>
+                    <div class="product-rating">⭐⭐⭐⭐⭐ (4.90)</div>
+                    <div class="pricing">
+                        <span class="sale-price">₹150</span>
+                    </div>
+                    <button class="add-btn" onclick="addToCart(event)">Add to Cart</button>
+                </div>
+                <div class="product-data" style="display:none;" data-name="Root Booster" data-price="150" data-image="Images/Bone Meal.jpg" data-rating="4.90" data-reviews="(4.90)" data-description="Specialized organic formula to promote strong and healthy root development. Perfect for both seedlings and established plants to encourage deeper root systems." data-benefits="Promotes root growth|Strengthens plant base|Improves nutrient uptake|Increases plant stability|Organic source|Better transplant survival" data-usage="Mix 2-3 tablespoons per plant hole during planting. For existing plants, apply 1 tablespoon per month to soil surface. Water well after application." data-type="Root Growth Enhancer" data-weight="800g" data-packaging="Pack of 1" data-shelflife="18 months"></div>
+            </div>
+
+            <div class="product-card" onclick="openProductDetail(this)">
+                <div class="product-image" style="background-size: cover; background-position: center;" data-src="Images/Flower mixture 2.png"></div>
+                <div class="product-content">
+                    <h3>Plant Diet</h3>
+                    <p class="tags"><span class="tag">Organic</span><span class="tag">Nutrition</span></p>
+                    <div class="product-rating">⭐⭐⭐⭐ (4.77)</div>
+                    <div class="pricing">
+                        <span class="sale-price">₹150</span>
+                    </div>
+                    <button class="add-btn" onclick="addToCart(event)">Add to Cart</button>
+                </div>
+                <div class="product-data" style="display:none;" data-name="Plant Diet" data-price="150" data-image="Images/Flower mixture 2.png" data-rating="4.77" data-reviews="(4.77)" data-description="Complete dietary supplement for plants with all essential micro and macronutrients. Formulated to address nutritional deficiencies and maintain overall plant health." data-benefits="Prevents nutrient deficiencies|Promotes healthy growth|Improves immunity|Enhances foliage color|Safe for all plant types|Long-lasting nutrition" data-usage="Dissolve 1 teaspoon in 1 liter water. Apply once every 2 weeks. Can also be mixed with soil at planting time." data-type="Complete Plant Nutrition" data-weight="500g" data-packaging="Pack of 1" data-shelflife="24 months"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Fertilizer Subscriptions -->
+    <section class="subscription-section">
+        <h2>Plant Care & Fertilizer Subscriptions</h2>
+        <p>Get premium plant care products and fertilizers delivered monthly</p>
+        <button class="subscription-btn">Subscribe Now & Save 20%</button>
+    </section>
+
+    <!-- Rewards Club -->
+    <section class="rewards-section">
+        <h2>Join Our Green Thumb Rewards Club</h2>
+        <div class="rewards-container">
+            <div class="reward-item">
+                <h3>Earn Points</h3>
+                <p>Collect points with every purchase and redeem for discounts</p>
+            </div>
+            <div class="reward-item">
+                <h3>Refer & Earn</h3>
+                <p>Share with fellow plant lovers! Earn 10% of referral orders as rewards</p>
+            </div>
+            <div class="reward-item">
+                <h3>Exclusive Access</h3>
+                <p>Members-only sales, early product launches, and special perks</p>
+            </div>
+        </div>
+        <button class="rewards-btn">Join Now - It's Free!</button>
+    </section>
+
+    <!-- Blog Section -->
+    <section id="blog" class="blog-section">
+        <h2>Plant Care Tips & Guides</h2>
+        <div class="blog-grid">
+            <div class="blog-card">
+                <div class="blog-image" style="background: linear-gradient(135deg, #90EE90, #32CD32);"></div>
+                <div class="blog-content">
+                    <h3>Organic Fertilizers vs Chemical: Which is Better?</h3>
+                    <p>Understand the benefits of organic fertilizers and how to choose the right one for your plants...</p>
+                    <a href="#" class="read-more">Read More →</a>
+                </div>
+            </div>
+
+            <div class="blog-card">
+                <div class="blog-image" style="background: linear-gradient(135deg, #FFD700, #FFA500);"></div>
+                <div class="blog-content">
+                    <h3>10 Essential Plant Care Products You Need</h3>
+                    <p>A complete guide to the must-have plant care products for healthy and thriving plants...</p>
+                    <a href="#" class="read-more">Read More →</a>
+                </div>
+            </div>
+
+            <div class="blog-card">
+                <div class="blog-image" style="background: linear-gradient(135deg, #90EE90, #00FA9A);"></div>
+                <div class="blog-content">
+                    <h3>How to Use Vermicompost for Maximum Plant Growth</h3>
+                    <p>Learn the science behind vermicompost and how to apply it for optimal results...</p>
+                    <a href="#" class="read-more">Read More →</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Newsletter -->
+    <section class="newsletter-section">
+        <h2>Get Plant Care Tips & Product Updates</h2>
+        <p>Subscribe to our newsletter for expert guides, organic fertilizer tips, and exclusive deals</p>
+        <form class="newsletter-form" onsubmit="handleNewsletterSubmit(event)">
+            <input type="email" placeholder="Enter your email address" required>
+            <button type="submit">Subscribe</button>
+        </form>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>About Us</h4>
+                <ul>
+                    <li><a href="#">Our Story</a></li>
+                    <li><a href="#">Contact Us</a></li>
+                    <li><a href="#">Careers</a></li>
+                    <li><a href="#">Locate Stores</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-section">
+                <h4>Customer Care</h4>
+                <ul>
+                    <li><a href="#">Care Guides</a></li>
+                    <li><a href="#">Shipping Policy</a></li>
+                    <li><a href="#">Returns & Refunds</a></li>
+                    <li><a href="#">FAQs</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-section">
+                <h4>Get in Touch</h4>
+                <p>📞 +91-8887608236</p>
+                <p>📧 thenurserygreen@gmail.com</p>
+                <p>💬 WhatsApp: 8887608236</p>
+            </div>
+
+            <div class="footer-section">
+                <h4>Follow Us</h4>
+                <div class="social-links">
+                    <a href="#">Facebook</a>
+                    <a href="#">Instagram</a>
+                    <a href="#">Twitter</a>
+                    <a href="#">YouTube</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <p>© 2026 The Nursery Green. All rights reserved. | <a href="#">Privacy Policy</a> | <a href="#">Terms & Conditions</a></p>
+        </div>
+    </footer>
+
+    <!-- Cart Modal -->
+    <div id="cartModal" class="modal">
+        <div class="modal-content cart-modal">
+            <div class="modal-header">
+                <h2>Shopping Cart</h2>
+                <button class="close-modal" onclick="closeCart()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="cartItems" class="cart-items">
+                    <!-- Cart items will be inserted here -->
+                </div>
+                <div id="emptyCart" class="empty-cart">
+                    <p>Your cart is empty</p>
+                <p class="empty-message">Add some products to get started!</p>
+                </div>
+            </div>
+            <div class="modal-footer cart-summary">
+                <div class="summary-row">
+                    <span>Subtotal:</span>
+                    <span id="subtotal">₹0</span>
+                </div>
+                <div class="summary-row">
+                    <span>Shipping:</span>
+                    <span id="shipping">FREE</span>
+                </div>
+                <div class="summary-row total">
+                    <span>Total:</span>
+                    <span id="cartTotal">₹0</span>
+                </div>
+                <button id="checkoutBtn" class="checkout-btn" disabled>Proceed to Checkout</button>
+                <button class="continue-shopping-btn" onclick="closeCart()">Continue Shopping</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Checkout Modal -->
+    <div id="checkoutModal" class="modal">
+        <div class="modal-content checkout-modal">
+            <div class="modal-header">
+                <h2>Checkout</h2>
+                <button class="close-modal" onclick="closeCheckout()">&times;</button>
+            </div>
+            <div class="modal-body checkout-body">
+                <!-- Order Summary -->
+                <div class="checkout-section order-summary-section">
+                    <h3>Order Summary</h3>
+                    <div id="checkoutOrderSummary" class="order-summary">
+                        <!-- Items will be inserted here -->
+                    </div>
+                </div>
+
+                <!-- Customer Details -->
+                <div class="checkout-section">
+                    <h3>Delivery Details</h3>
+                    <form id="checkoutForm">
+                        <div class="form-group">
+                            <label for="fullName">Full Name *</label>
+                            <input type="text" id="fullName" placeholder="John Doe" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="email">Email *</label>
+                            <input type="email" id="email" placeholder="john@example.com" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="phone">Phone Number *</label>
+                            <input type="tel" id="phone" placeholder="+91-8887608236" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="address">Address *</label>
+                            <textarea id="address" placeholder="Enter your delivery address" required></textarea>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="city">City *</label>
+                                <input type="text" id="city" placeholder="Mumbai" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="state">State *</label>
+                                <input type="text" id="state" placeholder="Maharashtra" required>
+                                <small id="rateInfo" style="color: var(--primary-green); font-size: 11px; margin-top: 4px; display: block; font-weight: 500;"></small>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="pincode">Pin Code *</label>
+                                <input type="text" id="pincode" placeholder="400001" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="country">Country *</label>
+                                <input type="text" id="country" placeholder="India" value="India" required>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Payment Method -->
+                <div class="checkout-section">
+                    <h3>Payment Method</h3>
+                    <div class="payment-options">
+                        <label class="radio-option">
+                            <input type="radio" name="payment" value="online" checked>
+                            <span>Online Payment (Card/UPI/Net Banking)</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Order Total -->
+                <div class="checkout-section order-total-section">
+                    <div class="shipping-info">
+                        <p style="font-size: 12px; color: #666; margin-bottom: 10px;">
+                            💡 <strong>Shipping Info:</strong> Rates calculated from Lucknow. Free shipping on orders above ₹1999!
+                        </p>
+                    </div>
+                    <div class="order-total">
+                        <div class="total-row">
+                            <span>Subtotal:</span>
+                            <span id="checkoutSubtotal">₹0</span>
+                        </div>
+                        <div class="total-row">
+                            <span>Shipping:</span>
+                            <span id="checkoutShipping">FREE</span>
+                        </div>
+                        <div class="total-row total">
+                            <span>Total Amount:</span>
+                            <span id="checkoutTotalAmount">₹0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="goBackToCart()">Back to Cart</button>
+                <button id="placeOrderBtn" class="btn-primary">Place Order</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Confirmation Modal -->
+    <div id="confirmationModal" class="modal">
+        <div class="modal-content confirmation-modal">
+            <div class="confirmation-content">
+                <div class="success-icon">✓</div>
+                <h2>Order Placed Successfully!</h2>
+                <p id="orderNumber" class="order-number">Order #12345</p>
+                
+                <div id="confirmationDetails" class="confirmation-details">
+                    <!-- Details will be inserted here -->
+                </div>
+
+                <div class="confirmation-message">
+                    <p>Thank you for your order!</p>
+                    <p>You will receive a confirmation email shortly with tracking details.</p>
+                </div>
+
+                <button class="btn-primary" onclick="closeConfirmation()">Continue Shopping</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Detail Modal -->
+    <div id="productDetailModal" class="modal">
+        <div class="modal-content product-detail-modal">
+            <button class="close-modal product-detail-close" onclick="closeProductDetail()">&times;</button>
+            
+            <div class="product-detail-container">
+                <!-- Product Images -->
+                <div class="product-detail-images">
+                    <div class="main-image">
+                        <img id="mainProductImage" src="" alt="Product image">
+                    </div>
+                    <div class="product-thumbnails">
+                        <img id="thumb1" src="" alt="Thumbnail 1" onclick="changeMainImage(this.src)" class="thumbnail">
+                    </div>
+                </div>
+
+                <!-- Product Information -->
+                <div class="product-detail-info">
+                    <!-- Product Name & Rating -->
+                    <div class="product-header">
+                        <h1 id="productDetailName">Product Name</h1>
+                        <div class="product-meta">
+                            <div class="rating-section">
+                                <span id="productRating" class="rating">⭐⭐⭐⭐⭐</span>
+                                <span id="productReviews" class="reviews">(4.85)</span>
+                            </div>
+                            <div id="productTags" class="product-tags">
+                                <!-- Tags will be inserted here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Price Section -->
+                    <div class="price-section">
+                        <div class="price-display">
+                            <span id="productPrice" class="product-detail-price">₹0</span>
+                        </div>
+                    </div>
+
+                    <!-- Product Description -->
+                    <div class="description-section">
+                        <h3>About This Product</h3>
+                        <p id="productDescription">Product description will appear here</p>
+                    </div>
+
+                    <!-- Key Benefits -->
+                    <div class="benefits-section">
+                        <h3>Key Benefits</h3>
+                        <ul id="productBenefits">
+                            <li>Premium quality</li>
+                            <li>Organic certified</li>
+                            <li>Long shelf life</li>
+                        </ul>
+                    </div>
+
+                    <!-- Usage Instructions -->
+                    <div class="usage-section">
+                        <h3>How to Use</h3>
+                        <p id="productUsage">Usage instructions will appear here</p>
+                    </div>
+
+                    <!-- Specifications -->
+                    <div class="specifications-section">
+                        <h3>Specifications</h3>
+                        <table id="productSpecs" class="specs-table">
+                            <tr>
+                                <td>Type</td>
+                                <td id="specType">-</td>
+                            </tr>
+                            <tr>
+                                <td>Weight</td>
+                                <td id="specWeight">-</td>
+                            </tr>
+                            <tr>
+                                <td>Packaging</td>
+                                <td id="specPackaging">-</td>
+                            </tr>
+                            <tr>
+                                <td>Shelf Life</td>
+                                <td id="specShelfLife">-</td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <!-- Add to Cart Button -->
+                    <div class="detail-actions">
+                        <button id="detailAddToCartBtn" class="add-to-cart-btn" onclick="addFromDetailModal()">🛒 Add to Cart</button>
+                        <button class="continue-shopping-btn" onclick="closeProductDetail()">Continue Shopping</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SEO Sitemap and Robots Configuration -->
+    <script>
+        // Indicate to search engines that this is an important/content page
+        document.documentElement.setAttribute('data-seo-priority', 'high');
+    </script>
+    
+    <!-- Main Cart & Checkout System (Deferred for fast page load) -->
+    <script defer src="shared-auth.js?v=20260225c"></script>
+    <script defer src="script.js"></script>
+    
+    <!-- Chatbot Support System (Deferred for fast page load) -->
+    <script defer src="chatbot.js"></script>
+</body>
+</html>
