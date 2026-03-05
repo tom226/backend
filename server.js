@@ -13,6 +13,10 @@ const { ensureEnergySeeded, startDailyEnergyRefresh } = require('./services/plan
 const app = express();
 const PORT = process.env.PORT || 7000; // Changed default port to 7000
 
+const hasRazorpayConfig = Boolean(
+  process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET
+);
+
 // Middleware
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:3000',
@@ -116,6 +120,11 @@ app.listen(PORT, () => {
   console.log(`\n🌱 Nursery Green Backend Server running on port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`MongoDB: ${process.env.MONGODB_URI || 'mongodb://localhost:27017/nursery-green'}\n`);
+  if (hasRazorpayConfig) {
+    console.log('✓ Payments: Razorpay configured');
+  } else {
+    console.warn('⚠ Payments: Razorpay not configured (set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET)');
+  }
 });
 
 module.exports = app;
