@@ -8,6 +8,7 @@ import { CartProvider } from './src/context/CartContext';
 import AppNavigator from './src/navigation/AppNavigator';
 import ErrorBoundary from './src/components/ErrorBoundary';
 import { flushErrorLogs, installGlobalErrorHandler, logError } from './src/utils/errorLogger';
+import { startOtaUpdateManager } from './src/utils/otaUpdateManager';
 
 // Keep the splash screen visible while we load resources
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -23,6 +24,11 @@ export default function App() {
 
   useEffect(() => {
     const uninstall = installGlobalErrorHandler();
+    let stopOtaUpdateManager = null;
+
+    startOtaUpdateManager().then((cleanup) => {
+      stopOtaUpdateManager = cleanup;
+    });
 
     logError({
       source: 'app-start',
@@ -37,6 +43,9 @@ export default function App() {
 
     return () => {
       clearInterval(flushTimer);
+      if (typeof stopOtaUpdateManager === 'function') {
+        stopOtaUpdateManager();
+      }
       if (typeof uninstall === 'function') uninstall();
     };
   }, []);
