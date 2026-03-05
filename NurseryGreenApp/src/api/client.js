@@ -78,8 +78,16 @@ class ApiClient {
   }
 
   // Community
-  async getCommunityPosts() {
-    return this.request('/api/community');
+  async getCommunityPosts(params = {}) {
+    const qs = new URLSearchParams();
+    if (params.q) qs.set('q', params.q);
+    if (params.category) qs.set('category', params.category);
+    if (params.tag) qs.set('tag', params.tag);
+    if (params.sort) qs.set('sort', params.sort);
+    if (params.page) qs.set('page', params.page);
+    if (params.limit) qs.set('limit', params.limit);
+    const qstr = qs.toString();
+    return this.request(`/api/community${qstr ? '?' + qstr : ''}`);
   }
 
   async createPost(postData) {
@@ -100,6 +108,42 @@ class ApiClient {
       method: 'POST',
       body: JSON.stringify({ text }),
     });
+  }
+
+  async getCommunityStats() {
+    return this.request('/api/community/stats');
+  }
+
+  async getTrending() {
+    return this.request('/api/community/trending');
+  }
+
+  async getLeaderboard() {
+    return this.request('/api/community/leaderboard');
+  }
+
+  async getNotifications() {
+    return this.request('/api/community/notifications');
+  }
+
+  async markNotificationsRead() {
+    return this.request('/api/community/notifications/read', { method: 'POST' });
+  }
+
+  async getMyProfile() {
+    return this.request('/api/community/my-profile');
+  }
+
+  async sharePost(postId) {
+    return this.request(`/api/community/${postId}/share`, { method: 'POST' });
+  }
+
+  async viewPost(postId) {
+    return this.request(`/api/community/${postId}/view`, { method: 'POST' });
+  }
+
+  async setBestAnswer(postId, commentId) {
+    return this.request(`/api/community/${postId}/best-answer/${commentId}`, { method: 'POST' });
   }
 
   async googleOneTapLogin(idToken) {

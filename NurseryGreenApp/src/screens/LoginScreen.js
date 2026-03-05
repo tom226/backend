@@ -8,11 +8,11 @@ import { haptic } from '../utils/platform';
 
 const { width } = Dimensions.get('window');
 const BACKEND_URL = 'https://backend-production-f128.up.railway.app';
+const APP_LOGO = require('../../assets/icon.png');
 
 export default function LoginScreen({ navigation }) {
   const { login } = useAuth();
   const [showWebView, setShowWebView] = React.useState(false);
-  const [authProvider, setAuthProvider] = React.useState('google');
   const webViewRef = useRef(null);
 
   const handleWebViewNav = (event) => {
@@ -35,14 +35,14 @@ export default function LoginScreen({ navigation }) {
   };
 
   if (showWebView) {
-    const authUrl = `${BACKEND_URL}/auth/${authProvider}?redirect=${encodeURIComponent('nurserygreen://auth')}`;
+    const authUrl = `${BACKEND_URL}/auth/google?redirect=${encodeURIComponent('nurserygreen://auth')}`;
     return (
       <View style={styles.container}>
         <View style={styles.webViewHeader}>
           <TouchableOpacity onPress={() => setShowWebView(false)} style={styles.closeBtn}>
             <Ionicons name="close" size={24} color={Colors.text} />
           </TouchableOpacity>
-          <Text style={styles.webViewTitle}>Sign In with {authProvider === 'google' ? 'Google' : 'Facebook'}</Text>
+          <Text style={styles.webViewTitle}>Sign In with Google</Text>
           <View style={{ width: 24 }} />
         </View>
         <WebView
@@ -62,7 +62,7 @@ export default function LoginScreen({ navigation }) {
     <View style={styles.container}>
       <View style={styles.topSection}>
         <View style={styles.logoCircle}>
-          <Ionicons name="leaf" size={48} color={Colors.primary} />
+          <Image source={APP_LOGO} style={styles.logoImage} resizeMode="contain" />
         </View>
         <Text style={styles.appName}>The Nursery Green</Text>
         <Text style={styles.tagline}>Your Plant Care Companion</Text>
@@ -76,7 +76,7 @@ export default function LoginScreen({ navigation }) {
 
         <TouchableOpacity
           style={styles.googleBtn}
-          onPress={() => { haptic.medium(); setAuthProvider('google'); setShowWebView(true); }}
+          onPress={() => { haptic.medium(); setShowWebView(true); }}
           activeOpacity={0.85}
         >
           <View style={styles.btnIcon}>
@@ -85,20 +85,11 @@ export default function LoginScreen({ navigation }) {
           <Text style={styles.googleBtnText}>Continue with Google</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.facebookBtn}
-          onPress={() => { haptic.medium(); setAuthProvider('facebook'); setShowWebView(true); }}
-          activeOpacity={0.85}
-        >
-          <Ionicons name="logo-facebook" size={20} color="#FFFFFF" />
-          <Text style={styles.facebookBtnText}>Continue with Facebook</Text>
-        </TouchableOpacity>
-
         {/* Apple Sign In — iOS only */}
         {Platform.OS === 'ios' && (
           <TouchableOpacity
             style={styles.appleBtn}
-            onPress={() => { haptic.medium(); setAuthProvider('google'); setShowWebView(true); }}
+            onPress={() => { haptic.medium(); setShowWebView(true); }}
             activeOpacity={0.85}
           >
             <Ionicons name="logo-apple" size={20} color="#FFFFFF" />
@@ -140,6 +131,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     ...Shadows.medium,
+  },
+  logoImage: {
+    width: 68,
+    height: 68,
+    borderRadius: 34,
   },
   appName: {
     fontSize: 28,
@@ -198,22 +194,6 @@ const styles = StyleSheet.create({
   },
   googleBtnText: {
     ...Fonts.medium,
-    flex: 1,
-    textAlign: 'center',
-  },
-  facebookBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#1877F2',
-    borderRadius: Radius.lg,
-    paddingVertical: 14,
-    paddingHorizontal: Spacing.xl,
-    marginBottom: Spacing.lg,
-    ...Shadows.small,
-  },
-  facebookBtnText: {
-    ...Fonts.medium,
-    color: '#FFF',
     flex: 1,
     textAlign: 'center',
   },

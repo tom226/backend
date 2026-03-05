@@ -53,7 +53,14 @@ export default function PostCard({ post, onLike, onComment, isLoggedIn }) {
           )}
         </View>
         <View style={styles.authorInfo}>
-          <Text style={styles.authorName}>{post.author || post.authorName || 'Plant Lover'}</Text>
+          <View style={styles.authorNameRow}>
+            <Text style={styles.authorName}>{post.author || post.authorName || 'Plant Lover'}</Text>
+            {post.isExpertPost && (
+              <View style={styles.expertBadge}>
+                <Text style={styles.expertBadgeText}>✓ Expert</Text>
+              </View>
+            )}
+          </View>
           <Text style={styles.meta}>
             {post.city ? `${post.city} · ` : ''}{timeAgo(post.createdAt || post.timestamp)}
           </Text>
@@ -65,6 +72,16 @@ export default function PostCard({ post, onLike, onComment, isLoggedIn }) {
         )}
       </View>
 
+      {/* Scanner Diagnosis Badge */}
+      {post.scanDiagnosis && (
+        <View style={styles.scanBadge}>
+          <Text style={styles.scanBadgeText}>
+            🔬 Scanner: <Text style={{ fontWeight: '800' }}>{post.scanDiagnosis}</Text>
+            {post.scanConfidence ? ` (${Math.round(post.scanConfidence * 100)}%)` : ''}
+          </Text>
+        </View>
+      )}
+
       {/* Content */}
       <Text style={styles.content}>{post.content}</Text>
 
@@ -73,6 +90,18 @@ export default function PostCard({ post, onLike, onComment, isLoggedIn }) {
         <View style={styles.imageRow}>
           {post.images.slice(0, 2).map((img, idx) => (
             <Image key={idx} source={{ uri: img }} style={styles.postImage} />
+          ))}
+        </View>
+      )}
+
+      {/* Product Suggestions */}
+      {post.linkedProducts && post.linkedProducts.length > 0 && (
+        <View style={styles.productRow}>
+          <Text style={styles.productLabel}>🛒 Recommended:</Text>
+          {post.linkedProducts.map((p, i) => (
+            <View key={i} style={styles.productChip}>
+              <Text style={styles.productChipText}>{p}</Text>
+            </View>
           ))}
         </View>
       )}
@@ -112,8 +141,12 @@ export default function PostCard({ post, onLike, onComment, isLoggedIn }) {
       {showComments && (
         <View style={styles.commentsSection}>
           {(post.comments || []).slice(-3).map((c, idx) => (
-            <View key={idx} style={styles.commentItem}>
-              <Text style={styles.commentAuthor}>{c.authorName || 'User'}</Text>
+            <View key={idx} style={[styles.commentItem, c.isPinned && styles.bestAnswer]}>
+              <View style={styles.commentAuthorRow}>
+                <Text style={styles.commentAuthor}>{c.authorName || c.author || 'User'}</Text>
+                {c.isExpert && <Text style={styles.expertDot}>✓</Text>}
+                {c.isPinned && <Text style={styles.bestAnswerLabel}>✅ Best Answer</Text>}
+              </View>
               <Text style={styles.commentText}>{c.text}</Text>
             </View>
           ))}
@@ -173,9 +206,25 @@ const styles = StyleSheet.create({
     flex: 1,
     marginLeft: Spacing.md,
   },
+  authorNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
   authorName: {
     ...Fonts.medium,
     fontSize: 14,
+  },
+  expertBadge: {
+    backgroundColor: '#10b981',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  expertBadgeText: {
+    color: '#fff',
+    fontSize: 9,
+    fontWeight: '800',
   },
   meta: {
     ...Fonts.small,
@@ -192,6 +241,19 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     textTransform: 'uppercase',
   },
+  scanBadge: {
+    backgroundColor: '#eff6ff',
+    borderWidth: 1,
+    borderColor: '#93c5fd',
+    borderRadius: Radius.md,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    marginBottom: Spacing.sm,
+  },
+  scanBadgeText: {
+    fontSize: 12,
+    color: '#1e40af',
+  },
   content: {
     ...Fonts.regular,
     lineHeight: 20,
@@ -207,6 +269,36 @@ const styles = StyleSheet.create({
     borderRadius: Radius.md,
     marginRight: Spacing.sm,
     backgroundColor: Colors.card,
+  },
+  productRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#fefce8',
+    borderWidth: 1,
+    borderColor: '#fde68a',
+    borderRadius: Radius.md,
+    padding: Spacing.sm,
+    marginBottom: Spacing.md,
+  },
+  productLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#92400e',
+  },
+  productChip: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#fde68a',
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  productChipText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#92400e',
   },
   actions: {
     flexDirection: 'row',
@@ -230,13 +322,34 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.md,
   },
   commentItem: {
-    flexDirection: 'row',
     marginBottom: Spacing.sm,
+  },
+  commentAuthorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 2,
   },
   commentAuthor: {
     ...Fonts.caption,
     fontWeight: '700',
-    marginRight: Spacing.sm,
+  },
+  expertDot: {
+    fontSize: 10,
+    color: '#10b981',
+    fontWeight: '800',
+  },
+  bestAnswer: {
+    backgroundColor: '#f0fdf4',
+    borderWidth: 1,
+    borderColor: 'rgba(16,185,129,0.2)',
+    borderRadius: Radius.md,
+    padding: Spacing.sm,
+  },
+  bestAnswerLabel: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#059669',
   },
   commentText: {
     ...Fonts.caption,

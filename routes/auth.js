@@ -44,45 +44,6 @@ router.get('/google/callback',
   }
 );
 
-// Facebook OAuth Routes
-router.get('/facebook', (req, res, next) => {
-  if (req.query.redirect) {
-    req.session.oauthRedirect = req.query.redirect;
-  }
-  next();
-}, passport.authenticate('facebook', { scope: ['email'] }));
-
-router.get('/facebook/callback',
-  passport.authenticate('facebook', { 
-    failureRedirect: process.env.FRONTEND_URL ? `${process.env.FRONTEND_URL}/login.html?error=facebook_auth_failed` : '/login' 
-  }),
-  (req, res) => {
-    console.log('Facebook OAuth callback - User authenticated:', req.user);
-    
-    try {
-      const redirectTarget = req.session.oauthRedirect;
-      delete req.session.oauthRedirect;
-
-      // Generate JWT Token
-      const token = jwt.sign(
-        { userId: req.user._id, email: req.user.email },
-        process.env.JWT_SECRET || 'your-secret-key',
-        { expiresIn: '24h' }
-      );
-      
-      // Redirect to frontend with token
-      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-      const redirectParam = redirectTarget ? `&redirect=${encodeURIComponent(redirectTarget)}` : '';
-      console.log('Redirecting to:', `${frontendUrl}/login.html?token=${token.substring(0, 20)}...${redirectParam ? ' with redirect' : ''}`);
-      res.redirect(`${frontendUrl}/login.html?token=${token}&user=${encodeURIComponent(JSON.stringify(req.user))}${redirectParam}`);
-    } catch (error) {
-      console.error('Facebook OAuth callback error:', error);
-      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-      res.redirect(`${frontendUrl}/login.html?error=token_generation_failed`);
-    }
-  }
-);
-
 // Logout
 router.get('/logout', (req, res) => {
   req.logout((err) => {

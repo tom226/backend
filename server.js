@@ -11,7 +11,7 @@ const { ensureEnergySeeded, startDailyEnergyRefresh } = require('./services/plan
 
 // Initialize Express
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 7000; // Changed default port to 7000
 
 // Middleware
 app.use(cors({

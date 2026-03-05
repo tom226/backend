@@ -56,26 +56,48 @@ export default function ProductDetailScreen({ route, navigation }) {
           <Text style={styles.sectionTitle}>Description</Text>
           <Text style={styles.description}>{product.description}</Text>
 
-          {/* Features */}
-          <Text style={styles.sectionTitle}>Features</Text>
+          {/* Benefits */}
+          <Text style={styles.sectionTitle}>{product.benefits ? 'Benefits' : 'Features'}</Text>
           <View style={styles.featuresList}>
-            <View style={styles.featureItem}>
-              <Ionicons name="checkmark-circle" size={18} color={Colors.success} />
-              <Text style={styles.featureText}>100% Organic</Text>
-            </View>
-            <View style={styles.featureItem}>
-              <Ionicons name="checkmark-circle" size={18} color={Colors.success} />
-              <Text style={styles.featureText}>Safe for all plants</Text>
-            </View>
-            <View style={styles.featureItem}>
-              <Ionicons name="checkmark-circle" size={18} color={Colors.success} />
-              <Text style={styles.featureText}>Easy to use</Text>
-            </View>
+            {product.benefits && product.benefits.length > 0 ? (
+              product.benefits.map((benefit, idx) => (
+                <View key={idx} style={styles.featureItem}>
+                  <Ionicons name="checkmark-circle" size={18} color={Colors.success} />
+                  <Text style={styles.featureText}>{benefit}</Text>
+                </View>
+              ))
+            ) : (
+              <>
+                <View style={styles.featureItem}>
+                  <Ionicons name="checkmark-circle" size={18} color={Colors.success} />
+                  <Text style={styles.featureText}>100% Organic</Text>
+                </View>
+                <View style={styles.featureItem}>
+                  <Ionicons name="checkmark-circle" size={18} color={Colors.success} />
+                  <Text style={styles.featureText}>Safe for all plants</Text>
+                </View>
+                <View style={styles.featureItem}>
+                  <Ionicons name="checkmark-circle" size={18} color={Colors.success} />
+                  <Text style={styles.featureText}>Easy to use</Text>
+                </View>
+              </>
+            )}
             <View style={styles.featureItem}>
               <Ionicons name="checkmark-circle" size={18} color={Colors.success} />
               <Text style={styles.featureText}>Free shipping over ₹1999</Text>
             </View>
           </View>
+
+          {/* Usage Instructions */}
+          {product.usage && (
+            <>
+              <Text style={styles.sectionTitle}>How to Use</Text>
+              <View style={styles.usageBox}>
+                <Ionicons name="information-circle-outline" size={20} color={Colors.primary} />
+                <Text style={styles.usageText}>{product.usage}</Text>
+              </View>
+            </>
+          )}
 
           {/* Shipping info */}
           <View style={styles.shippingBox}>

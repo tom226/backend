@@ -12,7 +12,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css?v=20260225b">
-    <link rel="stylesheet" href="scanner.css?v=20260225b">
+    <link rel="stylesheet" href="scanner.css?v=20260305a">
 
     <script type="application/ld+json">
     {
@@ -274,6 +274,111 @@
                     <div id="energyReferences" class="energy-references" style="display:none;"></div>
                 </div>
 
+                <!-- Observation Questionnaire (shown when confidence is low) -->
+                <div class="observation-form-card" id="observationForm" style="display:none;">
+                    <div class="obs-header">
+                        <h3>📋 Help Us Diagnose Better</h3>
+                        <p>Your photo analysis had low confidence. Answer a few quick questions for a more accurate result:</p>
+                    </div>
+
+                    <div class="obs-field">
+                        <label>🌱 Plant Name (if known)</label>
+                        <input type="text" id="obsPlantName" placeholder="e.g. Rose, Tulsi, Money Plant..." class="obs-input">
+                    </div>
+
+                    <div class="obs-field">
+                        <label>🍃 Leaf Color</label>
+                        <select id="obsLeafColor" class="obs-select">
+                            <option value="">— Select —</option>
+                            <option value="green">Green (healthy)</option>
+                            <option value="yellow">Yellow / Yellowing</option>
+                            <option value="brown">Brown / Dry</option>
+                            <option value="pale-green">Pale Green</option>
+                            <option value="black">Black / Dark</option>
+                        </select>
+                    </div>
+
+                    <div class="obs-field">
+                        <label>🍃 Leaf Texture</label>
+                        <select id="obsLeafTexture" class="obs-select">
+                            <option value="">— Select —</option>
+                            <option value="normal">Normal / Firm</option>
+                            <option value="spotted">Has Spots</option>
+                            <option value="powdery">White Powder / Dusty</option>
+                            <option value="droopy">Droopy / Wilted</option>
+                            <option value="curled">Curled / Deformed</option>
+                            <option value="sticky">Sticky</option>
+                            <option value="crispy">Dry / Crispy edges</option>
+                        </select>
+                    </div>
+
+                    <div class="obs-field">
+                        <label>🔍 Symptoms You See (select all that apply)</label>
+                        <div class="obs-symptom-grid">
+                            <label class="obs-chip"><input type="checkbox" class="obs-symptom-check" value="yellowing leaves"> Yellowing leaves</label>
+                            <label class="obs-chip"><input type="checkbox" class="obs-symptom-check" value="brown spots on leaves"> Brown spots</label>
+                            <label class="obs-chip"><input type="checkbox" class="obs-symptom-check" value="white powder on leaves"> White powder</label>
+                            <label class="obs-chip"><input type="checkbox" class="obs-symptom-check" value="wilting with wet soil"> Wilting</label>
+                            <label class="obs-chip"><input type="checkbox" class="obs-symptom-check" value="visible tiny insects"> Tiny insects</label>
+                            <label class="obs-chip"><input type="checkbox" class="obs-symptom-check" value="sticky leaves"> Sticky leaves</label>
+                            <label class="obs-chip"><input type="checkbox" class="obs-symptom-check" value="foul smell from soil"> Foul smell from soil</label>
+                            <label class="obs-chip"><input type="checkbox" class="obs-symptom-check" value="curled new leaves"> Curled leaves</label>
+                            <label class="obs-chip"><input type="checkbox" class="obs-symptom-check" value="white cottony masses on stems"> White cotton on stems</label>
+                            <label class="obs-chip"><input type="checkbox" class="obs-symptom-check" value="orange/rust colored spots"> Orange/rust spots</label>
+                            <label class="obs-chip"><input type="checkbox" class="obs-symptom-check" value="holes in leaves"> Holes in leaves</label>
+                            <label class="obs-chip"><input type="checkbox" class="obs-symptom-check" value="stunted growth"> Stunted growth</label>
+                        </div>
+                        <input type="text" id="obsExtraSymptoms" placeholder="Any other symptom..." class="obs-input" style="margin-top:8px;">
+                    </div>
+
+                    <div class="obs-row">
+                        <div class="obs-field obs-half">
+                            <label>💧 Soil Moisture</label>
+                            <select id="obsSoilMoisture" class="obs-select">
+                                <option value="">— Select —</option>
+                                <option value="dry">Dry</option>
+                                <option value="slightly-dry">Slightly Dry</option>
+                                <option value="moist">Moist</option>
+                                <option value="wet">Very Wet</option>
+                                <option value="waterlogged">Waterlogged</option>
+                            </select>
+                        </div>
+                        <div class="obs-field obs-half">
+                            <label>🪴 Drainage</label>
+                            <select id="obsSoilDrainage" class="obs-select">
+                                <option value="">— Select —</option>
+                                <option value="good">Good (drains fast)</option>
+                                <option value="average">Average</option>
+                                <option value="poor">Poor (stays wet)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="obs-row">
+                        <div class="obs-field obs-half">
+                            <label>👃 Soil Smell</label>
+                            <select id="obsSoilSmell" class="obs-select">
+                                <option value="">— Select —</option>
+                                <option value="normal">Normal / Earthy</option>
+                                <option value="foul">Foul / Rotten</option>
+                                <option value="musty">Musty / Damp</option>
+                                <option value="none">No smell</option>
+                            </select>
+                        </div>
+                        <div class="obs-field obs-half">
+                            <label>🏠 Environment</label>
+                            <select id="obsEnvType" class="obs-select">
+                                <option value="">— Auto-detect —</option>
+                                <option value="indoor">Indoor</option>
+                                <option value="outdoor">Outdoor / Garden</option>
+                                <option value="balcony">Balcony / Terrace</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button class="btn-scan analyze" onclick="submitObservation()" style="margin-top:12px;">🔬 Re-Analyze with Details</button>
+                </div>
+
                 <!-- Product Recommendations -->
                 <div class="products-card" id="productsCard">
                     <h3>🛒 Recommended Products</h3>
@@ -382,6 +487,6 @@
     </footer>
 
     <script src="shared-auth.js?v=20260225c"></script>
-    <script src="scanner.js?v=20260227b"></script>
+    <script src="scanner.js?v=20260305a"></script>
 </body>
 </html>

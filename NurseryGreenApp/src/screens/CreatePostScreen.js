@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView,
-  Alert, ActivityIndicator,
+  Alert, ActivityIndicator, Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Fonts, Spacing, Radius } from '../constants/theme';
 import { COMMUNITY_CATEGORIES } from '../constants/data';
 import api from '../api/client';
+
+const APP_LOGO = require('../../assets/icon.png');
 
 export default function CreatePostScreen({ navigation }) {
   const [content, setContent] = useState('');
@@ -62,11 +64,15 @@ export default function CreatePostScreen({ navigation }) {
               style={[styles.catChip, category === cat.key && styles.catChipActive]}
               onPress={() => setCategory(cat.key)}
             >
-              <Ionicons
-                name={cat.icon}
-                size={14}
-                color={category === cat.key ? Colors.white : Colors.textSecondary}
-              />
+              {cat.icon === 'leaf' ? (
+                <Image source={APP_LOGO} style={styles.catLogo} resizeMode="contain" />
+              ) : (
+                <Ionicons
+                  name={cat.icon}
+                  size={14}
+                  color={category === cat.key ? Colors.white : Colors.textSecondary}
+                />
+              )}
               <Text style={[styles.catText, category === cat.key && styles.catTextActive]}>
                 {cat.label}
               </Text>
@@ -115,6 +121,11 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.sm, borderRadius: Radius.full,
     backgroundColor: Colors.surface, marginRight: Spacing.sm,
     borderWidth: 1, borderColor: Colors.border,
+  },
+  catLogo: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
   },
   catChipActive: { backgroundColor: Colors.primary, borderColor: Colors.primary },
   catText: { ...Fonts.small, fontWeight: '600', marginLeft: 4 },

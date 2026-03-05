@@ -4,7 +4,6 @@ const userSchema = new mongoose.Schema({
   // OAuth Info
   id: { type: String, unique: true, sparse: true },
   googleId: { type: String, unique: true, sparse: true },
-  facebookId: { type: String, unique: true, sparse: true },
   
   // User Details
   firstName: String,
@@ -25,7 +24,7 @@ const userSchema = new mongoose.Schema({
   // OAuth Provider
   provider: {
     type: String,
-    enum: ['google', 'facebook', 'email'],
+    enum: ['google', 'email'],
     default: 'email'
   },
   

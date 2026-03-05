@@ -1,7 +1,9 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Fonts, Spacing, Radius, Shadows } from '../constants/theme';
+
+const APP_LOGO = require('../../assets/icon.png');
 
 export default function EnergyCard({ plant, onReadMore }) {
   if (!plant) return null;
@@ -83,7 +85,7 @@ export default function EnergyCard({ plant, onReadMore }) {
           {plant.healthBenefits.airPurify && (
             <View style={styles.tagRow}>
               <View style={styles.tag}>
-                <Ionicons name="leaf" size={11} color={Colors.primary} />
+                <Image source={APP_LOGO} style={styles.tagLogo} resizeMode="contain" />
                 <Text style={styles.tagText}>Air Purifying</Text>
               </View>
             </View>
@@ -261,6 +263,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginLeft: 3,
     color: Colors.primary,
+  },
+  tagLogo: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
   },
   careGrid: {
     flexDirection: 'row',

@@ -47,11 +47,16 @@
         "backgroundColor": "#F5F9E8"
       },
       "package": "com.nurserygreen.app",
-      "versionCode": 1
+      "versionCode": 1,
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png",
-      "bundler": "metro"
+      "bundler": "metro",
+      "output": "single",
+      "baseUrl": "/app"
     },
     "plugins": [
       "expo-dev-client",
@@ -67,8 +72,9 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "nursery-green-app"
+        "projectId": "ecc87b16-8b2e-4ed9-bda5-4254476df0a8"
       }
-    }
+    },
+    "owner": "arpitit18"
   }
 }

@@ -202,18 +202,31 @@
         setAuthedUI();
         hideProfileModal();
         loadPostsFromApi();
+        loadStats();
+        loadTrending();
+        loadLeaderboard();
+        if (isAuthed()) {
+            loadNotifications();
+            loadMyProfile();
+        }
+        handleScannerBridge();
     }
 
     // ==========================================
     // DATA LOADING
     // ==========================================
-    async function loadPostsFromApi() {
+    async function loadPostsFromApi(searchQuery) {
         authToken = sharedAuth && sharedAuth.getToken ? sharedAuth.getToken() : authToken;
         const headers = {};
         if (authToken) headers.Authorization = `Bearer ${authToken}`;
 
+        let url = `${API_BASE}/api/community?limit=30`;
+        if (searchQuery) url += `&q=${encodeURIComponent(searchQuery)}`;
+        if (currentFilter && currentFilter !== 'all') url += `&category=${currentFilter}`;
+        if (activeTag) url += `&tag=${encodeURIComponent(activeTag)}`;
+
         try {
-            const res = await fetch(`${API_BASE}/api/community`, { headers });
+            const res = await fetch(url, { headers });
             if (!res.ok) throw new Error('Failed to fetch posts');
 
             const data = await res.json();
@@ -233,6 +246,255 @@
         renderFeed();
         updateCounts();
         startLiveUpdates();
+    }
+
+    // ==========================================
+    // DYNAMIC WIDGETS — Stats, Trending, Leaderboard
+    // ==========================================
+    async function loadStats() {
+        try {
+            const res = await fetch(`${API_BASE}/api/community/stats`);
+            if (!res.ok) return;
+            const data = await res.json();
+            const el = (id, val) => { const e = document.getElementById(id); if (e) e.textContent = (val || 0).toLocaleString(); };
+            el('memberCount', data.members);
+            el('postCount', data.posts);
+            el('cityCount', data.cities);
+        } catch (err) {
+            console.warn('Stats load error:', err);
+        }
+    }
+
+    async function loadTrending() {
+        try {
+            const res = await fetch(`${API_BASE}/api/community/trending`);
+            if (!res.ok) return;
+            const data = await res.json();
+            const list = document.getElementById('trendingList');
+            if (!list) return;
+            if (!data.trending || data.trending.length === 0) {
+                list.innerHTML = '<p style="font-size:0.9rem;color:var(--text-light);">No trending topics yet</p>';
+                return;
+            }
+            list.innerHTML = data.trending.map(t => `
+                <a href="#" class="trending-item" data-tag="${t.tag}">
+                    <span class="trend-tag">#${t.tag.charAt(0).toUpperCase() + t.tag.slice(1)}</span>
+                    <span class="trend-count">${t.count} post${t.count !== 1 ? 's' : ''}</span>
+                </a>
+            `).join('');
+            list.querySelectorAll('.trending-item').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    filterByTag(item.dataset.tag);
+                });
+            });
+        } catch (err) {
+            console.warn('Trending load error:', err);
+        }
+    }
+
+    async function loadLeaderboard() {
+        try {
+            const res = await fetch(`${API_BASE}/api/community/leaderboard`);
+            if (!res.ok) return;
+            const data = await res.json();
+            const list = document.getElementById('leaderboardList');
+            if (!list) return;
+            if (!data.leaderboard || data.leaderboard.length === 0) {
+                list.innerHTML = '<p style="font-size:0.9rem;color:var(--text-light);">Be the first contributor!</p>';
+                return;
+            }
+            const ranks = ['🥇', '🥈', '🥉'];
+            list.innerHTML = data.leaderboard.map((l, i) => `
+                <div class="leader-row">
+                    <span class="leader-rank">${ranks[i] || (i + 1)}</span>
+                    <span class="leader-avatar">${l.avatar}</span>
+                    <div class="leader-info">
+                        <span class="leader-name">${l.name}${l.isExpert ? ' <span class="expert-badge">✓ Expert</span>' : ''}${l.badges.length ? ' ' + l.badges.map(b => b.icon).join('') : ''}</span>
+                        <span class="leader-detail">${l.city} · ${l.postCount} posts · ${l.totalLikes} ❤️</span>
+                    </div>
+                </div>
+            `).join('');
+        } catch (err) {
+            console.warn('Leaderboard load error:', err);
+        }
+    }
+
+    // ==========================================
+    // SEARCH & HASHTAG FILTERING
+    // ==========================================
+    let activeTag = null;
+    let searchDebounce = null;
+
+    function setupSearch() {
+        const input = document.getElementById('communitySearch');
+        const clearBtn = document.getElementById('searchClear');
+        if (!input) return;
+
+        input.addEventListener('input', () => {
+            clearBtn.style.display = input.value.length > 0 ? 'block' : 'none';
+            clearTimeout(searchDebounce);
+            searchDebounce = setTimeout(() => {
+                activeTag = null;
+                loadPostsFromApi(input.value.trim());
+            }, 400);
+        });
+
+        input.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                clearTimeout(searchDebounce);
+                activeTag = null;
+                loadPostsFromApi(input.value.trim());
+            }
+        });
+
+        clearBtn.addEventListener('click', () => {
+            input.value = '';
+            clearBtn.style.display = 'none';
+            activeTag = null;
+            loadPostsFromApi();
+        });
+    }
+
+    function filterByTag(tag) {
+        activeTag = tag;
+        const input = document.getElementById('communitySearch');
+        if (input) { input.value = '#' + tag; document.getElementById('searchClear').style.display = 'block'; }
+        displayedPosts = postsPerPage;
+        loadPostsFromApi();
+        showToast('Filtering by #' + tag);
+    }
+
+    // ==========================================
+    // NOTIFICATIONS
+    // ==========================================
+    async function loadNotifications() {
+        try {
+            const res = await fetch(`${API_BASE}/api/community/notifications`, {
+                headers: { Authorization: `Bearer ${authToken}` }
+            });
+            if (!res.ok) return;
+            const data = await res.json();
+
+            const card = document.getElementById('notifCard');
+            const list = document.getElementById('notifList');
+            const badge = document.getElementById('notifBadge');
+            const markBtn = document.getElementById('notifMarkRead');
+            if (!card || !list) return;
+            card.style.display = 'block';
+
+            if (data.unreadCount > 0) {
+                badge.textContent = data.unreadCount;
+                badge.style.display = 'inline-block';
+                markBtn.style.display = 'block';
+            } else {
+                badge.style.display = 'none';
+                markBtn.style.display = 'none';
+            }
+
+            if (data.notifications.length === 0) {
+                list.innerHTML = '<p style="font-size:0.9rem;color:var(--text-light);">No notifications yet</p>';
+                return;
+            }
+
+            list.innerHTML = data.notifications.slice(0, 10).map(n => `
+                <div class="notif-item ${n.read ? '' : 'notif-unread'}">
+                    <span class="notif-icon">${n.icon}</span>
+                    <div class="notif-body">
+                        <span class="notif-msg">${n.message}</span>
+                        <span class="notif-time">${formatRelativeTime(new Date(n.createdAt))}</span>
+                    </div>
+                </div>
+            `).join('');
+        } catch (err) {
+            console.warn('Notifications error:', err);
+        }
+    }
+
+    async function markNotificationsRead() {
+        try {
+            await fetch(`${API_BASE}/api/community/notifications/read`, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${authToken}` }
+            });
+            document.getElementById('notifBadge').style.display = 'none';
+            document.getElementById('notifMarkRead').style.display = 'none';
+            document.querySelectorAll('.notif-unread').forEach(el => el.classList.remove('notif-unread'));
+        } catch (err) { console.warn('Mark read error:', err); }
+    }
+
+    // ==========================================
+    // GAMIFICATION PROFILE
+    // ==========================================
+    const LEVEL_LABELS = { seedling: '🌱 Seedling', sapling: '🌿 Sapling', tree: '🌳 Tree', forest: '🌲 Forest', expert: '👑 Expert' };
+    const LEVEL_MAX = { seedling: 100, sapling: 500, tree: 2000, forest: 5000, expert: 10000 };
+
+    async function loadMyProfile() {
+        try {
+            const res = await fetch(`${API_BASE}/api/community/my-profile`, {
+                headers: { Authorization: `Bearer ${authToken}` }
+            });
+            if (!res.ok) return;
+            const data = await res.json();
+
+            const card = document.getElementById('gamificationCard');
+            if (!card) return;
+            card.style.display = 'block';
+
+            document.getElementById('gamLevel').textContent = LEVEL_LABELS[data.level] || '🌱 Seedling';
+            document.getElementById('gamPoints').textContent = (data.points || 0).toLocaleString();
+            document.getElementById('gamStreak').textContent = `🔥 ${data.streak?.current || 0}-day streak`;
+
+            const max = LEVEL_MAX[data.level] || 100;
+            const pct = Math.min(100, Math.round((data.points / max) * 100));
+            document.getElementById('gamProgressBar').style.width = pct + '%';
+
+            const badgesEl = document.getElementById('gamBadges');
+            if (data.badges && data.badges.length > 0) {
+                badgesEl.innerHTML = data.badges.map(b => `<span class="gam-badge-icon" title="${b.name}">${b.icon}</span>`).join('');
+            } else {
+                badgesEl.innerHTML = '<span style="font-size:0.85rem;color:var(--text-light);">Earn your first badge!</span>';
+            }
+        } catch (err) {
+            console.warn('Profile load error:', err);
+        }
+    }
+
+    // ==========================================
+    // SCANNER → COMMUNITY BRIDGE
+    // ==========================================
+    function handleScannerBridge() {
+        const params = new URLSearchParams(window.location.search);
+        const scanDiagnosis = params.get('scanDiagnosis');
+        const scanConfidence = params.get('scanConfidence');
+        const scanId = params.get('scanId');
+
+        if (scanDiagnosis) {
+            // Auto-open create post with pre-filled content
+            const confPct = scanConfidence ? Math.round(parseFloat(scanConfidence) * 100) : '?';
+            const preContent = `🔬 Scanner detected **${scanDiagnosis}** (${confPct}% confidence) on my plant. Has anyone dealt with this? What worked for you?\n\n#${scanDiagnosis.replace(/\\s+/g, '')} #HelpNeeded #PlantScanner`;
+
+            // Wait for auth check then fill
+            setTimeout(() => {
+                if (isAuthed()) {
+                    const trigger = document.getElementById('createTrigger');
+                    const expanded = document.getElementById('createPostExpanded');
+                    const textarea = document.getElementById('postContent');
+                    const catSelect = document.getElementById('postCategory');
+                    if (trigger) trigger.style.display = 'none';
+                    if (expanded) expanded.style.display = 'block';
+                    if (textarea) { textarea.value = preContent; document.getElementById('charCount').textContent = preContent.length; }
+                    if (catSelect) catSelect.value = 'help';
+
+                    // Store scan metadata for post submission
+                    window._scanBridge = { scanId, scanDiagnosis, scanConfidence: parseFloat(scanConfidence) || null };
+                    showToast('Share your scan with the community! Edit and post below 👇');
+                }
+            }, 500);
+
+            // Clean URL
+            window.history.replaceState({}, '', 'community.html');
+        }
     }
 
     // ==========================================
@@ -456,6 +718,13 @@
                 }
             });
         });
+
+        // Search
+        setupSearch();
+
+        // Notifications mark read
+        const markReadBtn = document.getElementById('notifMarkRead');
+        if (markReadBtn) markReadBtn.addEventListener('click', markNotificationsRead);
     }
 
     // ==========================================
@@ -537,7 +806,12 @@
                 body: JSON.stringify({
                     content,
                     category,
-                    images: [...uploadedImages]
+                    images: [...uploadedImages],
+                    ...(window._scanBridge ? {
+                        linkedScanId: window._scanBridge.scanId,
+                        scanDiagnosis: window._scanBridge.scanDiagnosis,
+                        scanConfidence: window._scanBridge.scanConfidence
+                    } : {})
                 })
             });
 
@@ -574,6 +848,9 @@
             renderFeed();
             updateUserCard();
             updateCounts();
+
+            // Clear scan bridge data
+            window._scanBridge = null;
 
             showToast('Post shared! 🌱');
 
@@ -635,13 +912,32 @@
 
     function renderPostCard(post) {
         const isLiked = Boolean(post.liked);
-        const hashtagContent = post.content.replace(/#(\w+)/g, '<span class="hashtag">#$1</span>');
+        const hashtagContent = post.content.replace(/#(\w+)/g, '<a href="#" class="hashtag" data-tag="$1">#$1</a>');
 
         let imagesHTML = '';
         if (post.images && post.images.length > 0) {
             const imgClass = 'img-' + Math.min(post.images.length, 4);
             imagesHTML = `<div class="post-images ${imgClass}">
                 ${post.images.map(img => `<img src="${img}" alt="Post image" class="post-img" loading="lazy">`).join('')}
+            </div>`;
+        }
+
+        // Expert badge
+        const expertHTML = post.isExpertPost ? '<span class="expert-badge">✓ Expert</span>' : '';
+
+        // Scanner diagnosis badge
+        let scanBadgeHTML = '';
+        if (post.scanDiagnosis) {
+            const confPct = post.scanConfidence ? Math.round(post.scanConfidence * 100) : '?';
+            scanBadgeHTML = `<div class="scan-diagnosis-badge">🔬 Scanner: <strong>${post.scanDiagnosis}</strong> (${confPct}% confidence)</div>`;
+        }
+
+        // Product suggestions
+        let productHTML = '';
+        if (post.linkedProducts && post.linkedProducts.length > 0) {
+            productHTML = `<div class="product-suggestions">
+                <span class="product-label">🛒 Recommended:</span>
+                ${post.linkedProducts.map(p => `<a href="index.html#products" class="product-chip">${p}</a>`).join('')}
             </div>`;
         }
 
@@ -667,23 +963,22 @@
             </div>
         `;
 
-        const menuHTML = '';
-
         return `
         <div class="post-card" data-post-id="${post.id}">
             <div class="post-header">
                 <div class="post-avatar">${post.avatar}</div>
                 <div class="post-meta">
                     <div class="post-author">
-                        ${post.author}
+                        ${post.author} ${expertHTML}
                         <span class="post-category-badge">${CATEGORY_LABELS[post.category] || post.category}</span>
                     </div>
                     <div class="post-location">${post.city} · <span class="post-time">${post.time}</span></div>
                 </div>
-                ${menuHTML}
             </div>
+            ${scanBadgeHTML}
             <div class="post-body">${hashtagContent}</div>
             ${imagesHTML}
+            ${productHTML}
             <div class="post-actions">
                 <button class="action-btn like-btn ${isLiked ? 'liked' : ''}" data-post-id="${post.id}">
                     <span>${isLiked ? '❤️' : '🤍'}</span>
@@ -703,11 +998,13 @@
     }
 
     function renderComment(comment) {
+        const expertBadge = comment.isExpert ? ' <span class="expert-badge-sm">✓</span>' : '';
         return `
-            <div class="comment-item">
+            <div class="comment-item ${comment.isPinned ? 'best-answer' : ''}">
                 <div class="comment-avatar">${comment.avatar}</div>
                 <div class="comment-body">
-                    <span class="comment-author">${comment.author}</span>
+                    <span class="comment-author">${comment.author}${expertBadge}</span>
+                    ${comment.isPinned ? '<span class="best-answer-label">✅ Best Answer</span>' : ''}
                     <div class="comment-text">${escapeHTML(comment.text)}</div>
                     <div class="comment-time">${comment.time}</div>
                 </div>
@@ -761,11 +1058,24 @@
             });
         });
 
-        // Share
+        // Share (with view tracking)
         container.querySelectorAll('.share-post-btn').forEach(btn => {
             btn.addEventListener('click', function () {
                 activeSharePostId = this.dataset.postId;
+                // Track share on backend
+                fetch(`${API_BASE}/api/community/${activeSharePostId}/share`, {
+                    method: 'POST',
+                    headers: authToken ? { Authorization: `Bearer ${authToken}` } : {}
+                }).catch(() => {});
                 document.getElementById('shareModal').style.display = 'flex';
+            });
+        });
+
+        // Hashtag click to filter
+        container.querySelectorAll('.hashtag').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                filterByTag(link.dataset.tag);
             });
         });
 
@@ -1008,18 +1318,28 @@
             liked: Boolean(raw?.liked),
             comments: (raw?.comments || []).map(normalizeComment),
             timestamp: created.getTime(),
-            time: formatRelativeTime(created)
+            time: formatRelativeTime(created),
+            isExpertPost: Boolean(raw?.isExpertPost),
+            scanDiagnosis: raw?.scanDiagnosis || null,
+            scanConfidence: raw?.scanConfidence || null,
+            linkedProducts: raw?.linkedProducts || [],
+            tags: raw?.tags || [],
+            viewCount: raw?.viewCount || 0,
+            shareCount: raw?.shareCount || 0
         };
     }
 
     function normalizeComment(raw) {
         const created = raw?.createdAt ? new Date(raw.createdAt) : new Date();
         return {
+            id: raw?._id || raw?.id || null,
             author: raw?.author || raw?.authorName || 'Plant Parent',
             avatar: raw?.avatar || '🌱',
             text: raw?.text || '',
             time: raw?.time || formatRelativeTime(created),
-            timestamp: created.getTime()
+            timestamp: created.getTime(),
+            isExpert: Boolean(raw?.isExpert),
+            isPinned: Boolean(raw?.isPinned)
         };
     }
 

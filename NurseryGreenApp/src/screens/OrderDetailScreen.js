@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  ActivityIndicator,
+  ActivityIndicator, Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Fonts, Spacing, Radius, Shadows } from '../constants/theme';
 import { ORDER_STATUSES } from '../constants/data';
 import api from '../api/client';
+
+const APP_LOGO = require('../../assets/icon.png');
 
 export default function OrderDetailScreen({ route, navigation }) {
   const { order: initialOrder } = route.params;
@@ -113,7 +115,7 @@ export default function OrderDetailScreen({ route, navigation }) {
           {(order.items || []).map((item, idx) => (
             <View key={idx} style={styles.itemRow}>
               <View style={styles.itemIcon}>
-                <Ionicons name="leaf" size={16} color={Colors.primary} />
+                <Image source={APP_LOGO} style={styles.itemLogo} resizeMode="contain" />
               </View>
               <View style={styles.itemInfo}>
                 <Text style={styles.itemName}>{item.productName}</Text>
@@ -218,6 +220,7 @@ const styles = StyleSheet.create({
   // Items
   itemRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: Spacing.sm, borderBottomWidth: 1, borderBottomColor: Colors.divider },
   itemIcon: { width: 32, height: 32, borderRadius: 16, backgroundColor: Colors.card, alignItems: 'center', justifyContent: 'center' },
+  itemLogo: { width: 16, height: 16, borderRadius: 8 },
   itemInfo: { flex: 1, marginLeft: Spacing.md },
   itemName: { ...Fonts.medium, fontSize: 14 },
   itemMeta: { ...Fonts.small, marginTop: 2 },

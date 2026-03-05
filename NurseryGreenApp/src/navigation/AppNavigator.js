@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, ActivityIndicator, StyleSheet, Platform } from 'react-native';
+import { View, ActivityIndicator, StyleSheet, Platform, Image } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -27,6 +27,7 @@ import PaymentScreen from '../screens/PaymentScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
+const APP_LOGO = require('../../assets/icon.png');
 
 function HomeTabs() {
   const { itemCount } = useCart();
@@ -138,7 +139,7 @@ export default function AppNavigator() {
     return (
       <View style={styles.loadingContainer}>
         <View style={styles.loadingIcon}>
-          <Ionicons name="leaf" size={48} color={Colors.primary} />
+          <Image source={APP_LOGO} style={styles.loadingLogo} resizeMode="contain" />
         </View>
         <ActivityIndicator size="large" color={Colors.primary} style={{ marginTop: 20 }} />
       </View>
@@ -190,5 +191,10 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.accentLight,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  loadingLogo: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
   },
 });

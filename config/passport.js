@@ -1,10 +1,8 @@
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
-const FacebookStrategy = require('passport-facebook').Strategy;
 const User = require('../models/User');
 
 const hasGoogleCreds = Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
-const hasFacebookCreds = Boolean(process.env.FACEBOOK_APP_ID && process.env.FACEBOOK_APP_SECRET);
 
 // Google OAuth Strategy
 if (hasGoogleCreds) {
@@ -47,44 +45,6 @@ if (hasGoogleCreds) {
   }));
 } else {
   console.warn('⚠️ Google OAuth disabled: GOOGLE_CLIENT_ID/SECRET not set');
-}
-
-// Facebook OAuth Strategy
-if (hasFacebookCreds) {
-  passport.use(new FacebookStrategy({
-    clientID: process.env.FACEBOOK_APP_ID,
-    clientSecret: process.env.FACEBOOK_APP_SECRET,
-    callbackURL: process.env.FACEBOOK_CALLBACK_URL || '/auth/facebook/callback',
-    profileFields: ['id', 'displayName', 'name', 'emails', 'picture']
-  }, async (accessToken, refreshToken, profile, done) => {
-    try {
-      let user = await User.findOne({ facebookId: profile.id });
-      
-      if (user) {
-        user.lastLogin = new Date();
-        await user.save();
-        return done(null, user);
-      }
-      
-      // Create new user
-      user = new User({
-        facebookId: profile.id,
-        firstName: profile.name?.givenName || profile.displayName.split(' ')[0],
-        lastName: profile.name?.familyName || '',
-        email: profile.emails?.[0]?.value,
-        profilePicture: profile.photos?.[0]?.value,
-        provider: 'facebook',
-        lastLogin: new Date()
-      });
-      
-      await user.save();
-      return done(null, user);
-    } catch (error) {
-      return done(error);
-    }
-  }));
-} else {
-  console.warn('⚠️ Facebook OAuth disabled: FACEBOOK_APP_ID/SECRET not set');
 }
 
 // Serialize User

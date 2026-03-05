@@ -1359,12 +1359,18 @@ function buildSoilPlan(envInfo = makeDefaultEnvironmentGuess(), diseaseMeta = {}
 // =============================================
 // ANALYSIS LOGIC
 // =============================================
-async function analyzePlant() {
+// Store pending plant check for re-analysis after questionnaire
+let pendingPlantCheck = null;
+let pendingUserObservation = null;
+
+async function analyzePlant(userObservation = null) {
     if (!requireLogin()) return;
     if (!selectedFile) return;
 
     // Fast gate: detect if the photo even looks like a plant/leaf/grass before doing AI calls
     const plantCheck = await quickPlantCheck(selectedFile);
+    pendingPlantCheck = plantCheck;
+
     if (!plantCheck.isPlant) {
         displayResults({
             notPlant: true,
@@ -1379,19 +1385,23 @@ async function analyzePlant() {
     previewZone.querySelector('.preview-img-wrap').style.display = 'none';
     analyzeBtn.style.display = 'none';
     
+    // Hide questionnaire during analysis
+    const qForm = document.getElementById('observationForm');
+    if (qForm) qForm.style.display = 'none';
+
     const loading = document.getElementById('scanLoading');
     loading.style.display = 'block';
 
     let analysisDone = false;
     const analysisPromise = (async () => {
         try {
-            const backendResult = await analyzeWithBackend(plantCheck);
+            const backendResult = await analyzeWithBackend(plantCheck, userObservation);
             if (backendResult.environment) {
                 environmentGuess = normalizeEnvironment(backendResult.environment);
             }
             return backendResult;
         } catch {
-            return analyzeLocally(plantCheck);
+            return analyzeLocally(plantCheck, userObservation);
         } finally {
             analysisDone = true;
         }
@@ -1412,40 +1422,83 @@ async function analyzePlant() {
     displayResults(result, environmentGuess, plantCheck);
 }
 
-function buildObservationPayload(plantCheck = {}) {
+function buildObservationPayload(plantCheck = {}, userObservation = null) {
     const stats = plantCheck.stats || {};
     const green = stats.greenRatio || 0;
     const wood = stats.woodRatio || 0;
     const variance = stats.brightnessVar || 0;
+    const yellow = stats.yellowRatio || 0;
+    const white = stats.whiteRatio || 0;
+    const darkSpot = stats.darkSpotRatio || 0;
+    const orange = stats.orangeRatio || 0;
+
+    // Derive leaf color from image analysis (more accurate)
+    let leafColor = 'green';
+    if (yellow > 0.10) leafColor = 'yellow';
+    else if (green < 0.12 && wood > 0.10) leafColor = 'brown';
+    else if (green < 0.16) leafColor = 'pale-green';
+
+    // Derive texture from patterns
+    let leafTexture = 'normal';
+    if (white > 0.05) leafTexture = 'powdery';
+    else if (darkSpot > 0.03 || variance > 800) leafTexture = 'spotted';
+    else if (wood > 0.10 && green < 0.15) leafTexture = 'droopy';
+
+    // Auto-detect symptoms from image analysis
+    const autoSymptoms = [];
+    if (yellow > 0.10) autoSymptoms.push('yellowing leaves');
+    if (white > 0.05) autoSymptoms.push('white powder on leaves');
+    if (darkSpot > 0.03) autoSymptoms.push('brown spots on leaves');
+    if (orange > 0.03) autoSymptoms.push('orange/rust colored spots');
+    if (wood > 0.12 && green < 0.12) autoSymptoms.push('wilting with wet soil');
+    if (white > 0.03 && white < 0.15 && green > 0.10) autoSymptoms.push('white cottony masses on stems');
+    if (yellow > 0.05 && variance > 500) autoSymptoms.push('curled new leaves');
+
+    // Merge user-provided observation if available
+    const userLeaf = userObservation?.leafCondition || {};
+    const userSoil = userObservation?.soilCondition || {};
+    const userSymptoms = userObservation?.symptoms || [];
+    const mergedSymptoms = [...new Set([...autoSymptoms, ...userSymptoms])];
 
     return {
         source: 'scanner',
-        plantName: 'unknown',
-        symptoms: [],
+        plantName: userObservation?.plantName || 'unknown',
+        symptoms: mergedSymptoms,
         leafCondition: {
-            color: green < 0.16 ? 'yellow' : 'green',
-            texture: variance > 900 ? 'spotted' : 'normal',
-            hasSpots: variance > 900,
-            isWilting: wood > 0.08,
-            hasPests: false
+            color: userLeaf.color || leafColor,
+            texture: userLeaf.texture || leafTexture,
+            hasSpots: userLeaf.hasSpots !== undefined ? userLeaf.hasSpots : (darkSpot > 0.03 || variance > 800),
+            isWilting: userLeaf.isWilting !== undefined ? userLeaf.isWilting : (wood > 0.10 && green < 0.15),
+            hasPests: userLeaf.hasPests !== undefined ? userLeaf.hasPests : (white > 0.03 && white < 0.15 && green > 0.10)
         },
         soilCondition: {
-            moisture: 'unknown',
-            drainage: 'unknown',
-            smell: 'unknown',
-            texture: 'unknown'
+            moisture: userSoil.moisture || 'unknown',
+            drainage: userSoil.drainage || 'unknown',
+            smell: userSoil.smell || 'unknown',
+            texture: userSoil.texture || 'unknown'
         },
         environment: {
             locationType: environmentGuess.type || 'unknown',
             sunlightHours: environmentGuess.type === 'outdoor' ? 6 : 4,
             humidity: 60,
             temperatureC: 28
+        },
+        // Pass image analysis metadata to backend for logging
+        imageAnalysis: {
+            greenRatio: green,
+            yellowRatio: yellow,
+            whiteRatio: white,
+            darkSpotRatio: darkSpot,
+            orangeRatio: orange,
+            woodRatio: wood,
+            brightnessVar: variance,
+            healthScore: plantCheck.health?.score || 50
         }
     };
 }
 
-async function analyzeWithBackend(plantCheck = {}) {
-    const observation = buildObservationPayload(plantCheck);
+async function analyzeWithBackend(plantCheck = {}, userObservation = null) {
+    const observation = buildObservationPayload(plantCheck, userObservation);
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 7000);
 
@@ -1479,7 +1532,7 @@ async function analyzeWithBackend(plantCheck = {}) {
     return data;
 }
 
-function analyzeLocally(plantCheck = { isPlant: true }) {
+function analyzeLocally(plantCheck = { isPlant: true }, userObservation = null) {
     if (!plantCheck.isPlant) {
         return {
             notPlant: true,
@@ -1488,90 +1541,382 @@ function analyzeLocally(plantCheck = { isPlant: true }) {
         };
     }
 
-    // Smart local analysis using image characteristics; avoid random generic outputs
-    const commonDiseases = [
-        'powdery-mildew', 'leaf-spot', 'aphids', 'yellow-leaves',
-        'mealybugs', 'whitefly', 'root-rot', 'rust'
-    ];
-    
-    // Pick based on file name hints or lean toward foliage stress instead of randomness
-    const fileName = selectedFile.name.toLowerCase();
-    let diseaseKey;
-    const stats = plantCheck.stats || {};
-    const g = stats.greenRatio || 0;
-    const s = stats.strongGreenRatio || 0;
-    const wood = stats.woodRatio || 0;
-    const varBright = stats.brightnessVar || 0;
-    const hasDiseaseHintInName = /(yellow|peel|spot|brown|white|powder|bug|insect|rot|wilt|rust|orange|dry|dead)/.test(fileName);
+    const health = plantCheck.health || { score: 50, isHealthy: false, isStressed: true, isSevere: false };
+    const diseaseScores = plantCheck.diseaseScores || [];
 
-    const looksHealthy =
-        g >= 0.18 &&
-        s >= 0.05 &&
-        wood <= 0.11 &&
-        varBright >= 80 &&
-        varBright <= 1050;
-
-    const strongStressSignal =
-        g < 0.14 ||
-        wood > 0.16 ||
-        varBright > 1250;
-
-    if (looksHealthy && !strongStressSignal && !hasDiseaseHintInName) {
+    // If plant looks genuinely healthy based on deep analysis
+    if (health.isHealthy && (!diseaseScores.length || diseaseScores[0].score < 0.20)) {
         return {
             success: true,
             healthy: true,
-            confidence: 0.84,
-            source: 'local',
-            description: 'Leaf color and texture look normal with no strong stress signal.',
+            confidence: Math.min(0.92, 0.70 + health.score * 0.003),
+            source: 'local-deep',
+            description: 'Multi-zone color analysis shows healthy chlorophyll levels, minimal stress markers, and no disease patterns detected.',
+            detailedSignals: ['Green coverage: strong', 'No brown spots or lesions', 'No white/powdery patches', 'No yellowing pattern', 'Brightness distribution: normal'],
             products: ['Plant Booster Spray', 'Vermi Compost'],
             environment: environmentGuess
         };
     }
 
-    if (fileName.includes('yellow') || fileName.includes('peel')) {
-        diseaseKey = 'yellow-leaves';
-    } else if (fileName.includes('spot') || fileName.includes('brown')) {
-        diseaseKey = 'leaf-spot';
-    } else if (fileName.includes('white') || fileName.includes('powder')) {
-        diseaseKey = 'powdery-mildew';
-    } else if (fileName.includes('bug') || fileName.includes('insect')) {
-        diseaseKey = 'aphids';
-    } else if (fileName.includes('rot') || fileName.includes('wilt')) {
-        diseaseKey = 'root-rot';
-    } else if (fileName.includes('rust') || fileName.includes('orange')) {
-        diseaseKey = 'rust';
-    } else {
-        // Use pixel stats from plantCheck to choose a likely issue
-        if (g < 0.16 || wood > 0.08) {
-            diseaseKey = 'yellow-leaves'; // low green or woody/dry indicates stress/deficiency
-        } else if (varBright > 900) {
-            diseaseKey = 'leaf-spot'; // spotty contrast
-        } else if (s > 0.12 && g > 0.22) {
-            diseaseKey = 'aphids'; // lush foliage with likely pest risk
-        } else {
-            diseaseKey = 'yellow-leaves';
+    // Use deep pattern scoring to pick the best disease match
+    let diseaseKey = null;
+    let matchScore = 0;
+    let matchSignals = [];
+
+    if (diseaseScores.length > 0 && diseaseScores[0].score >= 0.15) {
+        diseaseKey = diseaseScores[0].key;
+        matchScore = diseaseScores[0].score;
+        matchSignals = diseaseScores[0].signals || [];
+    }
+
+    // Also factor in user-selected symptoms (if observation questionnaire was filled)
+    if (userObservation && userObservation.symptoms && userObservation.symptoms.length) {
+        const userSymptoms = userObservation.symptoms.map(s => s.toLowerCase());
+        // Boost scores for diseases whose symptoms match user input
+        const symptomBoosts = {
+            'yellow-leaves': ['yellow', 'yellowing', 'pale', 'chlorosis'],
+            'powdery-mildew': ['white powder', 'powdery', 'white coating'],
+            'leaf-spot': ['brown spots', 'black spots', 'spots', 'lesions'],
+            'aphids': ['insects', 'bugs', 'sticky', 'tiny insects', 'curled leaves'],
+            'root-rot': ['wilting', 'mushy', 'foul smell', 'rotting', 'overwatered'],
+            'mealybugs': ['white cottony', 'white clusters', 'cottony', 'mealybugs'],
+            'whitefly': ['white flies', 'tiny flies', 'whitefly'],
+            'rust': ['orange spots', 'rust', 'orange pustules'],
+            'spider-mites': ['webbing', 'stippling', 'tiny dots', 'spider mites'],
+            'sunburn': ['bleached', 'scorched', 'sun damage', 'crispy edges'],
+            'nitrogen-deficiency': ['pale green', 'stunted', 'slow growth', 'weak stems'],
+            'blight': ['rapid browning', 'water soaked', 'blight'],
+        };
+
+        for (const [dKey, keywords] of Object.entries(symptomBoosts)) {
+            const hits = userSymptoms.filter(s => keywords.some(k => s.includes(k) || k.includes(s))).length;
+            if (hits > 0) {
+                const existingEntry = diseaseScores.find(d => d.key === dKey);
+                const boostedScore = (existingEntry ? existingEntry.score : 0.10) + hits * 0.15;
+                if (boostedScore > matchScore) {
+                    diseaseKey = dKey;
+                    matchScore = boostedScore;
+                    matchSignals = existingEntry ? [...existingEntry.signals, 'User-confirmed symptoms boost'] : ['Matched from user-reported symptoms'];
+                }
+            }
         }
     }
 
+    // Fallback: if no disease scored high enough, use the best available
+    if (!diseaseKey) {
+        const stats = plantCheck.stats || {};
+        if (stats.yellowRatio > 0.08 || stats.greenRatio < 0.16) {
+            diseaseKey = 'yellow-leaves';
+            matchSignals = ['Low green ratio suggests nutrient stress'];
+        } else if (stats.brightnessVar > 800) {
+            diseaseKey = 'leaf-spot';
+            matchSignals = ['High brightness variance suggests spots/lesions'];
+        } else {
+            diseaseKey = 'yellow-leaves';
+            matchSignals = ['General stress indicator — more details needed for precision'];
+        }
+        matchScore = 0.35;
+    }
+
     const disease = DISEASE_DB[diseaseKey];
+    if (!disease) {
+        return {
+            success: true,
+            healthy: false,
+            confidence: 0.40,
+            source: 'local-deep',
+            description: 'Some stress signals detected but could not match a specific disease. Please use the questionnaire below for a more accurate diagnosis.',
+            products: ['Neem Oil', 'Plant Protection Spray'],
+            environment: environmentGuess,
+            needsMoreInfo: true
+        };
+    }
+
+    // Calibrate confidence based on actual match quality
+    const calibratedConfidence = Math.min(0.93, Math.max(0.35, 0.30 + matchScore * 0.65));
+
+    // Build runner-up suggestions for differential diagnosis
+    const runnerUps = diseaseScores
+        .filter(d => d.key !== diseaseKey && d.score >= 0.15)
+        .slice(0, 2)
+        .map(d => ({ key: d.key, name: DISEASE_DB[d.key]?.name || d.key, score: d.score, signals: d.signals }));
+
     return {
         success: true,
         diseaseKey,
         disease: disease.name,
         severity: disease.severity,
-        description: `${disease.description} (local quick check — please confirm with a clearer photo if unsure).`,
+        description: disease.description,
         cause: disease.cause,
         symptoms: disease.symptoms,
         remedies: disease.remedies,
         prevention: disease.prevention,
         products: disease.products,
-        confidence: 0.78,
-        source: 'local',
-        environment: environmentGuess
+        confidence: Number(calibratedConfidence.toFixed(2)),
+        source: 'local-deep',
+        environment: environmentGuess,
+        detailedSignals: matchSignals,
+        runnerUps,
+        needsMoreInfo: calibratedConfidence < 0.60,
+        healthScore: health.score
     };
 }
 
-// Lightweight plant vs. non-plant gate using pixel-level green-ness
+// =============================================
+// DEEP IMAGE ANALYSIS ENGINE (Multi-zone + Color Histogram + Pattern Detection)
+// =============================================
+
+/**
+ * Analyze a specific rectangular region of pixel data.
+ * Returns detailed color distribution stats for that zone.
+ */
+function analyzeZone(data, imgWidth, x0, y0, x1, y1) {
+    let greenish = 0, strongGreen = 0, brownish = 0, yellowish = 0;
+    let whitish = 0, darkSpots = 0, orangeRust = 0, total = 0;
+    let brightSum = 0, brightSqSum = 0;
+    let rSum = 0, gSum = 0, bSum = 0;
+
+    for (let y = y0; y < y1; y++) {
+        for (let x = x0; x < x1; x++) {
+            const i = (y * imgWidth + x) * 4;
+            const r = data[i], g = data[i + 1], b = data[i + 2];
+            const bright = (r + g + b) / 3;
+            const sum = r + g + b || 1;
+            const greenShare = g / sum;
+
+            // Plant green detection
+            if (g > r * 1.1 && g > b * 1.1) {
+                greenish++;
+                if (greenShare > 0.4) strongGreen++;
+            }
+            // Brown/dry tissue (wood, dry leaves, necrotic areas)
+            if (r > 90 && g > 60 && g < r * 0.92 && b < g * 0.8) brownish++;
+            // Yellowing (chlorosis indicator)
+            if (r > 150 && g > 140 && b < 100 && Math.abs(r - g) < 50) yellowish++;
+            // White/powdery patches (powdery mildew, mealybugs)
+            if (r > 210 && g > 210 && b > 210 && Math.abs(r - g) < 20 && Math.abs(g - b) < 20) whitish++;
+            // Dark spots (necrotic lesions, sooty mold)
+            if (bright < 60 && Math.abs(r - g) < 20) darkSpots++;
+            // Orange/rust pustules
+            if (r > 160 && g > 80 && g < 150 && b < 80 && r > g * 1.2) orangeRust++;
+
+            brightSum += bright;
+            brightSqSum += bright * bright;
+            rSum += r; gSum += g; bSum += b;
+            total++;
+        }
+    }
+
+    if (total === 0) total = 1;
+    const meanBright = brightSum / total;
+    const variance = brightSqSum / total - meanBright * meanBright;
+
+    return {
+        greenRatio: greenish / total,
+        strongGreenRatio: strongGreen / total,
+        woodRatio: brownish / total,
+        yellowRatio: yellowish / total,
+        whiteRatio: whitish / total,
+        darkSpotRatio: darkSpots / total,
+        orangeRatio: orangeRust / total,
+        brightnessMean: meanBright,
+        brightnessVar: variance,
+        avgR: rSum / total,
+        avgG: gSum / total,
+        avgB: bSum / total,
+        total
+    };
+}
+
+/**
+ * Score how strongly each disease pattern matches the image analysis.
+ * Returns an array of { key, score, signals } sorted by score descending.
+ */
+function scoreDiseasePatterns(zoneStats) {
+    const { center, edges, full } = zoneStats;
+    const scores = [];
+
+    // 1. Powdery Mildew — white patches on leaf surface
+    {
+        let s = 0;
+        const signals = [];
+        if (full.whiteRatio > 0.05) { s += 0.35; signals.push('white patches detected (' + (full.whiteRatio * 100).toFixed(1) + '%)'); }
+        if (center.whiteRatio > 0.08) { s += 0.20; signals.push('concentrated white on leaf center'); }
+        if (full.greenRatio > 0.10) { s += 0.10; signals.push('green tissue still present — partial coverage'); }
+        if (full.brightnessVar > 600) { s += 0.10; signals.push('high brightness contrast (powder vs leaf)'); }
+        scores.push({ key: 'powdery-mildew', score: Math.min(s, 0.95), signals });
+    }
+
+    // 2. Leaf Spot — brown/dark spots with high variance
+    {
+        let s = 0;
+        const signals = [];
+        if (full.darkSpotRatio > 0.03) { s += 0.25; signals.push('dark lesions detected (' + (full.darkSpotRatio * 100).toFixed(1) + '%)'); }
+        if (full.woodRatio > 0.06 && full.woodRatio < 0.25) { s += 0.20; signals.push('brown necrotic tissue present'); }
+        if (full.brightnessVar > 800) { s += 0.15; signals.push('high contrast — spots against healthy tissue'); }
+        if (center.darkSpotRatio > edges.darkSpotRatio) { s += 0.10; signals.push('spots concentrated in center zone'); }
+        if (full.greenRatio > 0.10) { s += 0.05; signals.push('surrounding healthy green tissue'); }
+        scores.push({ key: 'leaf-spot', score: Math.min(s, 0.95), signals });
+    }
+
+    // 3. Aphids/Pests — lush green with potential honeydew shine
+    {
+        let s = 0;
+        const signals = [];
+        if (full.strongGreenRatio > 0.12) { s += 0.15; signals.push('healthy green foliage — common aphid host'); }
+        if (full.yellowRatio > 0.03 && full.yellowRatio < 0.15) { s += 0.15; signals.push('mild yellowing from sap drain'); }
+        if (full.brightnessMean > 130 && full.brightnessVar > 400) { s += 0.10; signals.push('shiny/sticky patches (honeydew hint)'); }
+        scores.push({ key: 'aphids', score: Math.min(s, 0.85), signals });
+    }
+
+    // 4. Yellow Leaves — widespread yellowing
+    {
+        let s = 0;
+        const signals = [];
+        if (full.yellowRatio > 0.10) { s += 0.30; signals.push('significant yellowing (' + (full.yellowRatio * 100).toFixed(1) + '%)'); }
+        if (full.yellowRatio > 0.20) { s += 0.15; signals.push('heavy chlorosis pattern'); }
+        if (full.greenRatio < 0.15) { s += 0.15; signals.push('low green — unhealthy chlorophyll levels'); }
+        if (edges.yellowRatio > center.yellowRatio) { s += 0.10; signals.push('yellowing starts from edges (nutrient deficiency pattern)'); }
+        scores.push({ key: 'yellow-leaves', score: Math.min(s, 0.95), signals });
+    }
+
+    // 5. Root Rot — wilted appearance, dark/dull tones
+    {
+        let s = 0;
+        const signals = [];
+        if (full.woodRatio > 0.12) { s += 0.20; signals.push('significant brown/dry tissue'); }
+        if (full.greenRatio < 0.12) { s += 0.15; signals.push('very low green — severe stress'); }
+        if (full.darkSpotRatio > 0.05) { s += 0.10; signals.push('dark rotting patterns'); }
+        if (full.brightnessMean < 110) { s += 0.10; signals.push('overall dark/dull appearance'); }
+        scores.push({ key: 'root-rot', score: Math.min(s, 0.90), signals });
+    }
+
+    // 6. Mealybugs — white cottony clusters
+    {
+        let s = 0;
+        const signals = [];
+        if (full.whiteRatio > 0.03 && full.whiteRatio < 0.15) { s += 0.20; signals.push('white clusters detected'); }
+        if (full.greenRatio > 0.12) { s += 0.10; signals.push('on green tissue background'); }
+        // Distinguish from powdery mildew: mealybugs are more localized, less uniform
+        if (center.whiteRatio < edges.whiteRatio && full.whiteRatio > 0.03) { s += 0.10; signals.push('white patches at joints/edges (mealybug pattern)'); }
+        scores.push({ key: 'mealybugs', score: Math.min(s, 0.85), signals });
+    }
+
+    // 7. Whitefly — small white specks
+    {
+        let s = 0;
+        const signals = [];
+        if (full.whiteRatio > 0.02 && full.whiteRatio < 0.10) { s += 0.15; signals.push('scattered white specks'); }
+        if (full.yellowRatio > 0.05) { s += 0.10; signals.push('yellow stippling from feeding damage'); }
+        if (full.greenRatio > 0.10) { s += 0.05; signals.push('on green foliage'); }
+        scores.push({ key: 'whitefly', score: Math.min(s, 0.80), signals });
+    }
+
+    // 8. Rust Disease — orange/rust pustules
+    {
+        let s = 0;
+        const signals = [];
+        if (full.orangeRatio > 0.03) { s += 0.35; signals.push('orange/rust-colored areas (' + (full.orangeRatio * 100).toFixed(1) + '%)'); }
+        if (full.orangeRatio > 0.08) { s += 0.15; signals.push('heavy rust pustule coverage'); }
+        if (full.greenRatio > 0.08) { s += 0.05; signals.push('surrounding green tissue present'); }
+        if (full.brightnessVar > 500) { s += 0.10; signals.push('contrasting pustule pattern'); }
+        scores.push({ key: 'rust', score: Math.min(s, 0.95), signals });
+    }
+
+    // 9. Spider Mites — stippling (tiny dots), bronzing
+    {
+        let s = 0;
+        const signals = [];
+        if (full.yellowRatio > 0.05 && full.brightnessVar > 500 && full.brightnessVar < 1200) { s += 0.20; signals.push('fine stippling pattern detected'); }
+        if (full.woodRatio > 0.06 && full.orangeRatio > 0.01) { s += 0.15; signals.push('bronzing discoloration'); }
+        scores.push({ key: 'spider-mites', score: Math.min(s, 0.80), signals });
+    }
+
+    // 10. Sunburn — white/bleached + brown crispy edges
+    {
+        let s = 0;
+        const signals = [];
+        if (edges.woodRatio > center.woodRatio * 1.5 && edges.woodRatio > 0.08) { s += 0.25; signals.push('brown crispy edges'); }
+        if (full.whiteRatio > 0.04 && full.brightnessMean > 155) { s += 0.15; signals.push('bleached/sun-scorched patches'); }
+        if (full.greenRatio > 0.08 && full.greenRatio < 0.25) { s += 0.05; signals.push('faded green — UV damage'); }
+        scores.push({ key: 'sunburn', score: Math.min(s, 0.85), signals });
+    }
+
+    // 11. Nitrogen Deficiency — overall pale, uniform yellowing
+    {
+        let s = 0;
+        const signals = [];
+        if (full.yellowRatio > 0.08 && full.brightnessVar < 500) { s += 0.25; signals.push('uniform pale/yellow with low variance (deficiency pattern)'); }
+        if (full.greenRatio < 0.18 && full.greenRatio > 0.06) { s += 0.15; signals.push('reduced but present chlorophyll'); }
+        if (Math.abs(center.yellowRatio - edges.yellowRatio) < 0.04) { s += 0.10; signals.push('uniform yellowing across leaf'); }
+        scores.push({ key: 'nitrogen-deficiency', score: Math.min(s, 0.85), signals });
+    }
+
+    // 12. Fungal Wilt — one-sided, wilt + brown vascular
+    {
+        let s = 0;
+        const signals = [];
+        if (full.woodRatio > 0.10 && full.greenRatio > 0.05 && full.greenRatio < 0.20) { s += 0.20; signals.push('mixed live/dead tissue — wilt pattern'); }
+        if (full.brightnessMean < 130 && full.woodRatio > 0.12) { s += 0.15; signals.push('dark, wilted appearance'); }
+        scores.push({ key: 'fungal-wilt', score: Math.min(s, 0.80), signals });
+    }
+
+    // 13. Blight — large brown water-soaked patches
+    {
+        let s = 0;
+        const signals = [];
+        if (full.woodRatio > 0.15) { s += 0.20; signals.push('extensive brown tissue'); }
+        if (full.darkSpotRatio > 0.04 && full.woodRatio > 0.10) { s += 0.15; signals.push('combined dark + brown lesions (blight pattern)'); }
+        if (full.greenRatio < 0.15) { s += 0.10; signals.push('significant tissue loss'); }
+        scores.push({ key: 'blight', score: Math.min(s, 0.85), signals });
+    }
+
+    // 14. Damping Off — base browning + overall collapse
+    {
+        let s = 0;
+        const signals = [];
+        if (full.woodRatio > 0.10 && full.brightnessMean < 120) { s += 0.15; signals.push('dark rotting tissue'); }
+        if (full.greenRatio < 0.10) { s += 0.15; signals.push('very low vitality'); }
+        scores.push({ key: 'damping-off', score: Math.min(s, 0.75), signals });
+    }
+
+    // 15. Scale Insects — small brown bumps
+    {
+        let s = 0;
+        const signals = [];
+        if (full.woodRatio > 0.05 && full.woodRatio < 0.18 && full.greenRatio > 0.12) { s += 0.15; signals.push('brown specks on green tissue'); }
+        if (full.brightnessVar > 600 && full.darkSpotRatio > 0.02) { s += 0.10; signals.push('spotted bumpy texture'); }
+        scores.push({ key: 'scale-insects', score: Math.min(s, 0.75), signals });
+    }
+
+    scores.sort((a, b) => b.score - a.score);
+    return scores;
+}
+
+/**
+ * Determine if plant looks healthy based on deep analysis.
+ * More granular than the old binary check.
+ */
+function assessPlantHealth(zoneStats) {
+    const f = zoneStats.full;
+    const healthScore =
+        (f.greenRatio > 0.20 ? 25 : f.greenRatio > 0.14 ? 15 : 0) +
+        (f.strongGreenRatio > 0.08 ? 20 : f.strongGreenRatio > 0.04 ? 10 : 0) +
+        (f.yellowRatio < 0.05 ? 15 : f.yellowRatio < 0.10 ? 8 : 0) +
+        (f.whiteRatio < 0.03 ? 10 : 0) +
+        (f.darkSpotRatio < 0.02 ? 10 : 0) +
+        (f.orangeRatio < 0.02 ? 10 : 0) +
+        (f.woodRatio < 0.08 ? 10 : f.woodRatio < 0.12 ? 5 : 0);
+
+    return {
+        score: healthScore,
+        isHealthy: healthScore >= 75,
+        isStressed: healthScore >= 40 && healthScore < 75,
+        isSevere: healthScore < 40
+    };
+}
+
+// Lightweight plant vs. non-plant gate + DEEP multi-zone analysis
 function quickPlantCheck(file) {
     return new Promise((resolve) => {
         const url = URL.createObjectURL(file);
@@ -1580,68 +1925,72 @@ function quickPlantCheck(file) {
         img.onload = () => {
             try {
                 const canvas = document.createElement('canvas');
-                const size = 96;
+                const size = 192; // higher resolution for better pattern detection
                 canvas.width = size;
                 canvas.height = size;
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, size, size);
                 const data = ctx.getImageData(0, 0, size, size).data;
 
-                let greenish = 0;
-                let strongGreen = 0;
-                let brownish = 0;
-                let total = 0;
-                let brightSum = 0;
-                let brightSqSum = 0;
+                // ===== MULTI-ZONE ANALYSIS =====
+                // Full image
+                const fullZone = analyzeZone(data, size, 0, 0, size, size);
+                // Center zone (inner 50% — usually the main leaf/plant area)
+                const margin = Math.floor(size * 0.25);
+                const centerZone = analyzeZone(data, size, margin, margin, size - margin, size - margin);
+                // Edge zone (outer ring — leaf edges, background)
+                // We compute edge by subtracting center contribution from full
+                const edgeTotal = fullZone.total - centerZone.total;
+                const edgeZone = {
+                    greenRatio: edgeTotal > 0 ? Math.max(0, (fullZone.greenRatio * fullZone.total - centerZone.greenRatio * centerZone.total) / edgeTotal) : 0,
+                    strongGreenRatio: edgeTotal > 0 ? Math.max(0, (fullZone.strongGreenRatio * fullZone.total - centerZone.strongGreenRatio * centerZone.total) / edgeTotal) : 0,
+                    woodRatio: edgeTotal > 0 ? Math.max(0, (fullZone.woodRatio * fullZone.total - centerZone.woodRatio * centerZone.total) / edgeTotal) : 0,
+                    yellowRatio: edgeTotal > 0 ? Math.max(0, (fullZone.yellowRatio * fullZone.total - centerZone.yellowRatio * centerZone.total) / edgeTotal) : 0,
+                    whiteRatio: edgeTotal > 0 ? Math.max(0, (fullZone.whiteRatio * fullZone.total - centerZone.whiteRatio * centerZone.total) / edgeTotal) : 0,
+                    darkSpotRatio: edgeTotal > 0 ? Math.max(0, (fullZone.darkSpotRatio * fullZone.total - centerZone.darkSpotRatio * centerZone.total) / edgeTotal) : 0,
+                    orangeRatio: edgeTotal > 0 ? Math.max(0, (fullZone.orangeRatio * fullZone.total - centerZone.orangeRatio * centerZone.total) / edgeTotal) : 0,
+                    brightnessMean: fullZone.brightnessMean,
+                    brightnessVar: fullZone.brightnessVar,
+                    total: edgeTotal
+                };
 
-                for (let i = 0; i < data.length; i += 4) {
-                    const r = data[i];
-                    const g = data[i + 1];
-                    const b = data[i + 2];
-                    const sum = r + g + b || 1;
-                    const greenShare = g / sum;
-                    const bright = (r + g + b) / 3;
+                const zoneStats = { full: fullZone, center: centerZone, edges: edgeZone };
 
-                    if (g > r * 1.1 && g > b * 1.1) {
-                        greenish++;
-                        if (greenShare > 0.4) strongGreen++;
-                    }
-                    if (r > 90 && g > 70 && b < 80) {
-                        brownish++;
-                    }
-                    brightSum += bright;
-                    brightSqSum += bright * bright;
-                    total++;
-                }
-
-                const greenRatio = greenish / total;
-                const strongGreenRatio = strongGreen / total;
-                const woodRatio = brownish / total;
-                const vegSignal = strongGreenRatio - woodRatio;
-                const meanBright = brightSum / total;
-                const variance = brightSqSum / total - meanBright * meanBright;
+                // ===== PLANT-OR-NOT CHECK =====
+                const vegSignal = fullZone.strongGreenRatio - fullZone.woodRatio;
                 const likelyNonPlant =
-                    (greenRatio < 0.03 && strongGreenRatio < 0.008 && vegSignal < 0 && variance < 180) ||
-                    (greenRatio < 0.02 && strongGreenRatio < 0.005 && woodRatio > 0.22 && variance < 500);
+                    (fullZone.greenRatio < 0.03 && fullZone.strongGreenRatio < 0.008 && vegSignal < 0 && fullZone.brightnessVar < 180) ||
+                    (fullZone.greenRatio < 0.02 && fullZone.strongGreenRatio < 0.005 && fullZone.woodRatio > 0.22 && fullZone.brightnessVar < 500);
                 const isPlant = !likelyNonPlant;
+
+                // ===== DISEASE PATTERN SCORING =====
+                const diseaseScores = scoreDiseasePatterns(zoneStats);
+                const healthAssessment = assessPlantHealth(zoneStats);
 
                 resolve({
                     isPlant,
-                    score: Number((greenRatio + strongGreenRatio).toFixed(2)),
+                    score: Number((fullZone.greenRatio + fullZone.strongGreenRatio).toFixed(2)),
                     reason: isPlant
                         ? 'Plant-like texture/color signal detected'
                         : 'Very low plant-like texture/color signal; likely non-plant',
                     stats: {
-                        greenRatio: Number(greenRatio.toFixed(3)),
-                        strongGreenRatio: Number(strongGreenRatio.toFixed(3)),
-                        woodRatio: Number(woodRatio.toFixed(3)),
+                        greenRatio: Number(fullZone.greenRatio.toFixed(3)),
+                        strongGreenRatio: Number(fullZone.strongGreenRatio.toFixed(3)),
+                        woodRatio: Number(fullZone.woodRatio.toFixed(3)),
+                        yellowRatio: Number(fullZone.yellowRatio.toFixed(3)),
+                        whiteRatio: Number(fullZone.whiteRatio.toFixed(3)),
+                        darkSpotRatio: Number(fullZone.darkSpotRatio.toFixed(3)),
+                        orangeRatio: Number(fullZone.orangeRatio.toFixed(3)),
                         vegSignal: Number(vegSignal.toFixed(3)),
-                        brightnessMean: Number(meanBright.toFixed(1)),
-                        brightnessVar: Number(variance.toFixed(1))
-                    }
+                        brightnessMean: Number(fullZone.brightnessMean.toFixed(1)),
+                        brightnessVar: Number(fullZone.brightnessVar.toFixed(1))
+                    },
+                    zones: zoneStats,
+                    diseaseScores: diseaseScores.slice(0, 5), // top 5 matches
+                    health: healthAssessment
                 });
             } catch (err) {
-                resolve({ isPlant: true, score: 0, reason: 'Image read issue, skipping pre-check' });
+                resolve({ isPlant: true, score: 0, reason: 'Image read issue, skipping pre-check', diseaseScores: [], health: { score: 50, isHealthy: false, isStressed: true, isSevere: false } });
             } finally {
                 URL.revokeObjectURL(url);
             }
@@ -1649,8 +1998,7 @@ function quickPlantCheck(file) {
 
         img.onerror = () => {
             URL.revokeObjectURL(url);
-            // Fail-open on decode errors (e.g., HEIC/browser codec mismatch) to avoid false "Not a Plant".
-            resolve({ isPlant: true, score: 0, reason: 'Image decode issue; skipping pre-check' });
+            resolve({ isPlant: true, score: 0, reason: 'Image decode issue; skipping pre-check', diseaseScores: [], health: { score: 50, isHealthy: false, isStressed: true, isSevere: false } });
         };
 
         img.src = url;
@@ -1683,20 +2031,49 @@ async function displayResults(data, envInfo = environmentGuess, plantCheck = nul
         document.querySelector('.remedies-card').style.display = 'none';
         var energyCardEl = document.getElementById('energyCard');
         if (energyCardEl) energyCardEl.style.display = 'none';
+        hideObservationForm();
         return;
     }
 
     if (data.healthy) {
         statusEl.className = 'result-status healthy';
         statusEl.innerHTML = '<h3>✅ Your Plant Looks Healthy!</h3><p>No diseases detected. Keep up the good care!</p>';
+        // Show analysis signals if available
+        if (data.detailedSignals && data.detailedSignals.length) {
+            statusEl.innerHTML += '<div class="analysis-signals"><h5>🔬 Analysis Details</h5><ul>' +
+                data.detailedSignals.map(s => '<li>' + s + '</li>').join('') + '</ul></div>';
+        }
         document.getElementById('diseaseCard').style.display = 'none';
         document.querySelector('.remedies-card').style.display = 'none';
     } else {
         statusEl.className = 'result-status diseased';
         const plantCopy = plantLabel ? ` on ${plantLabel}` : '';
-        statusEl.innerHTML = `<h3>⚠️ Issue Detected${plantCopy}</h3><p>We found potential signs of <strong>${diseaseData.name || data.disease}</strong></p>`;
+        const confStr = data.confidence ? ` (${Math.round(data.confidence * 100)}% confidence)` : '';
+        statusEl.innerHTML = `<h3>⚠️ Issue Detected${plantCopy}</h3><p>We found potential signs of <strong>${diseaseData.name || data.disease}</strong>${confStr}</p>`;
+
+        // Show detailed image analysis signals
+        if (data.detailedSignals && data.detailedSignals.length) {
+            statusEl.innerHTML += '<div class="analysis-signals"><h5>🔬 How We Detected This</h5><ul>' +
+                data.detailedSignals.map(s => '<li>📊 ' + s + '</li>').join('') + '</ul></div>';
+        }
+
+        // Show runner-up diagnoses (differential diagnosis)
+        if (data.runnerUps && data.runnerUps.length) {
+            statusEl.innerHTML += '<div class="differential-diagnosis"><h5>🔄 Other Possible Causes</h5><ul>' +
+                data.runnerUps.map(r => '<li><strong>' + r.name + '</strong> (' + Math.round(r.score * 100) + '% match)' +
+                    (r.signals && r.signals.length ? ' — ' + r.signals[0] : '') + '</li>').join('') +
+                '</ul><p class="hint">Fill in the observation form below for higher accuracy.</p></div>';
+        }
+
         document.getElementById('diseaseCard').style.display = '';
         document.querySelector('.remedies-card').style.display = '';
+    }
+
+    // Show observation questionnaire if confidence is low or needsMoreInfo
+    if (data.needsMoreInfo || (data.confidence && data.confidence < 0.60)) {
+        showObservationForm();
+    } else {
+        hideObservationForm();
     }
 
     // Severity badge
@@ -1790,8 +2167,95 @@ async function displayResults(data, envInfo = environmentGuess, plantCheck = nul
         }
     });
 
+    // Ask the Community bridge — show only when a disease/issue is detected
+    let communityBridgeEl = document.getElementById('communityBridge');
+    if (!communityBridgeEl) {
+        communityBridgeEl = document.createElement('div');
+        communityBridgeEl.id = 'communityBridge';
+        communityBridgeEl.className = 'community-bridge-card';
+        results.appendChild(communityBridgeEl);
+    }
+    if (!data.healthy && !data.notPlant) {
+        const diagName = diseaseData.name || data.disease || 'Unknown Issue';
+        const conf = data.confidence || 0;
+        communityBridgeEl.style.display = '';
+        communityBridgeEl.innerHTML = `
+            <div class="bridge-icon">🌿</div>
+            <div class="bridge-body">
+                <h4>Still unsure? Ask the Community!</h4>
+                <p>Get advice from experienced plant parents who may have dealt with <strong>${diagName}</strong> before.</p>
+                <a href="community.html?scanDiagnosis=${encodeURIComponent(diagName)}&scanConfidence=${conf}" class="btn-bridge">
+                    💬 Ask Plant Parents Community
+                </a>
+            </div>
+        `;
+    } else {
+        communityBridgeEl.style.display = 'none';
+    }
+
     // Scroll to results
     results.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// =============================================
+// OBSERVATION QUESTIONNAIRE (improves accuracy when confidence is low)
+// =============================================
+function showObservationForm() {
+    const form = document.getElementById('observationForm');
+    if (form) {
+        form.style.display = '';
+        form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+}
+
+function hideObservationForm() {
+    const form = document.getElementById('observationForm');
+    if (form) form.style.display = 'none';
+}
+
+function submitObservation() {
+    const leafColor = document.getElementById('obsLeafColor')?.value || '';
+    const leafTexture = document.getElementById('obsLeafTexture')?.value || '';
+    const soilMoisture = document.getElementById('obsSoilMoisture')?.value || '';
+    const soilDrainage = document.getElementById('obsSoilDrainage')?.value || '';
+    const soilSmell = document.getElementById('obsSoilSmell')?.value || '';
+    const envType = document.getElementById('obsEnvType')?.value || '';
+    const plantName = document.getElementById('obsPlantName')?.value || '';
+
+    // Collect checked symptom checkboxes
+    const symptomChecks = document.querySelectorAll('.obs-symptom-check:checked');
+    const symptoms = Array.from(symptomChecks).map(cb => cb.value);
+
+    // Additional text symptoms
+    const extraSymptoms = document.getElementById('obsExtraSymptoms')?.value || '';
+    if (extraSymptoms.trim()) symptoms.push(extraSymptoms.trim());
+
+    const userObservation = {
+        plantName: plantName,
+        symptoms: symptoms,
+        leafCondition: {
+            color: leafColor || undefined,
+            texture: leafTexture || undefined,
+            hasSpots: symptoms.some(s => s.toLowerCase().includes('spot')),
+            isWilting: symptoms.some(s => s.toLowerCase().includes('wilt')),
+            hasPests: symptoms.some(s => s.toLowerCase().includes('insect') || s.toLowerCase().includes('bug'))
+        },
+        soilCondition: {
+            moisture: soilMoisture || undefined,
+            drainage: soilDrainage || undefined,
+            smell: soilSmell || undefined
+        }
+    };
+
+    // Override environment if user specified
+    if (envType) {
+        environmentGuess = { type: envType, confidence: 0.90, reason: 'User-specified' };
+    }
+
+    pendingUserObservation = userObservation;
+
+    // Re-run analysis with user observation data
+    analyzePlant(userObservation);
 }
 
 // =============================================

@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"path": "../KheloFit"
+		},
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"powershell.cwd": "Website Nursery green"
+	}
+}

@@ -12,7 +12,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css?v=20260225d">
-    <link rel="stylesheet" href="community.css?v=20260227a">
+    <link rel="stylesheet" href="community.css?v=20260305a">
 
     <script type="application/ld+json">
     {
@@ -79,10 +79,18 @@
             <span class="hero-badge">🌱 Plant Parents Community</span>
             <h1>Grow Together, <span class="text-gradient">Learn Together</span></h1>
             <p class="hero-desc">Join thousands of plant lovers across India. Share your garden wins, ask questions, swap tips, and celebrate every new leaf.</p>
+
+            <!-- Search Bar -->
+            <div class="community-search-bar">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="communitySearch" placeholder="Search posts, topics, users..." maxlength="100" autocomplete="off">
+                <button class="search-clear" id="searchClear" style="display:none;">✕</button>
+            </div>
+
             <div class="hero-stats">
-                <div class="stat-pill"><span class="stat-num" id="memberCount">1,247</span> members</div>
-                <div class="stat-pill"><span class="stat-num" id="postCount">3,580</span> posts</div>
-                <div class="stat-pill"><span class="stat-num">128</span> cities</div>
+                <div class="stat-pill"><span class="stat-num" id="memberCount">—</span> members</div>
+                <div class="stat-pill"><span class="stat-num" id="postCount">—</span> posts</div>
+                <div class="stat-pill"><span class="stat-num" id="cityCount">—</span> cities</div>
             </div>
             <div class="auth-banner" id="authBanner">
                 <div>
@@ -141,6 +149,29 @@
                     <div><strong id="myLikeCount">0</strong><span>Likes</span></div>
                 </div>
                 <button class="btn-edit-profile" id="editProfileBtn">Edit Profile</button>
+            </div>
+
+            <!-- Gamification Card -->
+            <div class="sidebar-card gamification-card" id="gamificationCard" style="display:none;">
+                <div class="gam-header">
+                    <div class="gam-level" id="gamLevel">🌱 Seedling</div>
+                    <div class="gam-points"><span id="gamPoints">0</span> pts</div>
+                </div>
+                <div class="gam-streak" id="gamStreak">🔥 0-day streak</div>
+                <div class="gam-progress">
+                    <div class="gam-progress-bar" id="gamProgressBar" style="width:0%"></div>
+                </div>
+                <div class="gam-badges" id="gamBadges"></div>
+            </div>
+
+            <!-- Notifications -->
+            <div class="sidebar-card notif-card" id="notifCard" style="display:none;">
+                <div class="notif-header">
+                    <h3>🔔 Notifications</h3>
+                    <span class="notif-badge" id="notifBadge" style="display:none;">0</span>
+                </div>
+                <div class="notif-list" id="notifList"><p style="font-size:0.9rem;color:var(--text-light);">No notifications yet</p></div>
+                <button class="notif-mark-read" id="notifMarkRead" style="display:none;">Mark all read</button>
             </div>
 
             <!-- Categories -->
@@ -243,81 +274,19 @@
 
         <!-- Right Sidebar -->
         <aside class="sidebar sidebar-right">
-            <!-- Trending Topics -->
+            <!-- Trending Topics (Dynamic) -->
             <div class="sidebar-card">
                 <h3>🔥 Trending Topics</h3>
-                <div class="trending-list">
-                    <a href="#" class="trending-item" data-topic="monsoon-care">
-                        <span class="trend-tag">#MonsoonCare</span>
-                        <span class="trend-count">142 posts</span>
-                    </a>
-                    <a href="#" class="trending-item" data-topic="balcony-garden">
-                        <span class="trend-tag">#BalconyGarden</span>
-                        <span class="trend-count">98 posts</span>
-                    </a>
-                    <a href="#" class="trending-item" data-topic="neem-hacks">
-                        <span class="trend-tag">#NeemHacks</span>
-                        <span class="trend-count">87 posts</span>
-                    </a>
-                    <a href="#" class="trending-item" data-topic="first-bloom">
-                        <span class="trend-tag">#FirstBloom</span>
-                        <span class="trend-count">76 posts</span>
-                    </a>
-                    <a href="#" class="trending-item" data-topic="desi-jugaad">
-                        <span class="trend-tag">#DesiJugaad</span>
-                        <span class="trend-count">65 posts</span>
-                    </a>
-                    <a href="#" class="trending-item" data-topic="organic-only">
-                        <span class="trend-tag">#OrganicOnly</span>
-                        <span class="trend-count">54 posts</span>
-                    </a>
+                <div class="trending-list" id="trendingList">
+                    <p style="font-size:0.9rem;color:var(--text-light);">Loading...</p>
                 </div>
             </div>
 
-            <!-- Top Contributors -->
+            <!-- Top Contributors (Dynamic) -->
             <div class="sidebar-card">
                 <h3>🏅 Top Plant Parents</h3>
-                <div class="leaderboard">
-                    <div class="leader-row">
-                        <span class="leader-rank">🥇</span>
-                        <span class="leader-avatar">🌻</span>
-                        <div class="leader-info">
-                            <span class="leader-name">Sunita Devi</span>
-                            <span class="leader-detail">Lucknow · 89 posts</span>
-                        </div>
-                    </div>
-                    <div class="leader-row">
-                        <span class="leader-rank">🥈</span>
-                        <span class="leader-avatar">🌵</span>
-                        <div class="leader-info">
-                            <span class="leader-name">Rahul Verma</span>
-                            <span class="leader-detail">Delhi · 67 posts</span>
-                        </div>
-                    </div>
-                    <div class="leader-row">
-                        <span class="leader-rank">🥉</span>
-                        <span class="leader-avatar">🌺</span>
-                        <div class="leader-info">
-                            <span class="leader-name">Meera Patel</span>
-                            <span class="leader-detail">Ahmedabad · 54 posts</span>
-                        </div>
-                    </div>
-                    <div class="leader-row">
-                        <span class="leader-rank">4</span>
-                        <span class="leader-avatar">🌱</span>
-                        <div class="leader-info">
-                            <span class="leader-name">Arjun Nair</span>
-                            <span class="leader-detail">Bangalore · 43 posts</span>
-                        </div>
-                    </div>
-                    <div class="leader-row">
-                        <span class="leader-rank">5</span>
-                        <span class="leader-avatar">🍃</span>
-                        <div class="leader-info">
-                            <span class="leader-name">Neha Singh</span>
-                            <span class="leader-detail">Jaipur · 38 posts</span>
-                        </div>
-                    </div>
+                <div class="leaderboard" id="leaderboardList">
+                    <p style="font-size:0.9rem;color:var(--text-light);">Loading...</p>
                 </div>
             </div>
 
@@ -388,8 +357,8 @@
         </div>
     </footer>
 
-    <script src="shared-auth.js?v=20260225d"></script>
-    <script src="community.js?v=20260225d"></script>
+    <script src="shared-auth.js?v=20260305a"></script>
+    <script src="community.js?v=20260305a"></script>
 
 <script src="/chatbot-widget.js"></script>
 </body>

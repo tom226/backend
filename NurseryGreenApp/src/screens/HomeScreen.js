@@ -10,6 +10,7 @@ import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 
 const { width } = Dimensions.get('window');
+const APP_LOGO = require('../../assets/icon.png');
 
 export default function HomeScreen({ navigation }) {
   const { user, isLoggedIn } = useAuth();
@@ -80,7 +81,7 @@ export default function HomeScreen({ navigation }) {
             </TouchableOpacity>
           </View>
           <View style={styles.heroIcon}>
-            <Ionicons name="leaf" size={60} color={Colors.primaryLight} />
+                <Image source={APP_LOGO} style={styles.heroLogo} resizeMode="contain" />
           </View>
         </View>
 
@@ -113,7 +114,7 @@ export default function HomeScreen({ navigation }) {
         {/* Stats cards */}
         <View style={styles.statsRow}>
           <View style={styles.statCard}>
-            <Ionicons name="leaf" size={20} color={Colors.primary} />
+              <Image source={APP_LOGO} style={styles.statLogo} resizeMode="contain" />
             <Text style={styles.statValue}>10+</Text>
             <Text style={styles.statLabel}>Products</Text>
           </View>
@@ -269,6 +270,11 @@ const styles = StyleSheet.create({
     marginLeft: Spacing.md,
     opacity: 0.4,
   },
+    heroLogo: {
+      width: 72,
+      height: 72,
+      borderRadius: 36,
+    },
   sectionTitle: {
     ...Fonts.subtitle,
     paddingHorizontal: Spacing.xl,
@@ -326,6 +332,11 @@ const styles = StyleSheet.create({
     padding: Spacing.md,
     alignItems: 'center',
   },
+    statLogo: {
+      width: 20,
+      height: 20,
+      borderRadius: 10,
+    },
   statValue: {
     ...Fonts.bold,
     fontSize: 20,

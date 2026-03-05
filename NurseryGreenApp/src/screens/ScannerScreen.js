@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity,
-  ActivityIndicator, Alert, Platform,
+  ActivityIndicator, Alert, Platform, Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { Colors, Fonts, Spacing, Radius, Shadows } from '../constants/theme';
 import EnergyCard from '../components/EnergyCard';
 import api from '../api/client';
@@ -17,6 +18,44 @@ export default function ScannerScreen({ navigation, route }) {
   const [loading, setLoading] = useState(false);
   const [diagnosisResult, setDiagnosisResult] = useState(null);
   const [energyResults, setEnergyResults] = useState([]);
+  const [selectedImage, setSelectedImage] = useState(null);
+
+  const pickImage = async (useCamera) => {
+    try {
+      let result;
+      if (useCamera) {
+        const { status } = await ImagePicker.requestCameraPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert('Permission Required', 'Camera permission is needed to scan your plant.');
+          return;
+        }
+        result = await ImagePicker.launchCameraAsync({
+          mediaTypes: ['images'],
+          allowsEditing: true,
+          aspect: [4, 3],
+          quality: 0.8,
+        });
+      } else {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert('Permission Required', 'Photo library access is needed to select a plant image.');
+          return;
+        }
+        result = await ImagePicker.launchImageLibraryAsync({
+          mediaTypes: ['images'],
+          allowsEditing: true,
+          aspect: [4, 3],
+          quality: 0.8,
+        });
+      }
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        setSelectedImage(result.assets[0].uri);
+        haptic.success();
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to pick image. Please try again.');
+    }
+  };
 
   const symptomOptions = [
     'Yellow leaves', 'Brown spots', 'Wilting', 'White powder',
@@ -139,7 +178,7 @@ export default function ScannerScreen({ navigation, route }) {
         <View style={styles.inputSection}>
           <Text style={styles.inputLabel}>Plant Name</Text>
           <View style={styles.searchInput}>
-            <Ionicons name="leaf" size={18} color={Colors.primary} />
+            <Image source={require('../../assets/icon.png')} style={styles.searchLogo} resizeMode="contain" />
             <TextInput
               style={styles.textInput}
               placeholder="e.g. Tulsi, Money Plant, Rose..."
@@ -152,6 +191,38 @@ export default function ScannerScreen({ navigation, route }) {
 
         {activeTab === 'diagnose' && (
           <>
+            {/* Camera/Gallery Buttons */}
+            <View style={styles.inputSection}>
+              <Text style={styles.inputLabel}>Scan Your Plant</Text>
+              <View style={styles.cameraRow}>
+                <TouchableOpacity
+                  style={styles.cameraBtn}
+                  onPress={() => pickImage(true)}
+                >
+                  <Ionicons name="camera" size={28} color={Colors.primary} />
+                  <Text style={styles.cameraBtnText}>Take Photo</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.cameraBtn}
+                  onPress={() => pickImage(false)}
+                >
+                  <Ionicons name="images" size={28} color={Colors.primary} />
+                  <Text style={styles.cameraBtnText}>Gallery</Text>
+                </TouchableOpacity>
+              </View>
+              {selectedImage && (
+                <View style={styles.imagePreview}>
+                  <Image source={{ uri: selectedImage }} style={styles.previewImage} />
+                  <TouchableOpacity
+                    style={styles.removeImageBtn}
+                    onPress={() => setSelectedImage(null)}
+                  >
+                    <Ionicons name="close-circle" size={24} color={Colors.error} />
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+
             {/* Symptoms Selection */}
             <View style={styles.inputSection}>
               <Text style={styles.inputLabel}>Select Symptoms</Text>
@@ -326,6 +397,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.surface,
     borderRadius: Radius.lg, paddingHorizontal: Spacing.lg, borderWidth: 1, borderColor: Colors.border, ...Shadows.small,
   },
+  searchLogo: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+  },
   textInput: { flex: 1, ...Fonts.regular, paddingVertical: Spacing.md, marginLeft: Spacing.sm, color: Colors.text },
   fullInput: {
     backgroundColor: Colors.surface, borderRadius: Radius.lg, paddingHorizontal: Spacing.lg,
@@ -376,4 +452,27 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.md, borderTopWidth: 1, borderTopColor: Colors.divider, marginTop: Spacing.sm,
   },
   shopLinkText: { ...Fonts.caption, color: Colors.primary, fontWeight: '700', marginHorizontal: Spacing.sm },
+  cameraRow: {
+    flexDirection: 'row', gap: Spacing.md,
+  },
+  cameraBtn: {
+    flex: 1, alignItems: 'center', justifyContent: 'center',
+    backgroundColor: Colors.surface, borderRadius: Radius.lg,
+    paddingVertical: Spacing.lg, borderWidth: 1.5,
+    borderColor: Colors.primary, borderStyle: 'dashed',
+  },
+  cameraBtnText: {
+    ...Fonts.caption, fontWeight: '700', color: Colors.primary, marginTop: Spacing.xs,
+  },
+  imagePreview: {
+    marginTop: Spacing.md, borderRadius: Radius.lg, overflow: 'hidden',
+    position: 'relative',
+  },
+  previewImage: {
+    width: '100%', height: 200, borderRadius: Radius.lg,
+  },
+  removeImageBtn: {
+    position: 'absolute', top: 8, right: 8,
+    backgroundColor: Colors.surface, borderRadius: 12,
+  },
 });

@@ -1,7 +1,9 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Fonts, Spacing, Radius, Shadows } from '../constants/theme';
+
+const APP_LOGO = require('../../assets/icon.png');
 
 export default function EnergyDetailScreen({ route, navigation }) {
   const { plant } = route.params;
@@ -25,7 +27,7 @@ export default function EnergyDetailScreen({ route, navigation }) {
         {/* Name & Score Header */}
         <View style={styles.nameSection}>
           <View style={[styles.bigIcon, { backgroundColor: eColor + '20' }]}>
-            <Ionicons name="leaf" size={40} color={eColor} />
+            <Image source={APP_LOGO} style={styles.bigLogo} resizeMode="contain" />
           </View>
           <Text style={styles.commonName}>{plant.commonName}</Text>
           {plant.scientificName && <Text style={styles.sciName}>{plant.scientificName}</Text>}
@@ -97,7 +99,7 @@ export default function EnergyDetailScreen({ route, navigation }) {
             <View style={styles.tagsRow}>
               {plant.healthBenefits.airPurify && (
                 <View style={[styles.tag, { backgroundColor: '#E8F5E9' }]}>
-                  <Ionicons name="leaf" size={12} color="#43A047" />
+                  <Image source={APP_LOGO} style={styles.tagLogo} resizeMode="contain" />
                   <Text style={[styles.tagText, { color: '#43A047' }]}>Air Purifying</Text>
                 </View>
               )}
@@ -250,6 +252,7 @@ const styles = StyleSheet.create({
   scrollContent: { padding: Spacing.lg },
   nameSection: { alignItems: 'center', marginBottom: Spacing.xxl },
   bigIcon: { width: 80, height: 80, borderRadius: 40, alignItems: 'center', justifyContent: 'center', marginBottom: Spacing.md },
+  bigLogo: { width: 48, height: 48, borderRadius: 24 },
   commonName: { ...Fonts.title, fontSize: 24, textAlign: 'center' },
   sciName: { ...Fonts.caption, fontStyle: 'italic', marginTop: 4, textAlign: 'center' },
   hindiName: { ...Fonts.caption, marginTop: 2, textAlign: 'center' },
@@ -274,6 +277,7 @@ const styles = StyleSheet.create({
   tagsRow: { flexDirection: 'row', flexWrap: 'wrap', marginTop: Spacing.sm, gap: Spacing.sm },
   tag: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.md, paddingVertical: 5, borderRadius: Radius.full },
   tagText: { ...Fonts.small, fontWeight: '700', marginLeft: 4 },
+  tagLogo: { width: 12, height: 12, borderRadius: 6 },
   listSection: { marginTop: Spacing.sm },
   listItem: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 4 },
   listDot: { width: 5, height: 5, borderRadius: 3, backgroundColor: Colors.primary, marginTop: 6, marginRight: Spacing.sm },
