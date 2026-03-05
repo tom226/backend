@@ -1,0 +1,30 @@
+# Ignore local/dev artifacts from EAS build upload
+.expo/
+node_modules/
+android/.gradle/
+android/app/build/
+android/build/
+ios/build/
+
+# Dist/export artifacts
+web-build/
+dist*/
+
+# Debug bundles and logs
+debug-bundle*.js
+*.log
+
+# VCS and editor
+.git/
+.vscode/
+
+# Docs and scripts not needed at build time
+README.md
+PROGRESS.md
+monitor-errors.ps1
+vercel.json
+
+# Optional local media dumps
+*.zip
+*.tar
+*.tar.gz

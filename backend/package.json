@@ -2,6 +2,15 @@
   "name": "nursery-green-backend",
   "version": "1.0.0",
   "description": "Backend for Nursery Green E-commerce with Order Management and OAuth",
+  "engines": {
+    "node": ">=24.14.0 <25",
+    "npm": ">=11.9.0"
+  },
+  "packageManager": "npm@11.9.0",
+  "volta": {
+    "node": "24.14.0",
+    "npm": "11.9.0"
+  },
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
