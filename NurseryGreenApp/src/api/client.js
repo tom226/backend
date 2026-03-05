@@ -196,6 +196,13 @@ class ApiClient {
   async healthCheck() {
     return this.request('/health');
   }
+
+  async reportMobileErrors(logs) {
+    return this.request('/api/mobile-errors/bulk', {
+      method: 'POST',
+      body: JSON.stringify({ logs }),
+    });
+  }
 }
 
 export const api = new ApiClient();

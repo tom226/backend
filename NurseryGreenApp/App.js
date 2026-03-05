@@ -7,6 +7,7 @@ import { AuthProvider } from './src/context/AuthContext';
 import { CartProvider } from './src/context/CartContext';
 import AppNavigator from './src/navigation/AppNavigator';
 import ErrorBoundary from './src/components/ErrorBoundary';
+import { flushErrorLogs, installGlobalErrorHandler, logError } from './src/utils/errorLogger';
 
 // Keep the splash screen visible while we load resources
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -18,6 +19,26 @@ export default function App() {
       SplashScreen.hideAsync().catch(() => {});
     }, 1500);
     return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    const uninstall = installGlobalErrorHandler();
+
+    logError({
+      source: 'app-start',
+      level: 'info',
+      isFatal: false,
+      error: 'App launched',
+    }).finally(() => flushErrorLogs(true));
+
+    const flushTimer = setInterval(() => {
+      flushErrorLogs();
+    }, 30000);
+
+    return () => {
+      clearInterval(flushTimer);
+      if (typeof uninstall === 'function') uninstall();
+    };
   }, []);
 
   return (

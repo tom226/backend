@@ -2,6 +2,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { flushErrorLogs, logError } from '../utils/errorLogger';
 
 export default class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -15,6 +16,14 @@ export default class ErrorBoundary extends React.Component {
 
   componentDidCatch(error, errorInfo) {
     console.error('ErrorBoundary caught:', error, errorInfo);
+    logError({
+      source: 'error-boundary',
+      isFatal: false,
+      error,
+      extra: {
+        componentStack: errorInfo?.componentStack || null,
+      },
+    }).finally(() => flushErrorLogs());
   }
 
   handleReset = () => {

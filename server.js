@@ -74,6 +74,7 @@ const paymentRoutes = require('./routes/payment');
 const adminRoutes = require('./routes/admin');
 const chatbotRoutes = require('./routes/chatbot');
 const analyticsRoutes = require('./routes/analytics');
+const mobileErrorsRoutes = require('./routes/mobileErrors');
 
 // Register Routes
 app.use('/auth', authRoutes);
@@ -87,6 +88,7 @@ app.use('/api/payment', paymentRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/chatbot', chatbotRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/mobile-errors', mobileErrorsRoutes);
 
 // Serve static frontend (root directory)
 app.use(express.static(path.join(__dirname)));

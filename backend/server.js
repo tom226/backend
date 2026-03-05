@@ -64,6 +64,7 @@ const communityRoutes = require('./routes/community');
 const plantKnowledgeRoutes = require('./routes/plantKnowledge');
 const plantScannerRoutes = require('./routes/plantScanner');
 const socialRoutes = require('./routes/social');
+const mobileErrorsRoutes = require('./routes/mobileErrors');
 
 // Register Routes
 app.use('/auth', authRoutes);
@@ -74,6 +75,7 @@ app.use('/api/community', communityRoutes);
 app.use('/api/plant-knowledge', plantKnowledgeRoutes);
 app.use('/api/plant-scanner', plantScannerRoutes);
 app.use('/webhooks', express.json({ type: '*/*' }), socialRoutes);
+app.use('/api/mobile-errors', mobileErrorsRoutes);
 
 // Health Check Endpoint
 app.get('/health', (req, res) => {
