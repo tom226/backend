@@ -5,15 +5,45 @@ const crypto = require("crypto");
 const mongoose = require("mongoose");
 const { PaymentHistory } = require("../models/PaymentHistory");
 
-// Initialize Razorpay instance
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET,
-});
+let razorpayClient = null;
+
+function getRazorpayClient() {
+  if (razorpayClient) {
+    return razorpayClient;
+  }
+
+  const keyId = process.env.RAZORPAY_KEY_ID;
+  const keySecret = process.env.RAZORPAY_KEY_SECRET;
+
+  if (!keyId || !keySecret) {
+    return null;
+  }
+
+  razorpayClient = new Razorpay({
+    key_id: keyId,
+    key_secret: keySecret,
+  });
+
+  return razorpayClient;
+}
+
+function ensurePaymentConfigured(res) {
+  const client = getRazorpayClient();
+  if (!client) {
+    res.status(503).json({
+      error: "Payment gateway is not configured",
+      details: "Missing RAZORPAY_KEY_ID or RAZORPAY_KEY_SECRET",
+    });
+    return null;
+  }
+  return client;
+}
 
 // POST /api/payment/create-order
 router.post("/create-order", async (req, res) => {
   const { amount } = req.body;
+  const razorpay = ensurePaymentConfigured(res);
+  if (!razorpay) return;
 
   try {
     const options = {
@@ -30,6 +60,8 @@ router.post("/create-order", async (req, res) => {
 // POST /api/payment/verify
 router.post("/verify", async (req, res) => {
   const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+  const razorpayConfigured = ensurePaymentConfigured(res);
+  if (!razorpayConfigured) return;
 
   try {
     const body = razorpay_order_id + "|" + razorpay_payment_id;
