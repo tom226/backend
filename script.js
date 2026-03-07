@@ -1,6 +1,131 @@
 // ===== AUTHENTICATION & USER INFO =====
 const BACKEND_URL = 'https://backend-production-f128.up.railway.app';
 
+function getStoredUserData() {
+    try {
+        const raw = localStorage.getItem('userData');
+        return raw ? JSON.parse(raw) : null;
+    } catch (e) {
+        console.error('Error parsing stored user data:', e);
+        return null;
+    }
+}
+
+function saveStoredUserData(userObj) {
+    try {
+        localStorage.setItem('userData', JSON.stringify(userObj));
+    } catch (e) {
+        console.error('Error saving user data:', e);
+    }
+}
+
+function isCommunityMemberUser(user) {
+    return Boolean(user && (
+        user.isCommunityMember ||
+        user.membershipActive ||
+        user.communityMembershipActive ||
+        (user.membership && user.membership.status === 'active')
+    ));
+}
+
+function isCurrentUserCommunityMember() {
+    return isCommunityMemberUser(getStoredUserData());
+}
+
+function updateMembershipStatusUI() {
+    const statusEl = document.getElementById('membershipStatus');
+    if (!statusEl) return;
+
+    if (isCurrentUserCommunityMember()) {
+        statusEl.textContent = 'Membership active: You can now access members-only community, events, competitions, and quizzes.';
+        statusEl.style.color = 'var(--primary-green)';
+    } else {
+        statusEl.textContent = 'Not a member yet.';
+        statusEl.style.color = 'var(--text-light)';
+    }
+}
+
+async function activateMonthlyMembership() {
+    const authToken = localStorage.getItem('authToken');
+    const user = getStoredUserData();
+
+    if (!authToken || !user) {
+        showNotification('Please login first to activate membership.');
+        setTimeout(() => {
+            window.location.href = 'login.html?redirect=index.html';
+        }, 500);
+        return;
+    }
+
+    try {
+        const res = await fetch(`${BACKEND_URL}/api/users/community-membership/activate`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${authToken}`,
+            },
+            body: JSON.stringify({ amount: 200, plan: 'monthly' }),
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+            throw new Error(data.error || 'Membership activation failed');
+        }
+
+        const updatedUser = {
+            ...user,
+            ...(data.user || {}),
+            isCommunityMember: true,
+            membershipActive: true,
+            membership: {
+                ...(data.membership || {}),
+                status: 'active',
+                amount: 200,
+                currency: 'INR',
+                plan: 'monthly',
+            },
+        };
+
+        saveStoredUserData(updatedUser);
+        showNotification('Membership activated: Rs. 200/month. Community unlocked!');
+        updateMembershipStatusUI();
+    } catch (error) {
+        console.error('Membership activation failed:', error);
+        showNotification('Could not activate membership right now. Please try again.');
+    }
+}
+
+function setupMembershipActions() {
+    const joinBtns = document.querySelectorAll('.join-membership-btn');
+    joinBtns.forEach((btn) => {
+        btn.addEventListener('click', activateMonthlyMembership);
+    });
+
+    const memberOnlyLinks = document.querySelectorAll('.membership-required');
+    memberOnlyLinks.forEach((link) => {
+        link.addEventListener('click', function (e) {
+            const authToken = localStorage.getItem('authToken');
+            if (!authToken) {
+                e.preventDefault();
+                showNotification('Login required to access members community.');
+                setTimeout(() => {
+                    window.location.href = 'login.html?redirect=community.html';
+                }, 500);
+                return;
+            }
+
+            if (!isCurrentUserCommunityMember()) {
+                e.preventDefault();
+                showNotification('Community is for members only. Activate Rs. 200/month membership.');
+                const membership = document.getElementById('membership');
+                if (membership) membership.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        });
+    });
+
+    updateMembershipStatusUI();
+}
+
 function initializeUserInfo() {
     const authToken = localStorage.getItem('authToken');
     const userData = localStorage.getItem('userData');
@@ -621,6 +746,7 @@ document.querySelector('.cart-btn').addEventListener('click', openCart);
 document.addEventListener('DOMContentLoaded', function() {
     initializeUserInfo();
     initializeCart();
+    setupMembershipActions();
     
     // Checkout button
     document.getElementById('checkoutBtn').addEventListener('click', goToCheckout);
@@ -718,6 +844,7 @@ document.head.appendChild(style);
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize cart from localStorage
     initializeCart();
+    updateMembershipStatusUI();
     
     // Shipping state input listeners
     const stateInput = document.getElementById('state');

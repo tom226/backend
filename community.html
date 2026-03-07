@@ -32,7 +32,7 @@
 <body>
     <!-- Top Notification Bar -->
     <div class="notification-bar">
-        <p>🌱 Plant Parents Community — Share your plant journey & learn from fellow growers!</p>
+        <p>🌱 Members-only Plant Parents Community | Rs. 200/month membership unlocks community access, events, competitions, and quizzes</p>
     </div>
 
     <!-- Navigation -->
@@ -99,6 +99,13 @@
                 </div>
                 <a class="btn-community" href="login.html?redirect=community.html">Login</a>
             </div>
+            <div class="member-banner" id="memberBanner" style="display:none;">
+                <div>
+                    <strong>Community access requires membership</strong>
+                    <p style="margin:0.2rem 0 0;font-size:0.92rem;opacity:0.92;">Activate Rs. 200/month membership to connect with plant parents, join events, competitions, and quizzes.</p>
+                </div>
+                <a class="btn-community" href="index.html#membership">Activate Membership</a>
+            </div>
         </div>
     </section>
 
@@ -136,7 +143,7 @@
     </div>
 
     <!-- Main Community Layout -->
-    <main class="community-main">
+    <main class="community-main" id="communityMain">
         <!-- Left Sidebar -->
         <aside class="sidebar sidebar-left">
             <!-- User Card -->
@@ -347,6 +354,18 @@
             </div>
         </aside>
     </main>
+
+    <section class="community-locked" id="communityLocked" style="display:none;">
+        <div class="community-locked-card">
+            <span class="locked-chip">Members Only</span>
+            <h2>Unlock The Plant Parents Community</h2>
+            <p>Community access is available only for active members. Get the Rs. 200/month subscription to connect with plant parents, attend events, and participate in competitions and quizzes.</p>
+            <div class="locked-actions">
+                <a class="btn-community" href="index.html#membership">Activate Membership</a>
+                <a class="btn-outline-community" href="login.html?redirect=community.html">Login</a>
+            </div>
+        </div>
+    </section>
 
     <!-- Post Detail Modal -->
     <div class="modal-overlay" id="postModal" style="display:none;">

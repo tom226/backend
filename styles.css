@@ -438,6 +438,98 @@ body {
     gap: 1rem;
 }
 
+/* ===== Membership ===== */
+.membership-shell {
+    max-width: 1360px;
+    margin: 0 auto 2rem;
+    padding: 0 2rem;
+}
+
+.membership-card {
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr;
+    gap: 1.2rem;
+    background: linear-gradient(130deg, #ffffff 0%, #f2f9ef 55%, #ebf6ff 100%);
+    border: 1px solid rgba(28, 107, 68, 0.14);
+    border-radius: 24px;
+    padding: 2rem;
+    box-shadow: var(--shadow);
+}
+
+.membership-kicker {
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    color: var(--primary-green);
+    font-weight: 700;
+    font-size: 0.8rem;
+    margin-bottom: 0.5rem;
+}
+
+.membership-copy h2 {
+    color: var(--deep-forest);
+    line-height: 1.2;
+    margin-bottom: 0.7rem;
+}
+
+.membership-lede {
+    color: var(--text-light);
+    margin-bottom: 0.85rem;
+}
+
+.membership-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1rem;
+    color: var(--text-dark);
+}
+
+.membership-list li {
+    margin-bottom: 0.45rem;
+}
+
+.membership-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+}
+
+.membership-status {
+    margin-top: 0.8rem;
+    color: var(--text-light);
+    font-weight: 600;
+}
+
+.membership-side {
+    background: rgba(28, 107, 68, 0.92);
+    color: #fff;
+    border-radius: 18px;
+    padding: 1.2rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.membership-badge {
+    display: inline-flex;
+    align-self: flex-start;
+    background: rgba(177, 242, 75, 0.24);
+    color: #dfffac;
+    border: 1px solid rgba(177, 242, 75, 0.35);
+    border-radius: 999px;
+    padding: 0.3rem 0.7rem;
+    font-size: 0.74rem;
+    font-weight: 700;
+    margin-bottom: 0.65rem;
+}
+
+.membership-side h3 {
+    margin-bottom: 0.45rem;
+}
+
+.membership-side p {
+    color: rgba(255, 255, 255, 0.88);
+}
+
 .tile {
     background: var(--card);
     border: 1px solid rgba(31, 138, 85, 0.08);
@@ -1286,6 +1378,13 @@ body {
 
     .blog-grid {
         grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 960px) {
+    .membership-card {
+        grid-template-columns: 1fr;
+        padding: 1.4rem;
     }
 }
 

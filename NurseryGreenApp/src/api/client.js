@@ -57,6 +57,17 @@ class ApiClient {
     });
   }
 
+  async getCommunityMembership() {
+    return this.request('/api/users/community-membership');
+  }
+
+  async activateCommunityMembership(payload = {}) {
+    return this.request('/api/users/community-membership/activate', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  }
+
   // Orders
   async createOrder(orderData) {
     return this.request('/api/orders/create', {

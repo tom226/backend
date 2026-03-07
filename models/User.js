@@ -60,6 +60,19 @@ const userSchema = new mongoose.Schema({
   },
   following: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   followers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+
+  // Membership
+  isCommunityMember: { type: Boolean, default: false },
+  membershipActive: { type: Boolean, default: false },
+  membership: {
+    plan: { type: String, default: 'monthly' },
+    amount: { type: Number, default: 200 },
+    currency: { type: String, default: 'INR' },
+    status: { type: String, enum: ['inactive', 'active'], default: 'inactive' },
+    startedAt: { type: Date, default: null },
+    paymentId: { type: String, default: '' },
+    orderId: { type: String, default: '' }
+  },
   
   // Timestamps
   createdAt: { type: Date, default: Date.now },

@@ -1556,6 +1556,80 @@
     flex-wrap: wrap;
 }
 
+.member-banner {
+    margin: 0.9rem auto 0;
+    padding: 0.9rem 1.1rem;
+    background: rgba(246, 173, 55, 0.2);
+    border: 1px solid rgba(246, 173, 55, 0.45);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.community-locked {
+    max-width: 980px;
+    margin: 1.2rem auto 2rem;
+    padding: 0 1.25rem;
+}
+
+.community-locked-card {
+    background: linear-gradient(140deg, #fff 0%, #fef9ed 60%, #f5faf2 100%);
+    border: 1px solid rgba(28, 107, 68, 0.14);
+    border-radius: 18px;
+    box-shadow: var(--shadow);
+    padding: 1.5rem;
+}
+
+.locked-chip {
+    display: inline-block;
+    margin-bottom: 0.65rem;
+    background: rgba(28, 107, 68, 0.1);
+    border: 1px solid rgba(28, 107, 68, 0.22);
+    color: var(--primary-green);
+    border-radius: 999px;
+    padding: 0.3rem 0.7rem;
+    font-size: 0.74rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+}
+
+.community-locked-card h2 {
+    margin-bottom: 0.55rem;
+}
+
+.community-locked-card p {
+    color: var(--text-light);
+    max-width: 720px;
+}
+
+.locked-actions {
+    margin-top: 0.95rem;
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+}
+
+.btn-outline-community {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border-gray);
+    border-radius: 10px;
+    padding: 0.5rem 0.9rem;
+    color: var(--text-dark);
+    text-decoration: none;
+    font-weight: 700;
+    background: #fff;
+}
+
+.btn-outline-community:hover {
+    border-color: var(--primary-green);
+    color: var(--primary-green);
+}
+
 .auth-guard {
     margin-top: 1rem;
     padding: 0.9rem 1rem;

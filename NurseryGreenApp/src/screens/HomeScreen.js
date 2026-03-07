@@ -13,7 +13,7 @@ const { width } = Dimensions.get('window');
 const APP_LOGO = require('../../assets/icon.png');
 
 export default function HomeScreen({ navigation }) {
-  const { user, isLoggedIn } = useAuth();
+  const { user, membershipActive, activateCommunityMembership } = useAuth();
   const { itemCount, addToCart } = useCart();
   const [refreshing, setRefreshing] = useState(false);
 
@@ -83,6 +83,32 @@ export default function HomeScreen({ navigation }) {
           <View style={styles.heroIcon}>
                 <Image source={APP_LOGO} style={styles.heroLogo} resizeMode="contain" />
           </View>
+        </View>
+
+        {/* Membership Banner */}
+        <View style={styles.membershipCard}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.membershipKicker}>Nursery Green Membership</Text>
+            <Text style={styles.membershipTitle}>Rs. 200 / month</Text>
+            <Text style={styles.membershipText}>
+              Get your plant needs support and unlock members-only community access to connect with plant parents, attend events, and join competitions and quizzes.
+            </Text>
+          </View>
+          {membershipActive ? (
+            <View style={styles.membershipActivePill}>
+              <Ionicons name="checkmark-circle" size={16} color={Colors.white} />
+              <Text style={styles.membershipActiveText}>Active</Text>
+            </View>
+          ) : (
+            <TouchableOpacity
+              style={styles.membershipBtn}
+              onPress={async () => {
+                await activateCommunityMembership();
+              }}
+            >
+              <Text style={styles.membershipBtnText}>Activate</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Quick Actions */}
@@ -269,6 +295,62 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginLeft: Spacing.md,
     opacity: 0.4,
+  },
+  membershipCard: {
+    marginHorizontal: Spacing.lg,
+    marginTop: Spacing.sm,
+    backgroundColor: '#fffaf0',
+    borderColor: '#f1d9a8',
+    borderWidth: 1,
+    borderRadius: Radius.xl,
+    padding: Spacing.lg,
+    ...Shadows.small,
+  },
+  membershipKicker: {
+    ...Fonts.caption,
+    color: '#8b5e00',
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+  },
+  membershipTitle: {
+    ...Fonts.subtitle,
+    marginTop: 4,
+  },
+  membershipText: {
+    ...Fonts.caption,
+    color: Colors.textSecondary,
+    marginTop: 6,
+    lineHeight: 18,
+  },
+  membershipBtn: {
+    marginTop: Spacing.md,
+    backgroundColor: Colors.primary,
+    alignSelf: 'flex-start',
+    borderRadius: Radius.full,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: 8,
+  },
+  membershipBtnText: {
+    color: Colors.white,
+    fontWeight: '700',
+    fontSize: 12,
+  },
+  membershipActivePill: {
+    marginTop: Spacing.md,
+    backgroundColor: Colors.primary,
+    alignSelf: 'flex-start',
+    borderRadius: Radius.full,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 7,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  membershipActiveText: {
+    color: Colors.white,
+    fontSize: 12,
+    fontWeight: '700',
   },
     heroLogo: {
       width: 72,

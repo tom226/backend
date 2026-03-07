@@ -40,7 +40,7 @@ const SEED_POSTS = [
 ];
 
 export default function CommunityScreen({ navigation }) {
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, membershipActive, activateCommunityMembership } = useAuth();
   const [posts, setPosts] = useState(SEED_POSTS);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [refreshing, setRefreshing] = useState(false);
@@ -88,25 +88,29 @@ export default function CommunityScreen({ navigation }) {
   }, [isLoggedIn]);
 
   useEffect(() => {
+    if (!membershipActive) return;
     fetchPosts();
     fetchStats();
     fetchProfile();
     fetchNotifCount();
     const interval = setInterval(fetchPosts, 20000);
     return () => clearInterval(interval);
-  }, [fetchPosts, fetchStats, fetchProfile, fetchNotifCount]);
+  }, [fetchPosts, fetchStats, fetchProfile, fetchNotifCount, membershipActive]);
 
   useEffect(() => {
+    if (!membershipActive) return;
     fetchPosts(searchQuery);
-  }, [selectedCategory]);
+  }, [selectedCategory, membershipActive]);
 
   const onRefresh = async () => {
+    if (!membershipActive) return;
     setRefreshing(true);
     await Promise.all([fetchPosts(searchQuery), fetchStats(), fetchProfile(), fetchNotifCount()]);
     setRefreshing(false);
   };
 
   const onSearchChange = (text) => {
+    if (!membershipActive) return;
     setSearchQuery(text);
     clearTimeout(searchTimeout.current);
     searchTimeout.current = setTimeout(() => {
@@ -115,7 +119,7 @@ export default function CommunityScreen({ navigation }) {
   };
 
   const handleLike = async (postId) => {
-    if (!isLoggedIn) return;
+    if (!isLoggedIn || !membershipActive) return;
     try {
       const result = await api.likePost(postId);
       setPosts(prev => prev.map(p =>
@@ -130,7 +134,7 @@ export default function CommunityScreen({ navigation }) {
   };
 
   const handleComment = async (postId, text) => {
-    if (!isLoggedIn) return;
+    if (!isLoggedIn || !membershipActive) return;
     try {
       const result = await api.commentOnPost(postId, text);
       setPosts(prev => prev.map(p =>
@@ -144,6 +148,33 @@ export default function CommunityScreen({ navigation }) {
   const filteredPosts = selectedCategory === 'all'
     ? posts
     : posts.filter(p => p.category === selectedCategory);
+
+  if (!membershipActive) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Community</Text>
+        </View>
+        <View style={styles.lockedWrap}>
+          <View style={styles.lockedCard}>
+            <Text style={styles.lockedChip}>Members Only</Text>
+            <Text style={styles.lockedTitle}>Unlock Plant Parents Community</Text>
+            <Text style={styles.lockedText}>
+              Rs. 200 monthly subscription unlocks community access where you can connect with plant parents, attend events, and participate in competitions and quizzes.
+            </Text>
+            <TouchableOpacity
+              style={styles.lockedBtn}
+              onPress={async () => {
+                await activateCommunityMembership();
+              }}
+            >
+              <Text style={styles.lockedBtnText}>Activate Membership</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    );
+  }
 
   const renderHeader = () => (
     <View>
@@ -352,4 +383,49 @@ const styles = StyleSheet.create({
   postsList: { paddingTop: Spacing.md, paddingBottom: Spacing.xxxl },
   emptyState: { alignItems: 'center', paddingTop: 80 },
   emptyText: { ...Fonts.medium, color: Colors.textSecondary, marginTop: Spacing.md },
+  lockedWrap: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: Spacing.xl,
+  },
+  lockedCard: {
+    backgroundColor: '#fffaf0',
+    borderWidth: 1,
+    borderColor: '#f2d8a5',
+    borderRadius: Radius.xl,
+    padding: Spacing.xl,
+  },
+  lockedChip: {
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(31,138,85,0.12)',
+    color: Colors.primary,
+    borderRadius: Radius.full,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 4,
+    fontSize: 11,
+    fontWeight: '700',
+    marginBottom: 10,
+  },
+  lockedTitle: {
+    ...Fonts.subtitle,
+    marginBottom: 6,
+  },
+  lockedText: {
+    ...Fonts.caption,
+    color: Colors.textSecondary,
+    lineHeight: 18,
+  },
+  lockedBtn: {
+    marginTop: Spacing.lg,
+    backgroundColor: Colors.primary,
+    borderRadius: Radius.full,
+    alignSelf: 'flex-start',
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: 9,
+  },
+  lockedBtnText: {
+    color: Colors.white,
+    fontSize: 12,
+    fontWeight: '700',
+  },
 });

@@ -177,6 +177,50 @@
 
     const isAuthed = () => Boolean(authToken && userProfile);
 
+    function getStoredUser() {
+        try {
+            const raw = localStorage.getItem('userData');
+            return raw ? JSON.parse(raw) : null;
+        } catch {
+            return null;
+        }
+    }
+
+    function isCommunityMember() {
+        const sharedUser = sharedAuth && sharedAuth.getUser ? sharedAuth.getUser() : null;
+        const storedUser = getStoredUser();
+        const source = sharedUser || storedUser || userProfile;
+        return Boolean(source && (
+            source.isCommunityMember ||
+            source.membershipActive ||
+            source.communityMembershipActive ||
+            (source.membership && source.membership.status === 'active')
+        ));
+    }
+
+    function hasCommunityAccess() {
+        return isAuthed() && isCommunityMember();
+    }
+
+    function setMembershipGateUI() {
+        const main = document.getElementById('communityMain');
+        const locked = document.getElementById('communityLocked');
+        const memberBanner = document.getElementById('memberBanner');
+
+        if (hasCommunityAccess()) {
+            if (main) main.style.display = 'grid';
+            if (locked) locked.style.display = 'none';
+            if (memberBanner) memberBanner.style.display = 'none';
+            return;
+        }
+
+        if (main) main.style.display = 'none';
+        if (locked) locked.style.display = 'block';
+        if (memberBanner) {
+            memberBanner.style.display = isAuthed() ? 'flex' : 'none';
+        }
+    }
+
     function syncAuthFromShared() {
         authToken = sharedAuth && sharedAuth.getToken ? sharedAuth.getToken() : null;
         const sharedUser = sharedAuth && sharedAuth.getUser ? sharedAuth.getUser() : null;
@@ -200,12 +244,13 @@
         setupEventListeners();
         renderMobileCategories();
         setAuthedUI();
+        setMembershipGateUI();
         hideProfileModal();
-        loadPostsFromApi();
-        loadStats();
-        loadTrending();
-        loadLeaderboard();
-        if (isAuthed()) {
+        if (hasCommunityAccess()) {
+            loadPostsFromApi();
+            loadStats();
+            loadTrending();
+            loadLeaderboard();
             loadNotifications();
             loadMyProfile();
         }
@@ -229,7 +274,18 @@
 
         try {
             const res = await fetch(url, { headers });
-            if (!res.ok) throw new Error('Failed to fetch posts');
+            if (!res.ok) {
+                let errorMessage = 'Failed to fetch posts';
+                try {
+                    const errData = await res.json();
+                    if (errData && (errData.error || errData.message)) {
+                        errorMessage = errData.error || errData.message;
+                    }
+                } catch {
+                    // Keep default message
+                }
+                throw new Error(errorMessage);
+            }
 
             const data = await res.json();
             const incoming = normalizePosts(data.posts || []);
@@ -239,6 +295,11 @@
                 posts = normalizePosts(SEED_POSTS);
             }
         } catch (err) {
+            if (err && /membership required/i.test(String(err.message || ''))) {
+                setMembershipGateUI();
+                showToast('Community is available for members only. Activate Rs. 200/month membership.');
+                return;
+            }
             console.warn('Falling back to seed posts:', err);
             if (!posts.length) posts = normalizePosts(SEED_POSTS);
         }
@@ -255,7 +316,10 @@
     // ==========================================
     async function loadStats() {
         try {
-            const res = await fetch(`${API_BASE}/api/community/stats`);
+            authToken = sharedAuth && sharedAuth.getToken ? sharedAuth.getToken() : authToken;
+            const headers = {};
+            if (authToken) headers.Authorization = `Bearer ${authToken}`;
+            const res = await fetch(`${API_BASE}/api/community/stats`, { headers });
             if (!res.ok) return;
             const data = await res.json();
             const el = (id, val) => { const e = document.getElementById(id); if (e) e.textContent = (val || 0).toLocaleString(); };
@@ -269,7 +333,10 @@
 
     async function loadTrending() {
         try {
-            const res = await fetch(`${API_BASE}/api/community/trending`);
+            authToken = sharedAuth && sharedAuth.getToken ? sharedAuth.getToken() : authToken;
+            const headers = {};
+            if (authToken) headers.Authorization = `Bearer ${authToken}`;
+            const res = await fetch(`${API_BASE}/api/community/trending`, { headers });
             if (!res.ok) return;
             const data = await res.json();
             const list = document.getElementById('trendingList');
@@ -297,7 +364,10 @@
 
     async function loadLeaderboard() {
         try {
-            const res = await fetch(`${API_BASE}/api/community/leaderboard`);
+            authToken = sharedAuth && sharedAuth.getToken ? sharedAuth.getToken() : authToken;
+            const headers = {};
+            if (authToken) headers.Authorization = `Bearer ${authToken}`;
+            const res = await fetch(`${API_BASE}/api/community/leaderboard`, { headers });
             if (!res.ok) return;
             const data = await res.json();
             const list = document.getElementById('leaderboardList');
@@ -557,19 +627,29 @@
         const createExpanded = document.getElementById('createPostExpanded');
         const card = document.getElementById('userCard');
         const banner = document.getElementById('authBanner');
+        const memberBanner = document.getElementById('memberBanner');
 
-        if (isAuthed()) {
+        if (hasCommunityAccess()) {
             if (authGuard) authGuard.style.display = 'none';
             if (createTrigger) createTrigger.style.display = 'block';
             if (card) card.style.display = 'block';
             if (banner) banner.style.display = 'none';
+            if (memberBanner) memberBanner.style.display = 'none';
             updateUserCard();
+        } else if (isAuthed()) {
+            if (authGuard) authGuard.style.display = 'none';
+            if (createTrigger) createTrigger.style.display = 'none';
+            if (createExpanded) createExpanded.style.display = 'none';
+            if (card) card.style.display = 'none';
+            if (banner) banner.style.display = 'none';
+            if (memberBanner) memberBanner.style.display = 'flex';
         } else {
             if (authGuard) authGuard.style.display = 'flex';
             if (createTrigger) createTrigger.style.display = 'none';
             if (createExpanded) createExpanded.style.display = 'none';
             if (card) card.style.display = 'none';
             if (banner) banner.style.display = 'flex';
+            if (memberBanner) memberBanner.style.display = 'none';
         }
     }
 
@@ -1523,7 +1603,17 @@
     }
 
     function requireAuth() {
-        if (isAuthed()) return true;
+        if (hasCommunityAccess()) return true;
+
+        if (isAuthed() && !isCommunityMember()) {
+            showToast('Community is available for members only. Activate Rs. 200/month membership.');
+            const memberBanner = document.getElementById('memberBanner');
+            const locked = document.getElementById('communityLocked');
+            if (memberBanner) memberBanner.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            if (locked) locked.style.display = 'block';
+            return false;
+        }
+
         showToast('Sign in to continue');
         const banner = document.getElementById('authBanner');
         if (banner) banner.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -1548,7 +1638,15 @@
     document.addEventListener('authReady', () => {
         syncAuthFromShared();
         setAuthedUI();
-        loadPostsFromApi();
+        setMembershipGateUI();
+        if (hasCommunityAccess()) {
+            loadPostsFromApi();
+            loadStats();
+            loadTrending();
+            loadLeaderboard();
+            loadNotifications();
+            loadMyProfile();
+        }
     });
 
     // ==========================================

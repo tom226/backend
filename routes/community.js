@@ -162,6 +162,32 @@ const optionalAuth = (req, _res, next) => {
   next();
 };
 
+const hasActiveMembership = (user) => Boolean(
+  user && (
+    user.isCommunityMember ||
+    user.membershipActive ||
+    user.membership?.status === 'active'
+  )
+);
+
+const verifyMember = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.userId);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    if (!hasActiveMembership(user)) {
+      return res.status(403).json({
+        error: 'Community membership required',
+        code: 'MEMBERSHIP_REQUIRED',
+        membership: { amount: 200, currency: 'INR', plan: 'monthly' }
+      });
+    }
+    req.memberUser = user;
+    next();
+  } catch (err) {
+    return res.status(500).json({ error: 'Membership verification failed' });
+  }
+};
+
 async function ensureSeeded() {
   const count = await CommunityPost.countDocuments();
   if (count === 0) await CommunityPost.insertMany(seedPosts.map(p => ({ ...p, userId: null })));
@@ -211,7 +237,7 @@ function shapePost(post, viewerId) {
 // ==========================================
 
 // GET / — Feed with search, filters, pagination
-router.get('/', optionalAuth, async (req, res) => {
+router.get('/', verifyToken, verifyMember, async (req, res) => {
   try {
     await ensureSeeded();
     const { q, category, city, tag, sort, page = 1, limit = 30 } = req.query;
@@ -235,7 +261,7 @@ router.get('/', optionalAuth, async (req, res) => {
 });
 
 // GET /stats
-router.get('/stats', async (_req, res) => {
+router.get('/stats', verifyToken, verifyMember, async (_req, res) => {
   try {
     const totalPosts = await CommunityPost.countDocuments({ isHidden: { $ne: true } });
     const totalMembers = await User.countDocuments();
@@ -249,7 +275,7 @@ router.get('/stats', async (_req, res) => {
 });
 
 // GET /trending
-router.get('/trending', async (_req, res) => {
+router.get('/trending', verifyToken, verifyMember, async (_req, res) => {
   try {
     const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000);
     const tags = await CommunityPost.aggregate([
@@ -269,7 +295,7 @@ router.get('/trending', async (_req, res) => {
 });
 
 // GET /leaderboard
-router.get('/leaderboard', async (_req, res) => {
+router.get('/leaderboard', verifyToken, verifyMember, async (_req, res) => {
   try {
     const leaders = await CommunityPost.aggregate([
       { $match: { isHidden: { $ne: true } } },
@@ -296,7 +322,7 @@ router.get('/leaderboard', async (_req, res) => {
 });
 
 // POST / — Create post (with scanner bridge support)
-router.post('/', verifyToken, async (req, res) => {
+router.post('/', verifyToken, verifyMember, async (req, res) => {
   try {
     const { content, category, images, linkedScanId, scanDiagnosis, scanConfidence } = req.body;
     if (!content && (!images || images.length === 0)) return res.status(400).json({ error: 'Content is required' });
@@ -334,7 +360,7 @@ router.post('/', verifyToken, async (req, res) => {
 });
 
 // POST /:postId/like
-router.post('/:postId/like', verifyToken, async (req, res) => {
+router.post('/:postId/like', verifyToken, verifyMember, async (req, res) => {
   try {
     const post = await CommunityPost.findById(req.params.postId);
     if (!post) return res.status(404).json({ error: 'Post not found' });
@@ -358,7 +384,7 @@ router.post('/:postId/like', verifyToken, async (req, res) => {
 });
 
 // POST /:postId/comment
-router.post('/:postId/comment', verifyToken, async (req, res) => {
+router.post('/:postId/comment', verifyToken, verifyMember, async (req, res) => {
   try {
     const { text } = req.body;
     if (!text) return res.status(400).json({ error: 'Comment text required' });
@@ -391,7 +417,7 @@ router.post('/:postId/comment', verifyToken, async (req, res) => {
 });
 
 // POST /:postId/share — Track shares
-router.post('/:postId/share', optionalAuth, async (req, res) => {
+router.post('/:postId/share', verifyToken, verifyMember, async (req, res) => {
   try {
     const post = await CommunityPost.findById(req.params.postId);
     if (!post) return res.status(404).json({ error: 'Post not found' });
@@ -402,7 +428,7 @@ router.post('/:postId/share', optionalAuth, async (req, res) => {
 });
 
 // POST /:postId/view — Track views
-router.post('/:postId/view', optionalAuth, async (req, res) => {
+router.post('/:postId/view', verifyToken, verifyMember, async (req, res) => {
   try {
     await CommunityPost.findByIdAndUpdate(req.params.postId, { $inc: { viewCount: 1 } });
     res.json({ ok: true });
@@ -410,7 +436,7 @@ router.post('/:postId/view', optionalAuth, async (req, res) => {
 });
 
 // POST /:postId/best-answer/:commentId — Pin best answer
-router.post('/:postId/best-answer/:commentId', verifyToken, async (req, res) => {
+router.post('/:postId/best-answer/:commentId', verifyToken, verifyMember, async (req, res) => {
   try {
     const post = await CommunityPost.findById(req.params.postId);
     if (!post) return res.status(404).json({ error: 'Post not found' });
@@ -429,7 +455,7 @@ router.post('/:postId/best-answer/:commentId', verifyToken, async (req, res) => 
 });
 
 // GET /notifications
-router.get('/notifications', verifyToken, async (req, res) => {
+router.get('/notifications', verifyToken, verifyMember, async (req, res) => {
   try {
     const notifs = await Notification.find({ userId: req.userId }).sort({ createdAt: -1 }).limit(50);
     const unreadCount = await Notification.countDocuments({ userId: req.userId, read: false });
@@ -441,7 +467,7 @@ router.get('/notifications', verifyToken, async (req, res) => {
 });
 
 // POST /notifications/read
-router.post('/notifications/read', verifyToken, async (req, res) => {
+router.post('/notifications/read', verifyToken, verifyMember, async (req, res) => {
   try {
     await Notification.updateMany({ userId: req.userId, read: false }, { $set: { read: true } });
     res.json({ ok: true });
@@ -449,7 +475,7 @@ router.post('/notifications/read', verifyToken, async (req, res) => {
 });
 
 // GET /my-profile — Gamification profile
-router.get('/my-profile', verifyToken, async (req, res) => {
+router.get('/my-profile', verifyToken, verifyMember, async (req, res) => {
   try {
     const user = await User.findById(req.userId);
     if (!user) return res.status(404).json({ error: 'User not found' });
@@ -500,7 +526,8 @@ router.post('/login-google', async (req, res) => {
     const displayName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Plant Parent';
     res.json({ token, user: { name: displayName, email: user.email, avatar: user.communityAvatar || '🪴',
       city: user.address?.city || '', picture: user.profilePicture || '', id: user._id,
-      points: user.points || 0, level: user.level || 'seedling', badges: user.badges || [], isExpert: user.isExpert || false } });
+      points: user.points || 0, level: user.level || 'seedling', badges: user.badges || [], isExpert: user.isExpert || false,
+      isCommunityMember: hasActiveMembership(user), membershipActive: hasActiveMembership(user), membership: user.membership || {} } });
   } catch (error) {
     console.error('Google login error:', error);
     res.status(500).json({ error: 'Login failed' });
