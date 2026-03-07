@@ -6,6 +6,7 @@ const session = require('express-session');
 const passport = require('passport');
 const bodyParser = require('body-parser');
 const path = require('path');
+const fs = require('fs');
 const { ensureKnowledgeSeeded, startDailyKnowledgeRefresh } = require('./services/plantKnowledgeService');
 const { ensureEnergySeeded, startDailyEnergyRefresh } = require('./services/plantEnergyService');
 
@@ -93,6 +94,31 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/chatbot', chatbotRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/mobile-errors', mobileErrorsRoutes);
+
+// Serve Expo web app at /app (path-based deployment on same domain)
+const appWebDist = path.join(__dirname, 'NurseryGreenApp', 'dist');
+const appWebIndex = path.join(appWebDist, 'index.html');
+const appWebHasBuild = fs.existsSync(appWebIndex);
+
+if (appWebHasBuild) {
+  // Expo web export emits absolute '/_expo/*' asset paths.
+  app.use('/_expo', express.static(path.join(appWebDist, '_expo')));
+  app.use('/app', express.static(appWebDist));
+
+  app.get('/app', (req, res) => {
+    res.sendFile(appWebIndex);
+  });
+
+  app.get('/app/*', (req, res) => {
+    res.sendFile(appWebIndex);
+  });
+} else {
+  app.get('/app', (_req, res) => {
+    res.status(503).json({
+      error: 'App web build not found. Run npm -C NurseryGreenApp run export:web:node24 and redeploy.'
+    });
+  });
+}
 
 // Serve static frontend (root directory)
 app.use(express.static(path.join(__dirname)));
