@@ -217,6 +217,52 @@ body {
     align-items: center;
 }
 
+.subscription-header-bar {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0.65rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.8rem;
+    border-top: 1px solid rgba(28, 107, 68, 0.1);
+    background: linear-gradient(90deg, rgba(246, 173, 55, 0.18), rgba(177, 242, 75, 0.2));
+}
+
+.subscription-header-bar p {
+    margin: 0;
+    color: var(--deep-forest);
+    font-size: 0.88rem;
+    font-weight: 600;
+}
+
+.subscription-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.subscription-header-actions .join-membership-btn {
+    border: none;
+    border-radius: 10px;
+    background: var(--primary-green);
+    color: #fff;
+    font-weight: 700;
+    padding: 0.46rem 0.9rem;
+    cursor: pointer;
+}
+
+.subscription-header-actions .membership-required {
+    text-decoration: none;
+    border: 1px solid rgba(28, 107, 68, 0.2);
+    border-radius: 10px;
+    color: var(--deep-forest);
+    background: #fff;
+    font-weight: 700;
+    padding: 0.42rem 0.78rem;
+}
+
 /* ===== Hero ===== */
 .hero-shell {
     max-width: 1360px;
@@ -1378,6 +1424,14 @@ body {
 
     .blog-grid {
         grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 960px) {
+    .subscription-header-bar {
+        padding: 0.6rem 1rem;
+        flex-direction: column;
+        align-items: flex-start;
     }
 }
 

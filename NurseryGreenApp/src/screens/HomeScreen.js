@@ -40,6 +40,27 @@ export default function HomeScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
+      <View style={styles.subscriptionHeaderStrip}>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.subscriptionHeaderTitle}>Rs. 200/month Membership</Text>
+          <Text style={styles.subscriptionHeaderText}>Plant support + members-only community access</Text>
+        </View>
+        {membershipActive ? (
+          <View style={styles.subscriptionActiveBadge}>
+            <Text style={styles.subscriptionActiveBadgeText}>Active</Text>
+          </View>
+        ) : (
+          <TouchableOpacity
+            style={styles.subscriptionHeaderBtn}
+            onPress={async () => {
+              await activateCommunityMembership();
+            }}
+          >
+            <Text style={styles.subscriptionHeaderBtnText}>Subscribe</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+
       {/* Top Bar */}
       <View style={styles.topBar}>
         <View>
@@ -211,12 +232,55 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
+  subscriptionHeaderStrip: {
+    paddingTop: 46,
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: Spacing.sm,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    backgroundColor: '#fff7e8',
+    borderBottomWidth: 1,
+    borderBottomColor: '#efd7a8',
+  },
+  subscriptionHeaderTitle: {
+    ...Fonts.caption,
+    fontWeight: '800',
+    color: '#6f4d00',
+  },
+  subscriptionHeaderText: {
+    ...Fonts.small,
+    color: Colors.textSecondary,
+    marginTop: 2,
+  },
+  subscriptionHeaderBtn: {
+    backgroundColor: Colors.primary,
+    borderRadius: Radius.full,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 7,
+  },
+  subscriptionHeaderBtnText: {
+    color: Colors.white,
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  subscriptionActiveBadge: {
+    backgroundColor: Colors.primary,
+    borderRadius: Radius.full,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 7,
+  },
+  subscriptionActiveBadgeText: {
+    color: Colors.white,
+    fontSize: 11,
+    fontWeight: '700',
+  },
   topBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: Spacing.xl,
-    paddingTop: 52,
+    paddingTop: Spacing.md,
     paddingBottom: Spacing.md,
     backgroundColor: Colors.surface,
     borderBottomWidth: 1,
