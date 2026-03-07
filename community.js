@@ -220,6 +220,8 @@
         const headers = {};
         if (authToken) headers.Authorization = `Bearer ${authToken}`;
 
+        renderFeedSkeleton(3);
+
         let url = `${API_BASE}/api/community?limit=30`;
         if (searchQuery) url += `&q=${encodeURIComponent(searchQuery)}`;
         if (currentFilter && currentFilter !== 'all') url += `&category=${currentFilter}`;
@@ -428,6 +430,28 @@
     // ==========================================
     const LEVEL_LABELS = { seedling: '🌱 Seedling', sapling: '🌿 Sapling', tree: '🌳 Tree', forest: '🌲 Forest', expert: '👑 Expert' };
     const LEVEL_MAX = { seedling: 100, sapling: 500, tree: 2000, forest: 5000, expert: 10000 };
+    const DAILY_PROMPTS = [
+        {
+            title: 'What changed in your garden this week?',
+            body: 'Share one win, one challenge, and one photo so others can learn from your setup.',
+            template: 'Weekly garden update:\n✅ Win: \n⚠️ Challenge: \n📸 Progress photo: '
+        },
+        {
+            title: 'Show your most improved plant',
+            body: 'Before-and-after stories get the highest replies. Share what you changed and what worked.',
+            template: 'Plant recovery story:\n🪴 Plant: \n🧪 What I changed: \n📈 Result after 2 weeks: '
+        },
+        {
+            title: 'Ask one focused care question',
+            body: 'Targeted questions help experts answer faster. Mention plant, weather, and routine.',
+            template: 'Need quick help with:\n🌿 Plant: \n🌤️ City/weather: \n💧 Current routine: \n❓Question: '
+        },
+        {
+            title: 'Share one no-fail care tip',
+            body: 'Actionable tips with exact frequency and dosage are most saved by members.',
+            template: 'Care tip that works for me:\n🧴 Product/mix: \n📅 Frequency: \n🌱 Best for: '
+        }
+    ];
 
     async function loadMyProfile() {
         try {
@@ -549,6 +573,46 @@
         }
     }
 
+    function hydrateDailyPrompt() {
+        const idx = new Date().getDate() % DAILY_PROMPTS.length;
+        const prompt = DAILY_PROMPTS[idx];
+        const title = document.getElementById('dailyPromptTitle');
+        const body = document.getElementById('dailyPromptBody');
+        const btn = document.getElementById('useDailyPromptBtn');
+
+        if (title) title.textContent = prompt.title;
+        if (body) body.textContent = prompt.body;
+        if (btn) btn.dataset.template = prompt.template;
+    }
+
+    function openComposerWithTemplate(templateText, category) {
+        if (!requireAuth()) return;
+
+        const trigger = document.getElementById('createTrigger');
+        const expanded = document.getElementById('createPostExpanded');
+        const textarea = document.getElementById('postContent');
+        const catSelect = document.getElementById('postCategory');
+        const safeText = String(templateText || '');
+
+        if (expanded) expanded.style.display = 'block';
+        if (trigger) trigger.style.display = 'none';
+
+        if (catSelect && category) catSelect.value = category;
+
+        if (textarea) {
+            if (!textarea.value.trim()) {
+                textarea.value = safeText;
+            } else {
+                textarea.value = textarea.value.trimEnd() + '\n\n' + safeText;
+            }
+            textarea.focus();
+            document.getElementById('charCount').textContent = textarea.value.length;
+        }
+
+        const createCard = document.getElementById('createPostCard');
+        if (createCard) createCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
     // ==========================================
     // EVENTS
     // ==========================================
@@ -615,6 +679,39 @@
             this.style.display = 'none';
             document.getElementById('postContent').focus();
         });
+
+        const writeHelpfulPostBtn = document.getElementById('writeHelpfulPostBtn');
+        if (writeHelpfulPostBtn) {
+            writeHelpfulPostBtn.addEventListener('click', function () {
+                openComposerWithTemplate('One practical thing that improved my plant growth this week:\n\n', 'tips');
+            });
+        }
+
+        const starterRow = document.getElementById('starterChipRow');
+        if (starterRow) {
+            starterRow.addEventListener('click', function (e) {
+                const chip = e.target.closest('.starter-chip');
+                if (!chip) return;
+                openComposerWithTemplate(chip.dataset.template || '', chip.dataset.cat || null);
+            });
+        }
+
+        const pollRow = document.getElementById('pollChipRow');
+        if (pollRow) {
+            pollRow.addEventListener('click', function (e) {
+                const chip = e.target.closest('.poll-chip');
+                if (!chip) return;
+                openComposerWithTemplate(chip.dataset.template || '', chip.dataset.cat || null);
+            });
+        }
+
+        const promptBtn = document.getElementById('useDailyPromptBtn');
+        if (promptBtn) {
+            promptBtn.addEventListener('click', function () {
+                const text = this.dataset.template || 'Weekly plant update:\n';
+                openComposerWithTemplate(text, 'show-tell');
+            });
+        }
 
         // Char counter
         document.getElementById('postContent').addEventListener('input', function () {
@@ -908,6 +1005,24 @@
         }
 
         document.getElementById('feedPostCount').textContent = filtered.length + ' post' + (filtered.length !== 1 ? 's' : '');
+    }
+
+    function renderFeedSkeleton(count) {
+        const container = document.getElementById('feedContainer');
+        if (!container) return;
+
+        const total = Math.max(1, count || 3);
+        container.innerHTML = Array.from({ length: total }).map(() => `
+            <div class="skeleton-post">
+                <div class="skeleton-line short"></div>
+                <div class="skeleton-line medium"></div>
+                <div class="skeleton-line full"></div>
+                <div class="skeleton-line full"></div>
+            </div>
+        `).join('');
+
+        const emptyFeed = document.getElementById('emptyFeed');
+        if (emptyFeed) emptyFeed.style.display = 'none';
     }
 
     function renderPostCard(post) {
@@ -1440,6 +1555,9 @@
     // BOOT
     // ==========================================
     updateTimes();
-    document.addEventListener('DOMContentLoaded', init);
+    document.addEventListener('DOMContentLoaded', () => {
+        hydrateDailyPrompt();
+        init();
+    });
 
 })();

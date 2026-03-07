@@ -205,6 +205,27 @@
 
         <!-- Main Feed -->
         <section class="feed-column">
+            <!-- Engagement Hub -->
+            <div class="engagement-hub" id="engagementHub">
+                <article class="eng-card daily-prompt-card">
+                    <p class="eng-kicker">✨ Daily Conversation Prompt</p>
+                    <h3 id="dailyPromptTitle">What changed in your garden this week?</h3>
+                    <p id="dailyPromptBody">Share one win, one challenge, and one photo to help others learn from your journey.</p>
+                    <button class="eng-cta" id="useDailyPromptBtn">Use This Prompt</button>
+                </article>
+
+                <article class="eng-card micro-poll-card">
+                    <p class="eng-kicker">🗳️ Quick Topic Starter</p>
+                    <h3>What are you growing right now?</h3>
+                    <div class="poll-chip-row" id="pollChipRow">
+                        <button class="poll-chip" data-template="Growing indoor greens this month. What is thriving for you?" data-cat="indoor">🪴 Indoor</button>
+                        <button class="poll-chip" data-template="Balcony update: what is flowering in your setup this week?" data-cat="balcony">🏠 Balcony</button>
+                        <button class="poll-chip" data-template="Terrace growers: what helped most in this weather?" data-cat="terrace">🌇 Terrace</button>
+                        <button class="poll-chip" data-template="Organic care check-in: what natural mix worked best for you?" data-cat="organic">🌿 Organic</button>
+                    </div>
+                </article>
+            </div>
+
             <!-- Create Post -->
             <div class="create-post-card" id="createPostCard">
                 <div class="create-post-header">
@@ -221,6 +242,13 @@
                 <div class="create-post-expanded" id="createPostExpanded" style="display:none;">
                     <textarea id="postContent" placeholder="What's happening in your garden today? 🌿&#10;&#10;Share a tip, ask a question, or show off your plants!" maxlength="1000"></textarea>
                     <div class="char-counter"><span id="charCount">0</span>/1000</div>
+
+                    <div class="starter-chip-row" id="starterChipRow">
+                        <button class="starter-chip" data-template="My biggest plant win this week was..." data-cat="show-tell">🏆 Share a Win</button>
+                        <button class="starter-chip" data-template="I need help with this plant issue: " data-cat="help">🆘 Ask for Help</button>
+                        <button class="starter-chip" data-template="One tip that made a big difference in my plant care: " data-cat="tips">💡 Share a Tip</button>
+                        <button class="starter-chip" data-template="My simple DIY setup for better growth: " data-cat="diy">🔧 Share a DIY</button>
+                    </div>
                     
                     <!-- Image Upload -->
                     <div class="image-upload-zone" id="imageUploadZone">
@@ -254,6 +282,11 @@
                     <button class="feed-tab" data-sort="my-posts">📝 My Posts</button>
                 </div>
                 <span class="post-total" id="feedPostCount">0 posts</span>
+            </div>
+
+            <div class="feed-quality-strip" id="feedQualityStrip">
+                <span>🌟 Helpful posts are boosted by recent replies, saves, and likes.</span>
+                <button class="strip-action" id="writeHelpfulPostBtn">Write Helpful Post</button>
             </div>
 
             <!-- Feed Posts -->

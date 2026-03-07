@@ -89,6 +89,72 @@
     margin: 0 auto;
 }
 
+/* Workflow Stepper */
+.scan-workflow {
+    background: linear-gradient(140deg, #ffffff, #f7fbf7);
+    border: 1px solid #dfe9df;
+    border-radius: 18px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 8px 24px rgba(17, 42, 26, 0.06);
+}
+.workflow-track {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+}
+.wf-step {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 10px;
+    border-radius: 12px;
+    background: #f5f8f4;
+    border: 1px solid #e5ece4;
+    color: #6a7a6f;
+    transition: all 0.25s ease;
+}
+.wf-dot {
+    width: 24px;
+    height: 24px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 800;
+    background: #dde6dd;
+    color: #3e5547;
+}
+.wf-label {
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+.wf-step.active {
+    background: #e9f5ed;
+    border-color: #9ed3ad;
+    color: #1c6b44;
+}
+.wf-step.active .wf-dot {
+    background: linear-gradient(120deg, #1c6b44, #1f8a55);
+    color: #fff;
+}
+.wf-step.done {
+    background: #f0f7ed;
+    border-color: #b9dbbe;
+    color: #215f3f;
+}
+.wf-step.done .wf-dot {
+    background: #2d8d56;
+    color: #fff;
+}
+.workflow-hint {
+    margin: 10px 2px 0;
+    font-size: 0.84rem;
+    color: #5e7265;
+    font-weight: 600;
+}
+
 /* Access Bar */
 .access-bar {
     background: #f0f7ed;
@@ -219,12 +285,14 @@
     padding: 50px 30px;
     text-align: center;
     background: white;
-    transition: all 0.3s;
+    transition: all 0.3s ease;
     cursor: pointer;
+    box-shadow: 0 10px 24px rgba(15, 36, 22, 0.05);
 }
 .upload-zone.drag-over {
     border-color: var(--primary-green);
     background: #f0f7ed;
+    transform: translateY(-1px);
 }
 .upload-icon {
     font-size: 3.5rem;
@@ -334,6 +402,7 @@
 /* Preview */
 .preview-zone {
     text-align: center;
+    animation: fadeSlideIn 0.28s ease;
 }
 .preview-img-wrap {
     position: relative;
@@ -370,6 +439,10 @@
 .scan-loading {
     text-align: center;
     padding: 60px 20px;
+    background: #fff;
+    border: 1px solid var(--border-gray);
+    border-radius: 18px;
+    box-shadow: var(--shadow);
 }
 .loader-ring {
     width: 60px;
@@ -417,12 +490,15 @@
     padding: 20px;
     border-radius: 16px;
     margin-bottom: 20px;
+    border: 1px solid transparent;
 }
 .result-status.healthy {
     background: #e8f5e9;
+    border-color: #bee5c3;
 }
 .result-status.diseased {
     background: #fff3e0;
+    border-color: #f5d7ad;
 }
 .result-status h3 {
     font-size: 1.3rem;
@@ -440,6 +516,7 @@
     margin-bottom: 20px;
     box-shadow: var(--shadow);
     border: 1px solid var(--border-gray);
+    animation: fadeSlideIn 0.26s ease;
 }
 
 .disease-top {
@@ -1033,6 +1110,15 @@
     margin-top: 24px;
 }
 
+.btn-scan:focus-visible,
+.change-photo:focus-visible,
+.btn-bridge:focus-visible,
+.obs-input:focus-visible,
+.obs-select:focus-visible {
+    outline: 3px solid rgba(31, 138, 85, 0.26);
+    outline-offset: 2px;
+}
+
 /* === Common Diseases Section === */
 .common-diseases {
     padding: 60px 2rem 80px;
@@ -1173,6 +1259,11 @@
     .scanner-stats { gap: 10px; }
     .stat-pill { padding: 10px 16px; min-width: 90px; }
     .upload-zone { padding: 36px 20px; }
+    .scan-workflow { padding: 12px; }
+    .workflow-track { gap: 6px; }
+    .wf-step { padding: 8px 8px; justify-content: center; }
+    .wf-label { font-size: 0.75rem; }
+    .workflow-hint { font-size: 0.8rem; text-align: center; }
     .disease-grid { grid-template-columns: repeat(2, 1fr); }
     .rec-products-grid { grid-template-columns: 1fr 1fr; }
     .result-actions { flex-direction: column; }
@@ -1183,6 +1274,10 @@
 @media (max-width: 480px) {
     .scanner-hero { padding: 120px 1rem 40px; }
     .scanner-hero h1 { font-size: 1.6rem; }
+    .scanner-main { padding: 30px 1rem 64px; }
+    .scan-workflow { border-radius: 14px; }
+    .workflow-track { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .wf-step { justify-content: flex-start; }
     .upload-buttons { flex-direction: column; }
     .disease-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
     .qr-modal { padding: 24px 18px; }

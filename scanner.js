@@ -47,6 +47,84 @@ function buildNotPlantStatusHtml(data, plantCheck) {
     return `<h3>🚫 Not a Plant</h3><p>${message}</p>${detailLine}${debugHtml}`;
 }
 
+function clampNumber(value, min, max) {
+    return Math.max(min, Math.min(max, value));
+}
+
+const PLANT_NAME_HINTS = [
+    { keywords: ['tulsi', 'holy basil', 'basil', 'tulasi'], name: 'Tulsi (Holy Basil)', slug: 'tulsi', confidence: 0.97 },
+    { keywords: ['money plant', 'pothos', 'devils ivy', 'devil\'s ivy'], name: 'Money Plant (Pothos)', slug: 'money-plant', confidence: 0.95 },
+    { keywords: ['snake plant', 'sansevieria', 'mother in law tongue', 'mother-in-law'], name: 'Snake Plant (Sansevieria)', slug: 'snake-plant', confidence: 0.95 },
+    { keywords: ['aloe', 'aloe vera', 'ghritkumari'], name: 'Aloe Vera', slug: 'aloe-vera', confidence: 0.95 },
+    { keywords: ['rose', 'gulab'], name: 'Rose (Gulab)', slug: 'rose', confidence: 0.95 },
+    { keywords: ['hibiscus', 'gudhal', 'shoe flower'], name: 'Hibiscus (Gudhal)', slug: 'hibiscus', confidence: 0.95 },
+    { keywords: ['marigold', 'genda'], name: 'Marigold (Genda)', slug: 'marigold', confidence: 0.95 },
+    { keywords: ['areca', 'areca palm'], name: 'Areca Palm', slug: 'areca-palm', confidence: 0.94 },
+    { keywords: ['spider plant', 'chlorophytum'], name: 'Spider Plant', slug: 'spider-plant', confidence: 0.94 },
+    { keywords: ['curry leaf', 'kadi patta', 'kari patta'], name: 'Curry Leaf Plant', slug: 'curry-leaf', confidence: 0.94 },
+    { keywords: ['peace lily'], name: 'Peace Lily', slug: 'peace-lily', confidence: 0.94 },
+    { keywords: ['jade', 'crassula'], name: 'Jade Plant (Crassula)', slug: 'jade', confidence: 0.93 },
+    { keywords: ['neem'], name: 'Neem Tree', slug: 'neem', confidence: 0.93 },
+    { keywords: ['banana', 'kela'], name: 'Banana Plant (Kela)', slug: 'banana', confidence: 0.92 }
+];
+
+function scorePlantByVisualHeuristics(stats, envInfo) {
+    const envType = envInfo && envInfo.type ? envInfo.type : 'unknown';
+    const g = stats.greenRatio || 0;
+    const s = stats.strongGreenRatio || 0;
+    const y = stats.yellowRatio || 0;
+    const w = stats.whiteRatio || 0;
+    const o = stats.orangeRatio || 0;
+    const wood = stats.woodRatio || 0;
+    const sat = stats.saturationMean || 0;
+
+    const candidates = [];
+    const add = (slug, name, score) => {
+        if (score >= 0.52) {
+            candidates.push({ slug, name, confidence: clampNumber(score, 0.52, 0.89), source: 'visual-heuristic' });
+        }
+    };
+
+    const indoorBonus = envType === 'indoor' ? 0.08 : 0;
+    const outdoorBonus = envType === 'outdoor' ? 0.08 : 0;
+
+    add('money-plant', 'Money Plant (Pothos)', 0.34 + (g > 0.24 ? 0.20 : 0) + (s > 0.08 ? 0.14 : 0) + (sat > 0.28 ? 0.08 : 0) + indoorBonus - (wood > 0.14 ? 0.10 : 0));
+    add('snake-plant', 'Snake Plant (Sansevieria)', 0.32 + (g > 0.16 ? 0.14 : 0) + (s > 0.05 ? 0.12 : 0) + (wood > 0.06 && wood < 0.16 ? 0.08 : 0) + indoorBonus - (y > 0.16 ? 0.08 : 0));
+    add('aloe-vera', 'Aloe Vera', 0.30 + (g > 0.18 ? 0.14 : 0) + (s > 0.10 ? 0.15 : 0) + (wood < 0.08 ? 0.08 : 0) + indoorBonus - (w > 0.08 ? 0.08 : 0));
+    add('tulsi', 'Tulsi (Holy Basil)', 0.30 + (g > 0.20 ? 0.18 : 0) + (s > 0.09 ? 0.12 : 0) + (y < 0.10 ? 0.08 : 0) + outdoorBonus - (o > 0.05 ? 0.08 : 0));
+    add('hibiscus', 'Hibiscus (Gudhal)', 0.30 + (g > 0.17 ? 0.14 : 0) + (y > 0.04 && y < 0.16 ? 0.06 : 0) + (sat > 0.26 ? 0.08 : 0) + outdoorBonus);
+    add('rose', 'Rose (Gulab)', 0.29 + (g > 0.16 ? 0.12 : 0) + (o > 0.03 ? 0.08 : 0) + (sat > 0.30 ? 0.07 : 0) + outdoorBonus);
+    add('marigold', 'Marigold (Genda)', 0.28 + (o > 0.05 ? 0.16 : 0) + (sat > 0.33 ? 0.10 : 0) + outdoorBonus);
+    add('areca-palm', 'Areca Palm', 0.30 + (g > 0.23 ? 0.16 : 0) + (s > 0.10 ? 0.12 : 0) + (wood < 0.10 ? 0.05 : 0) + indoorBonus);
+    add('spider-plant', 'Spider Plant', 0.28 + (g > 0.19 ? 0.12 : 0) + (w > 0.03 && w < 0.15 ? 0.10 : 0) + indoorBonus);
+
+    candidates.sort((a, b) => b.confidence - a.confidence);
+    return candidates;
+}
+
+function suggestPlantName(plantCheck, fileName = '', envInfo = environmentGuess) {
+    if (!plantCheck || !plantCheck.isPlant) return { primary: null, alternatives: [] };
+
+    const lower = (fileName || '').toLowerCase();
+    for (let i = 0; i < PLANT_NAME_HINTS.length; i++) {
+        const hint = PLANT_NAME_HINTS[i];
+        for (let j = 0; j < hint.keywords.length; j++) {
+            if (lower.includes(hint.keywords[j])) {
+                return {
+                    primary: { name: hint.name, slug: hint.slug, confidence: hint.confidence, source: 'filename-hint' },
+                    alternatives: []
+                };
+            }
+        }
+    }
+
+    const candidates = scorePlantByVisualHeuristics(plantCheck.stats || {}, envInfo);
+    return {
+        primary: candidates.length ? candidates[0] : null,
+        alternatives: candidates.slice(1, 3)
+    };
+}
+
 // =============================================
 // COMPREHENSIVE INDIAN PLANT DISEASE DATABASE
 // =============================================
@@ -1178,6 +1256,39 @@ const userNameLabel = document.getElementById('userNameLabel');
 const userContactLabel = document.getElementById('userContactLabel');
 const switchAccountBtn = document.getElementById('switchAccountBtn');
 
+const workflowHint = document.getElementById('workflowHint');
+const workflowSteps = {
+    upload: document.getElementById('wfUpload'),
+    preview: document.getElementById('wfPreview'),
+    analyze: document.getElementById('wfAnalyze'),
+    result: document.getElementById('wfResult')
+};
+
+function updateWorkflowStep(stage) {
+    const order = ['upload', 'preview', 'analyze', 'result'];
+    const idx = order.indexOf(stage);
+    if (idx < 0) return;
+
+    order.forEach((key, i) => {
+        const el = workflowSteps[key];
+        if (!el) return;
+        el.classList.remove('active', 'done');
+        if (i < idx) el.classList.add('done');
+        if (i === idx) el.classList.add('active');
+    });
+
+    if (!workflowHint) return;
+    const hints = {
+        upload: 'Step 1 of 4: Upload a clear plant photo.',
+        preview: 'Step 2 of 4: Check the photo and start analysis.',
+        analyze: 'Step 3 of 4: AI is analyzing symptoms and plant health.',
+        result: 'Step 4 of 4: Review diagnosis, remedies, and next actions.'
+    };
+    workflowHint.textContent = hints[stage] || '';
+}
+
+updateWorkflowStep('upload');
+
 // Drag and drop
 uploadZone.addEventListener('dragover', e => {
     e.preventDefault();
@@ -1216,6 +1327,7 @@ function handleFile(file) {
         previewImg.src = e.target.result;
         uploadZone.style.display = 'none';
         previewZone.style.display = 'block';
+        updateWorkflowStep('preview');
     };
     reader.readAsDataURL(file);
 }
@@ -1243,6 +1355,7 @@ function resetScanner() {
     
     // Scroll to scanner
     document.querySelector('.scanner-main').scrollIntoView({ behavior: 'smooth' });
+    updateWorkflowStep('upload');
 }
 
 function makeDefaultEnvironmentGuess() {
@@ -1384,6 +1497,7 @@ async function analyzePlant(userObservation = null) {
     analyzeBtn.disabled = true;
     previewZone.querySelector('.preview-img-wrap').style.display = 'none';
     analyzeBtn.style.display = 'none';
+    updateWorkflowStep('analyze');
     
     // Hide questionnaire during analysis
     const qForm = document.getElementById('observationForm');
@@ -1459,10 +1573,11 @@ function buildObservationPayload(plantCheck = {}, userObservation = null) {
     const userSoil = userObservation?.soilCondition || {};
     const userSymptoms = userObservation?.symptoms || [];
     const mergedSymptoms = [...new Set([...autoSymptoms, ...userSymptoms])];
+    const suggestedPlantName = plantCheck && plantCheck.suggestedPlant ? plantCheck.suggestedPlant.name : '';
 
     return {
         source: 'scanner',
-        plantName: userObservation?.plantName || 'unknown',
+        plantName: userObservation?.plantName || suggestedPlantName || 'unknown',
         symptoms: mergedSymptoms,
         leafCondition: {
             color: userLeaf.color || leafColor,
@@ -1492,7 +1607,15 @@ function buildObservationPayload(plantCheck = {}, userObservation = null) {
             orangeRatio: orange,
             woodRatio: wood,
             brightnessVar: variance,
+            exgRatio: stats.exgRatio || 0,
+            neutralRatio: stats.neutralRatio || 0,
+            saturationMean: stats.saturationMean || 0,
             healthScore: plantCheck.health?.score || 50
+        },
+        plantSuggestion: {
+            name: suggestedPlantName || undefined,
+            confidence: plantCheck?.suggestedPlant?.confidence || undefined,
+            alternatives: (plantCheck?.suggestedPlantAlternatives || []).map(p => p.name)
         }
     };
 }
@@ -1549,6 +1672,9 @@ function analyzeLocally(plantCheck = { isPlant: true }, userObservation = null) 
         return {
             success: true,
             healthy: true,
+            plantName: userObservation?.plantName || plantCheck?.suggestedPlant?.name || 'Unknown Plant',
+            plantSuggestionConfidence: plantCheck?.suggestedPlant?.confidence || 0,
+            plantSuggestions: (plantCheck?.suggestedPlantAlternatives || []).map(p => p.name),
             confidence: Math.min(0.92, 0.70 + health.score * 0.003),
             source: 'local-deep',
             description: 'Multi-zone color analysis shows healthy chlorophyll levels, minimal stress markers, and no disease patterns detected.',
@@ -1645,6 +1771,9 @@ function analyzeLocally(plantCheck = { isPlant: true }, userObservation = null) 
         success: true,
         diseaseKey,
         disease: disease.name,
+        plantName: userObservation?.plantName || plantCheck?.suggestedPlant?.name || 'Unknown Plant',
+        plantSuggestionConfidence: plantCheck?.suggestedPlant?.confidence || 0,
+        plantSuggestions: (plantCheck?.suggestedPlantAlternatives || []).map(p => p.name),
         severity: disease.severity,
         description: disease.description,
         cause: disease.cause,
@@ -1675,6 +1804,7 @@ function analyzeZone(data, imgWidth, x0, y0, x1, y1) {
     let whitish = 0, darkSpots = 0, orangeRust = 0, total = 0;
     let brightSum = 0, brightSqSum = 0;
     let rSum = 0, gSum = 0, bSum = 0;
+    let exgPositive = 0, neutralish = 0, satSum = 0;
 
     for (let y = y0; y < y1; y++) {
         for (let x = x0; x < x1; x++) {
@@ -1683,6 +1813,10 @@ function analyzeZone(data, imgWidth, x0, y0, x1, y1) {
             const bright = (r + g + b) / 3;
             const sum = r + g + b || 1;
             const greenShare = g / sum;
+            const maxC = Math.max(r, g, b);
+            const minC = Math.min(r, g, b);
+            const sat = maxC > 0 ? (maxC - minC) / maxC : 0;
+            const exg = (2 * g) - r - b;
 
             // Plant green detection
             if (g > r * 1.1 && g > b * 1.1) {
@@ -1699,10 +1833,13 @@ function analyzeZone(data, imgWidth, x0, y0, x1, y1) {
             if (bright < 60 && Math.abs(r - g) < 20) darkSpots++;
             // Orange/rust pustules
             if (r > 160 && g > 80 && g < 150 && b < 80 && r > g * 1.2) orangeRust++;
+            if (exg > 24) exgPositive++;
+            if (sat < 0.12) neutralish++;
 
             brightSum += bright;
             brightSqSum += bright * bright;
             rSum += r; gSum += g; bSum += b;
+            satSum += sat;
             total++;
         }
     }
@@ -1724,6 +1861,9 @@ function analyzeZone(data, imgWidth, x0, y0, x1, y1) {
         avgR: rSum / total,
         avgG: gSum / total,
         avgB: bSum / total,
+        exgRatio: exgPositive / total,
+        neutralRatio: neutralish / total,
+        saturationMean: satSum / total,
         total
     };
 }
@@ -1949,6 +2089,9 @@ function quickPlantCheck(file) {
                     whiteRatio: edgeTotal > 0 ? Math.max(0, (fullZone.whiteRatio * fullZone.total - centerZone.whiteRatio * centerZone.total) / edgeTotal) : 0,
                     darkSpotRatio: edgeTotal > 0 ? Math.max(0, (fullZone.darkSpotRatio * fullZone.total - centerZone.darkSpotRatio * centerZone.total) / edgeTotal) : 0,
                     orangeRatio: edgeTotal > 0 ? Math.max(0, (fullZone.orangeRatio * fullZone.total - centerZone.orangeRatio * centerZone.total) / edgeTotal) : 0,
+                    exgRatio: edgeTotal > 0 ? Math.max(0, (fullZone.exgRatio * fullZone.total - centerZone.exgRatio * centerZone.total) / edgeTotal) : 0,
+                    neutralRatio: edgeTotal > 0 ? Math.max(0, (fullZone.neutralRatio * fullZone.total - centerZone.neutralRatio * centerZone.total) / edgeTotal) : 0,
+                    saturationMean: fullZone.saturationMean,
                     brightnessMean: fullZone.brightnessMean,
                     brightnessVar: fullZone.brightnessVar,
                     total: edgeTotal
@@ -1957,37 +2100,73 @@ function quickPlantCheck(file) {
                 const zoneStats = { full: fullZone, center: centerZone, edges: edgeZone };
 
                 // ===== PLANT-OR-NOT CHECK =====
-                const vegSignal = fullZone.strongGreenRatio - fullZone.woodRatio;
-                const likelyNonPlant =
-                    (fullZone.greenRatio < 0.03 && fullZone.strongGreenRatio < 0.008 && vegSignal < 0 && fullZone.brightnessVar < 180) ||
-                    (fullZone.greenRatio < 0.02 && fullZone.strongGreenRatio < 0.005 && fullZone.woodRatio > 0.22 && fullZone.brightnessVar < 500);
-                const isPlant = !likelyNonPlant;
+                const vegSignal =
+                    (fullZone.strongGreenRatio * 0.55) +
+                    (fullZone.greenRatio * 0.30) +
+                    (fullZone.exgRatio * 0.35) -
+                    (fullZone.woodRatio * 0.40) -
+                    (fullZone.neutralRatio * 0.18);
+
+                const veryLowVegPattern =
+                    fullZone.greenRatio < 0.025 &&
+                    fullZone.strongGreenRatio < 0.006 &&
+                    fullZone.exgRatio < 0.03 &&
+                    fullZone.brightnessVar < 220;
+
+                const woodNeutralPattern =
+                    fullZone.greenRatio < 0.02 &&
+                    fullZone.exgRatio < 0.025 &&
+                    fullZone.woodRatio > 0.18 &&
+                    fullZone.neutralRatio > 0.42;
+
+                const artificialUniformPattern =
+                    fullZone.greenRatio < 0.09 &&
+                    fullZone.exgRatio < 0.10 &&
+                    fullZone.brightnessVar < 90 &&
+                    fullZone.saturationMean < 0.15;
+
+                const likelyNonPlant = veryLowVegPattern || woodNeutralPattern || artificialUniformPattern;
+                const likelyPlant =
+                    fullZone.greenRatio > 0.11 ||
+                    fullZone.strongGreenRatio > 0.04 ||
+                    fullZone.exgRatio > 0.16;
+
+                const isPlant = likelyPlant || (!likelyNonPlant && vegSignal > -0.02);
 
                 // ===== DISEASE PATTERN SCORING =====
                 const diseaseScores = scoreDiseasePatterns(zoneStats);
                 const healthAssessment = assessPlantHealth(zoneStats);
 
+                const statsPayload = {
+                    greenRatio: Number(fullZone.greenRatio.toFixed(3)),
+                    strongGreenRatio: Number(fullZone.strongGreenRatio.toFixed(3)),
+                    woodRatio: Number(fullZone.woodRatio.toFixed(3)),
+                    yellowRatio: Number(fullZone.yellowRatio.toFixed(3)),
+                    whiteRatio: Number(fullZone.whiteRatio.toFixed(3)),
+                    darkSpotRatio: Number(fullZone.darkSpotRatio.toFixed(3)),
+                    orangeRatio: Number(fullZone.orangeRatio.toFixed(3)),
+                    exgRatio: Number(fullZone.exgRatio.toFixed(3)),
+                    neutralRatio: Number(fullZone.neutralRatio.toFixed(3)),
+                    saturationMean: Number(fullZone.saturationMean.toFixed(3)),
+                    vegSignal: Number(vegSignal.toFixed(3)),
+                    brightnessMean: Number(fullZone.brightnessMean.toFixed(1)),
+                    brightnessVar: Number(fullZone.brightnessVar.toFixed(1))
+                };
+
+                const plantSuggestion = suggestPlantName({ isPlant, stats: statsPayload }, file ? file.name : '', environmentGuess);
+
                 resolve({
                     isPlant,
                     score: Number((fullZone.greenRatio + fullZone.strongGreenRatio).toFixed(2)),
                     reason: isPlant
-                        ? 'Plant-like texture/color signal detected'
-                        : 'Very low plant-like texture/color signal; likely non-plant',
-                    stats: {
-                        greenRatio: Number(fullZone.greenRatio.toFixed(3)),
-                        strongGreenRatio: Number(fullZone.strongGreenRatio.toFixed(3)),
-                        woodRatio: Number(fullZone.woodRatio.toFixed(3)),
-                        yellowRatio: Number(fullZone.yellowRatio.toFixed(3)),
-                        whiteRatio: Number(fullZone.whiteRatio.toFixed(3)),
-                        darkSpotRatio: Number(fullZone.darkSpotRatio.toFixed(3)),
-                        orangeRatio: Number(fullZone.orangeRatio.toFixed(3)),
-                        vegSignal: Number(vegSignal.toFixed(3)),
-                        brightnessMean: Number(fullZone.brightnessMean.toFixed(1)),
-                        brightnessVar: Number(fullZone.brightnessVar.toFixed(1))
-                    },
+                        ? 'Plant-like color and vegetation texture signal detected'
+                        : 'Low vegetation signal with non-plant texture pattern',
+                    stats: statsPayload,
                     zones: zoneStats,
                     diseaseScores: diseaseScores.slice(0, 5), // top 5 matches
-                    health: healthAssessment
+                    health: healthAssessment,
+                    suggestedPlant: plantSuggestion.primary,
+                    suggestedPlantAlternatives: plantSuggestion.alternatives
                 });
             } catch (err) {
                 resolve({ isPlant: true, score: 0, reason: 'Image read issue, skipping pre-check', diseaseScores: [], health: { score: 50, isHealthy: false, isStressed: true, isSevere: false } });
@@ -2011,6 +2190,7 @@ function quickPlantCheck(file) {
 async function displayResults(data, envInfo = environmentGuess, plantCheck = null) {
     const results = document.getElementById('scanResults');
     results.style.display = 'block';
+    updateWorkflowStep('result');
 
     // Look up from DB if backend returned a key
     let diseaseData;
@@ -2035,9 +2215,25 @@ async function displayResults(data, envInfo = environmentGuess, plantCheck = nul
         return;
     }
 
+    const autoDetectedPlant =
+        data.plantName ||
+        data.plant ||
+        (plantCheck && plantCheck.suggestedPlant ? plantCheck.suggestedPlant.name : '');
+    const autoDetectedPlantConfidence =
+        data.plantSuggestionConfidence ||
+        (plantCheck && plantCheck.suggestedPlant ? plantCheck.suggestedPlant.confidence : 0);
+    const fallbackPlantOptions =
+        (data.plantSuggestions && data.plantSuggestions.length)
+            ? data.plantSuggestions
+            : ((plantCheck && plantCheck.suggestedPlantAlternatives) ? plantCheck.suggestedPlantAlternatives.map(p => p.name) : []);
+
     if (data.healthy) {
         statusEl.className = 'result-status healthy';
         statusEl.innerHTML = '<h3>✅ Your Plant Looks Healthy!</h3><p>No diseases detected. Keep up the good care!</p>';
+        if (autoDetectedPlant) {
+            const matchCopy = autoDetectedPlantConfidence ? ` (${Math.round(autoDetectedPlantConfidence * 100)}% match)` : '';
+            statusEl.innerHTML += `<p class="hint">🌱 Auto-detected plant: <strong>${autoDetectedPlant}</strong>${matchCopy}</p>`;
+        }
         // Show analysis signals if available
         if (data.detailedSignals && data.detailedSignals.length) {
             statusEl.innerHTML += '<div class="analysis-signals"><h5>🔬 Analysis Details</h5><ul>' +
@@ -2047,9 +2243,17 @@ async function displayResults(data, envInfo = environmentGuess, plantCheck = nul
         document.querySelector('.remedies-card').style.display = 'none';
     } else {
         statusEl.className = 'result-status diseased';
-        const plantCopy = plantLabel ? ` on ${plantLabel}` : '';
+        const plantCopy = plantLabel ? ` on ${plantLabel}` : (autoDetectedPlant ? ` on ${autoDetectedPlant}` : '');
         const confStr = data.confidence ? ` (${Math.round(data.confidence * 100)}% confidence)` : '';
         statusEl.innerHTML = `<h3>⚠️ Issue Detected${plantCopy}</h3><p>We found potential signs of <strong>${diseaseData.name || data.disease}</strong>${confStr}</p>`;
+
+        if (autoDetectedPlant) {
+            const matchCopy = autoDetectedPlantConfidence ? ` (${Math.round(autoDetectedPlantConfidence * 100)}% match)` : '';
+            statusEl.innerHTML += `<p class="hint">🌱 Auto-detected plant: <strong>${autoDetectedPlant}</strong>${matchCopy}</p>`;
+            if (fallbackPlantOptions.length) {
+                statusEl.innerHTML += `<p class="hint">Other possibilities: ${fallbackPlantOptions.join(', ')}</p>`;
+            }
+        }
 
         // Show detailed image analysis signals
         if (data.detailedSignals && data.detailedSignals.length) {
@@ -2071,7 +2275,7 @@ async function displayResults(data, envInfo = environmentGuess, plantCheck = nul
 
     // Show observation questionnaire if confidence is low or needsMoreInfo
     if (data.needsMoreInfo || (data.confidence && data.confidence < 0.60)) {
-        showObservationForm();
+        showObservationForm(plantCheck, data);
     } else {
         hideObservationForm();
     }
@@ -2200,9 +2404,21 @@ async function displayResults(data, envInfo = environmentGuess, plantCheck = nul
 // =============================================
 // OBSERVATION QUESTIONNAIRE (improves accuracy when confidence is low)
 // =============================================
-function showObservationForm() {
+function showObservationForm(plantCheck = null, analysisData = null) {
     const form = document.getElementById('observationForm');
     if (form) {
+        const plantInput = document.getElementById('obsPlantName');
+        if (plantInput && !plantInput.value) {
+            const suggested =
+                (analysisData && analysisData.plantName) ||
+                (plantCheck && plantCheck.suggestedPlant ? plantCheck.suggestedPlant.name : '');
+            if (suggested) {
+                plantInput.value = suggested;
+                if (plantCheck && plantCheck.suggestedPlant && plantCheck.suggestedPlant.confidence) {
+                    plantInput.title = `Auto-suggested from image (${Math.round(plantCheck.suggestedPlant.confidence * 100)}% match)`;
+                }
+            }
+        }
         form.style.display = '';
         form.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
