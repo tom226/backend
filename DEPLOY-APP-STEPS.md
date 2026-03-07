@@ -14,6 +14,12 @@ cd "E:\VS Code Projects\Website Nursery green\NurseryGreenApp"
 npm run export:web
 ```
 
+If your system Node is older and `expo export` fails, use the Node 24-safe command:
+
+```powershell
+npm run export:web:node24
+```
+
 3. When it finishes, you’ll have a **`dist`** folder inside `NurseryGreenApp`.  
    The folder contains `index.html` and other files. Don’t rename it.
 
@@ -43,6 +49,18 @@ npm i -g vercel
 ```powershell
 cd "E:\VS Code Projects\Website Nursery green\NurseryGreenApp\dist"
 vercel --prod
+```
+
+If Vercel CLI reports Node engine issues, run the CLI with Node 24 runtime:
+
+```powershell
+npx -y node@24 ./node_modules/vercel/bin/vercel.js --prod
+```
+
+For Android production builds from this app folder:
+
+```powershell
+npm run build:android:production
 ```
 
 3. When asked:

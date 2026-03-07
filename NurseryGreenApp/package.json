@@ -17,6 +17,9 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "export:web": "expo export --platform web",
+    "export:web:node24": "npx -y node@24 ./node_modules/expo/bin/cli export --platform web",
+    "build:android:production": "npx -y node@24 ./node_modules/eas-cli/bin/run build --platform android --profile production",
+    "build:android:production:ci": "npx -y node@24 ./node_modules/eas-cli/bin/run build --platform android --profile production --non-interactive",
     "update:preview": "eas update --channel preview --message \"Preview OTA update\"",
     "update:production": "eas update --channel production --message \"Production OTA update\""
   },
